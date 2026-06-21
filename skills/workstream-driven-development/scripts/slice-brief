@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Extract one slice's full text from a Workstream Document into a file the
+# implementer reads in one call, so the slice text never has to be pasted
+# through the controller's context.
+#
+# Usage: slice-brief WORKSTREAM_FILE SLICE_LETTER [SLUG_OVERRIDE]
+# Default output: .solopowers/wsd/<slug>/slice-<LETTER>-brief.md
+# slug is auto-derived from the workstream filename (date prefix stripped)
+set -euo pipefail
+
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "usage: slice-brief WORKSTREAM_FILE SLICE_LETTER [SLUG_OVERRIDE]" >&2
+  exit 2
+fi
+
+workstream=$1
+letter=$2
+[ -f "$workstream" ] || {
+  echo "no such workstream file: $workstream" >&2
+  exit 2
+}
+
+# Derive slug from filename: strip directory, .md extension, and leading YYYY-MM-DD-
+if [ $# -eq 3 ] && [ -n "$3" ]; then
+  slug=$3
+else
+  slug=$(basename "$workstream" .md | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//')
+fi
+
+dir=$("${BASH_SOURCE[0]%/*}/wsd-workspace" "$slug")
+out="$dir/slice-${letter}-brief.md"
+
+awk -v letter="$letter" '
+  /^```/ { infence = !infence }
+  !infence && /^###[[:space:]]+Slice[[:space:]]+[A-Z]:/ {
+    inslice = ($0 ~ ("^###[[:space:]]+Slice[[:space:]]+" letter ":"))
+  }
+  inslice { print }
+' "$workstream" > "$out"
+
+if [ ! -s "$out" ]; then
+  echo "slice ${letter} not found in ${workstream} (no heading matching '### Slice ${letter}:')" >&2
+  exit 3
+fi
+
+echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines (workspace: ${slug})"

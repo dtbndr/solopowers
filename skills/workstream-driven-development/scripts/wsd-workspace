@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Resolve and ensure the working-tree directory WSD uses for its short-lived
+# artifacts: slice briefs, implementer reports, review packages, and the
+# progress ledger. Print the directory's absolute path.
+#
+# The workspace lives in the working tree (not under .git/) because Claude Code
+# treats .git/ as a protected path and denies agent writes there — which blocks
+# an implementer subagent from writing its report file. A self-ignoring
+# .gitignore keeps the workspace out of `git status` and out of accidental
+# commits without modifying any tracked file.
+#
+# Single source of truth for the workspace location, so slice-brief and
+# review-package cannot drift to different directories.
+#
+# Each workstream gets its own subdirectory derived from the workstream
+# filename (date prefix stripped). This prevents artifact collisions between
+# successive workstreams — progress.md, slice briefs, and review packages
+# no longer overwrite each other.
+#
+# Usage: wsd-workspace <slug>
+#   slug  short kebab-case identifier derived from the workstream filename,
+#         e.g. "previous-uploads-panel" from "2026-06-20-previous-uploads-panel.md"
+set -euo pipefail
+
+if [ $# -ne 1 ] || [ -z "$1" ]; then
+  echo "usage: wsd-workspace <slug>" >&2
+  exit 2
+fi
+
+slug=$1
+root=$(git rev-parse --show-toplevel)
+dir="$root/.solopowers/wsd/$slug"
+mkdir -p "$dir"
+printf '*\n' > "$dir/.gitignore"
+cd "$dir" && pwd

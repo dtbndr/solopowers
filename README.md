@@ -1,14 +1,15 @@
 # solopowers
 
-A curated fork of [obra/superpowers](https://github.com/obra/superpowers) skills, adapted for solo development workflows.
+A curated skill pack for solo development workflows, derived from [obra/superpowers](https://github.com/obra/superpowers).
 
 ## Skills
 
-| Skill | Description |
-|---|---|
-| `test-driven-development` | TDD workflow with red→green cycle and testing anti-patterns |
-| `tdd` | TDD reference: mocking, refactoring, test structure |
-| `using-superpowers` | Meta-skill for discovering and using skills |
+| Skill | Origin | Description |
+|---|---|---|
+| `using-solopowers` | Original | Meta-skill for discovering and using skills in this pack |
+| `workstream-brainstorming` | Original | Explore feature ideas and design before implementation |
+| `workstream-driven-development` | Original | Execute workstream documents slice-by-slice with subagent dispatch |
+| `test-driven-development` | [superpowers](https://github.com/obra/superpowers) | TDD workflow: red→green cycle, testing anti-patterns |
 
 ## Install
 
@@ -25,7 +26,8 @@ npx skills add https://github.com/dtbndr/solopowers
 ```bash
 git remote add upstream https://github.com/obra/superpowers.git
 git fetch upstream
-git cherry-pick <commit>  # or git merge upstream/main -- skills/test-driven-development
+# Cherry-pick specific changes from superpowers
+git cherry-pick <commit>
 ```
 
 ## Relationship to superpowers
