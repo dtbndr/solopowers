@@ -29,11 +29,32 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 
 ## Skills in this Pack
 
+### Workflow
+
 | Skill | Use when... |
 |---|---|
 | `workstream-brainstorming` | Exploring feature ideas, multi-file changes, or behavior changes that need design |
 | `workstream-driven-development` | Executing an approved Workstream Document slice-by-slice |
-| `test-driven-development` | Implementing any feature or bugfix (TDD enforcement) |
+| `using-git-worktrees` | Starting feature work that needs workspace isolation |
+| `finishing-a-development-branch` | Work is complete and you need to merge, PR, or clean up |
+| `dispatching-parallel-agents` | Facing 2+ independent tasks with no shared state or sequential dependencies |
+
+### Implementation & Quality
+
+| Skill | Use when... |
+|---|---|
+| `test-driven-development` | Implementing any feature or bugfix — TDD enforcement |
+| `systematic-debugging` | Encountering bugs, test failures, or unexpected behavior |
+| `verification-before-completion` | About to claim work is done — run verification commands first |
+| `requesting-code-review` | Completing a task and wanting a reviewer check (ad-hoc or non-workstream) |
+| `receiving-code-review` | Receiving review feedback — verify before implementing, push back with evidence |
+
+### Meta
+
+| Skill | Use when... |
+|---|---|
+| `using-solopowers` | Starting any conversation — tells agents which skills to invoke |
+| `writing-skills` | Creating new skills, editing existing ones, or verifying skills before deployment |
 
 ## Routing Rules
 
@@ -43,17 +64,15 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 **Bug fixes, single-file changes, refactors that don't need design:**
 → Work directly. Use `test-driven-development` for implementation discipline.
 
-## Upstream Skills (from superpowers)
+**Bugs, test failures, unexpected behavior:**
+→ `systematic-debugging` before proposing fixes.
 
-These skills from [obra/superpowers](https://github.com/obra/superpowers) remain useful and can be invoked as needed:
+**Before claiming completion:**
+→ `verification-before-completion` — no completion claims without fresh verification evidence.
 
-- `systematic-debugging` — When encountering bugs or unexpected behavior
-- `verification-before-completion` — Before claiming work is done
-- `using-git-worktrees` — For isolated feature work
-- `finishing-a-development-branch` — For branch completion decisions
-- `requesting-code-review` / `receiving-code-review` — For code review workflows
-- `dispatching-parallel-agents` — For parallel independent tasks
-- `frontend-design` — For UI/UX design decisions
+**Code review (non-workstream contexts):**
+→ `requesting-code-review` to dispatch a reviewer.
+→ `receiving-code-review` to handle feedback with technical rigor.
 
 ## Superseded Skills
 

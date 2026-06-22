@@ -4,12 +4,32 @@ A curated skill pack for solo development workflows, derived from [obra/superpow
 
 ## Skills
 
+### Workflow
+
+| Skill | Origin | Description |
+|---|---|---|
+| `workstream-brainstorming` | Original | Explore feature ideas and design before implementation |
+| `workstream-driven-development` | Original | Execute workstream documents slice-by-slice with subagent dispatch |
+| `using-git-worktrees` | [superpowers](https://github.com/obra/superpowers) | Isolated git worktrees for feature work |
+| `finishing-a-development-branch` | [superpowers](https://github.com/obra/superpowers) | Structured merge/PR/cleanup branch completion |
+| `dispatching-parallel-agents` | [superpowers](https://github.com/obra/superpowers) | Run multiple independent subagents concurrently |
+
+### Implementation & Quality
+
+| Skill | Origin | Description |
+|---|---|---|
+| `test-driven-development` | [superpowers](https://github.com/obra/superpowers) | TDD workflow: red→green cycle, testing anti-patterns |
+| `systematic-debugging` | [superpowers](https://github.com/obra/superpowers) | Root-cause-first debugging methodology |
+| `verification-before-completion` | [superpowers](https://github.com/obra/superpowers) | Evidence before claims — run verification before declaring done |
+| `requesting-code-review` | [superpowers](https://github.com/obra/superpowers) | Dispatch reviewer subagents for ad-hoc code review |
+| `receiving-code-review` | [superpowers](https://github.com/obra/superpowers) | Handle review feedback with rigor, not performative agreement |
+
+### Meta
+
 | Skill | Origin | Description |
 |---|---|---|
 | `using-solopowers` | Original | Meta-skill for discovering and using skills in this pack |
-| `workstream-brainstorming` | Original | Explore feature ideas and design before implementation |
-| `workstream-driven-development` | Original | Execute workstream documents slice-by-slice with subagent dispatch |
-| `test-driven-development` | [superpowers](https://github.com/obra/superpowers) | TDD workflow: red→green cycle, testing anti-patterns |
+| `writing-skills` | [superpowers](https://github.com/obra/superpowers) | Create, edit, and verify skills before deployment |
 
 ## Install
 
