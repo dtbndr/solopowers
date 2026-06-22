@@ -54,7 +54,7 @@ Changes to these skills have downstream impact on WSD. Verify compatibility befo
 ## Agent Instructions
 
 - Skills use `solopowers:` namespace for cross-references (e.g., `solopowers:test-driven-development`)
-- When adding or modifying skills, follow the TDD-for-skills methodology in `writing-skills`
+- When adding or modifying skills, follow the TDD-for-skills methodology in `authoring-skills`
 - Update `using-solopowers/SKILL.md` skill table when adding new skills
 
 ### Verification Checklist

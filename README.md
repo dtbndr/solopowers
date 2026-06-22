@@ -25,15 +25,15 @@ solopowers began as local adaptations of superpowers for a workflow where **a si
 | `test-driven-development` | [superpowers](https://github.com/obra/superpowers) | TDD workflow: red→green cycle, testing anti-patterns |
 | `systematic-debugging` | [superpowers](https://github.com/obra/superpowers) | Root-cause-first debugging methodology |
 | `verification-before-completion` | [superpowers](https://github.com/obra/superpowers) | Evidence before claims — run verification before declaring done |
-| `requesting-code-review` | [superpowers](https://github.com/obra/superpowers) | Dispatch reviewer subagents for ad-hoc code review |
-| `receiving-code-review` | [superpowers](https://github.com/obra/superpowers) | Handle review feedback with rigor, not performative agreement |
+| `dispatching-code-review` | [superpowers](https://github.com/obra/superpowers) | Dispatch reviewer subagents for ad-hoc code review |
+| `handling-review-feedback` | [superpowers](https://github.com/obra/superpowers) | Handle review feedback with rigor, not performative agreement |
 
 ### Meta
 
 | Skill | Origin | Description |
 |---|---|---|
 | `using-solopowers` | Original | Meta-skill for discovering and using skills in this pack |
-| `writing-skills` | [superpowers](https://github.com/obra/superpowers) | Create, edit, and verify skills before deployment |
+| `authoring-skills` | [superpowers](https://github.com/obra/superpowers) | Create, edit, and verify skills before deployment |
 
 ## Install
 
@@ -57,6 +57,7 @@ git cherry-pick <commit>
 ## Relationship to superpowers
 
 This is a personal derivation, not an official fork. Skills are adapted for:
+
 - Solo developer workflows (no team coordination overhead)
 - Workstream-driven development patterns
 - Simplified agent dispatch

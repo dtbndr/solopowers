@@ -46,15 +46,15 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 | `test-driven-development` | Implementing any feature or bugfix — TDD enforcement |
 | `systematic-debugging` | Encountering bugs, test failures, or unexpected behavior |
 | `verification-before-completion` | About to claim work is done — run verification commands first |
-| `requesting-code-review` | Completing a task and wanting a reviewer check (ad-hoc or non-workstream) |
-| `receiving-code-review` | Receiving review feedback — verify before implementing, push back with evidence |
+| `dispatching-code-review` | Completing a task and wanting a reviewer check (ad-hoc or non-workstream) |
+| `handling-review-feedback` | Receiving review feedback — verify before implementing, push back with evidence |
 
 ### Meta
 
 | Skill | Use when... |
 |---|---|
 | `using-solopowers` | Starting any conversation — tells agents which skills to invoke |
-| `writing-skills` | Creating new skills, editing existing ones, or verifying skills before deployment |
+| `authoring-skills` | Creating new skills, editing existing ones, or verifying skills before deployment |
 
 ## Routing Rules
 
@@ -71,8 +71,8 @@ If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "alw
 → `verification-before-completion` — no completion claims without fresh verification evidence.
 
 **Code review (non-workstream contexts):**
-→ `requesting-code-review` to dispatch a reviewer.
-→ `receiving-code-review` to handle feedback with technical rigor.
+→ `dispatching-code-review` to dispatch a reviewer.
+→ `handling-review-feedback` to handle feedback with technical rigor.
 
 ## Superseded Skills
 
