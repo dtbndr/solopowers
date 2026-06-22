@@ -6,6 +6,18 @@ This file contains information for AI coding agents working on this project.
 
 **solopowers** is a curated skill pack for solo developer workflows, derived from [obra/superpowers](https://github.com/obra/superpowers). It provides agent skills for workstream-doc-driven development with subagent dispatch.
 
+## Decision Grounding
+
+These principles drive fork/adapt/eliminate decisions when upstream (superpowers) changes arrive:
+
+- The canonical planning artifact is a **single workstream document**. Do not reintroduce separate spec/plan artifacts.
+- Execution is **sequential and slice-based**. Upstream changes that assume independent parallel tasks may need adaptation.
+- **One worktree per workstream**, not per task or slice. Workspace-isolation patterns must preserve this.
+- **Manual smoke-test pause after review pass** is a required workflow gate. Upstream changes that remove human-in-the-loop points require adaptation.
+- Upstream rigor (TDD enforcement, review discipline) should be **mapped onto workstream slices**, not upstream artifact assumptions.
+- Skills must not leak superpowers-specific artifact references (`docs/superpowers/specs`, `docs/superpowers/plans`) when those concepts do not exist in solopowers.
+- Upstream drift is a managed risk. Preserve compatibility where possible, but **do not compromise the workstream model** to stay in sync.
+
 ## Directory Structure
 
 ```
