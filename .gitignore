@@ -1,0 +1,19 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Editors
+.vscode/
+.idea/
+*.sublime-*
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Artifacts
+research/
+*.log
+*.tmp
