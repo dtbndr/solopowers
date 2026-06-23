@@ -1,14 +1,16 @@
 # Slice Reviewer Prompt Template
 
-Use this template when dispatching the slice reviewer subagent. The reviewer
+Use this template when dispatching the built-in `reviewer` subagent role. The reviewer
 reads the slice's diff once and returns two verdicts: spec compliance and
 code quality.
 
 **Purpose:** Verify one slice's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable)
 
+The built-in `reviewer` agent has `edit` and `write` tools in its default tool set. The WSD review is read-only; the prompt below already constrains this. No change in behavior.
+
 ```
-Subagent (general-purpose):
+reviewer subagent:
   description: "Review Slice [SLICE_LETTER] (compliance + quality)"
   model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
          model silently inherits the session's most expensive one]

@@ -1,9 +1,11 @@
 # Implementer Subagent Prompt Template (Workstream Slice)
 
-Use this template when dispatching an implementer subagent to execute a specific workstream slice.
+Use this template when dispatching the built-in `worker` subagent role to execute a specific workstream slice.
+
+The `worker` agent runs with `defaultContext: fork` — it does NOT inherit the controller's session history. This aligns with WSD's curated-input principle. Pass all needed files and the slice brief explicitly. The `worker` can escalate mid-execution via `contact_supervisor` if it hits a decision the controller must make.
 
 ```
-Task tool (general-purpose):
+worker subagent:
   description: "Implement Slice [Slice Letter]: [Slice Title]"
   model: [MODEL — REQUIRED: choose per SKILL.md model-selection guidance]
   prompt: |
