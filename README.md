@@ -45,6 +45,10 @@ npx skills add ~/Development/skills-ws/solopowers
 npx skills add https://github.com/dtbndr/solopowers
 ```
 
+## Agent Dispatch
+
+solopowers uses Pi's built-in subagent roles (`worker`, `reviewer`, `scout`, etc.) directly for dispatch. This repo does not rely on repo-owned custom agent definitions or the `pi-subagent-dispatch` bridge skill. Dispatch behavior and model selection are governed by the [AGENTS.md](AGENTS.md) delegation policy and local Pi configuration.
+
 ## Pulling upstream changes
 
 ```bash
