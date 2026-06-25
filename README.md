@@ -47,7 +47,7 @@ npx skills add https://github.com/dtbndr/solopowers
 
 ## Agent Dispatch
 
-solopowers uses Pi's built-in subagent roles (`worker`, `reviewer`, `scout`, etc.) directly for dispatch. This repo does not rely on repo-owned custom agent definitions or the `pi-subagent-dispatch` bridge skill. Dispatch behavior and model selection are governed by the [AGENTS.md](AGENTS.md) delegation policy and local Pi configuration.
+solopowers dispatch skills include a harness routing table for Pi, kiro-cli, claude-code, and Antigravity CLI. Each dispatch-bearing skill (e.g., `workstream-driven-development`, `dispatching-parallel-agents`, `dispatching-code-review`) contains a `## Harness Dispatch` section with the concrete dispatch mechanism for your harness. No custom agent definitions or bridge skills are needed.
 
 ## Pulling upstream changes
 

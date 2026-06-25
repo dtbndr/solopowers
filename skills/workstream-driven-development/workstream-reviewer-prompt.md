@@ -1,13 +1,12 @@
 # Slice Reviewer Prompt Template
 
-Use this template when dispatching the built-in `reviewer` subagent role. The reviewer
+Use this template when dispatching a reviewer subagent. See the Harness Dispatch
+table in SKILL.md for how to dispatch on your harness. The reviewer
 reads the slice's diff once and returns two verdicts: spec compliance and
 code quality.
 
 **Purpose:** Verify one slice's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable)
-
-The built-in `reviewer` agent has `edit` and `write` tools in its default tool set. The WSD review is read-only; the prompt below already constrains this. No change in behavior.
 
 ```
 reviewer subagent:

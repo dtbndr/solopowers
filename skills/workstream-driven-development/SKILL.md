@@ -72,14 +72,14 @@ digraph workstream_execution {
 }
 ```
 
-*Diagram labels describe workflow roles; dispatch uses built-in `worker` and `reviewer` roles.*
+*Diagram labels describe workflow roles; see Harness Dispatch section below for how to dispatch on your harness.*
 
 ## Prompt Templates
 
 The following prompt templates and helper scripts are stored in this skill's directory and MUST be used when dispatching subagents:
 
-- `implementer-prompt.md` - Dispatch prompt for the built-in `worker` role.
-- `workstream-reviewer-prompt.md` - Dispatch prompt for the built-in `reviewer` role.
+- `implementer-prompt.md` - Dispatch prompt for the implementer subagent.
+- `workstream-reviewer-prompt.md` - Dispatch prompt for the reviewer subagent.
 - `scripts/slice-brief` - Extracts a single slice into a file for worker handoff.
 - `scripts/review-package` - Creates the diff package used by reviewers.
 
@@ -92,10 +92,30 @@ Worker subagents MUST be configured to use:
 ## Roles and Model Selection
 
 - **Controller (You)**: Oversees execution, manages the slice-to-slice state, updates the Todo task list, curates file contexts, and coordinates reviews. (Most capable model).
-- **Implementer (worker role):** Focuses entirely on implementing and testing a single slice. (Fast, cheap model for mechanical/isolated tasks; standard model for complex integrations).
-- **Slice Reviewer (reviewer role):** Evaluates requirements compliance AND code quality in a single pass. Returns separate verdicts: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes). (Capable standard or premium model — this role covers both compliance and quality, so it carries more judgment load than either role did alone).
+- **Implementer subagent:** Focuses entirely on implementing and testing a single slice. (Fast, cheap model for mechanical/isolated tasks; standard model for complex integrations).
+- **Slice Reviewer subagent:** Evaluates requirements compliance AND code quality in a single pass. Returns separate verdicts: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes). (Capable standard or premium model — this role covers both compliance and quality, so it carries more judgment load than either role did alone).
 
 Always specify the model explicitly when dispatching a subagent. An omitted model silently inherits the controller's session model, which is often more expensive than needed.
+
+## Harness Dispatch
+
+Use the table below to dispatch implementer and reviewer subagents on your harness:
+
+| Harness | Dispatch implementer | Dispatch reviewer |
+|---|---|---|
+| Pi | built-in `worker` role | built-in `reviewer` role |
+| kiro-cli | `orchestrate_subagent(role: general-task-execution)` | `orchestrate_subagent(role: semantic_reviewer)` |
+| claude-code | `Task` tool with implementer prompt | `Task` tool with reviewer prompt |
+| Antigravity | describe the implementation task in natural language; harness spawns dynamically | describe the review task in natural language; harness spawns dynamically |
+
+### Escalation (subagent needs controller input mid-task)
+
+| Harness | How to escalate |
+|---|---|
+| Pi | `contact_supervisor` MCP tool |
+| kiro-cli | surface the question in response; controller resumes |
+| claude-code | surface the question in response; controller resumes |
+| Antigravity | subagent reports back; controller resumes with answer |
 
 **Task complexity signals:**
 

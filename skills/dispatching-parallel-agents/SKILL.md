@@ -69,18 +69,18 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-Issue all three subagent dispatches in the same response — they run in parallel:
+Issue all subagent dispatches together — they run in parallel:
 
 ```text
-Dispatch `worker` role: "Fix agent-tool-abort.test.ts failures"
-Dispatch `worker` role: "Fix batch-completion-behavior.test.ts failures"
-Dispatch `worker` role: "Fix tool-approval-race-conditions.test.ts failures"
+Dispatch implementer: "Fix agent-tool-abort.test.ts failures"
+Dispatch implementer: "Fix batch-completion-behavior.test.ts failures"
+Dispatch implementer: "Fix tool-approval-race-conditions.test.ts failures"
 # All three run concurrently.
 
-Use `scout` for investigation/research tasks, `worker` for implementation tasks.
+Use investigation-scoped subagents for research tasks, implementer subagents for implementation tasks.
 ```
 
-Multiple dispatch calls in one response = parallel execution. One per response = sequential.
+See **Harness Dispatch** section below for how parallelism works on your harness.
 
 ### 4. Review and Integrate
 
@@ -196,3 +196,12 @@ From debugging session (2025-10-03):
 - All investigations completed concurrently
 - All fixes integrated successfully
 - Zero conflicts between agent changes
+
+## Harness Dispatch
+
+| Harness | Dispatch implementer | Dispatch investigator | Parallel dispatch |
+|---|---|---|---|
+| Pi | built-in `worker` role | built-in `scout` role | multiple dispatch calls in one response |
+| kiro-cli | `orchestrate_subagent(role: general-task-execution)` | `orchestrate_subagent(role: context-gatherer)` | multiple calls in one response |
+| claude-code | `Task` tool with implementer prompt | `Task` tool with investigation prompt | multiple `Task` calls in one response |
+| Antigravity | describe the task in natural language | describe the investigation in natural language | list all tasks in one prompt; state "run these as parallel subagents" |

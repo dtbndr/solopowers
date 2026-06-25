@@ -36,7 +36,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code reviewer subagent:**
 
-Dispatch the built-in `reviewer` role, filling the template at [code-reviewer.md](code-reviewer.md)
+Dispatch a reviewer subagent, filling the template at [code-reviewer.md](code-reviewer.md). See **Harness Dispatch** below for how to dispatch on your harness.
 
 **Placeholders:**
 
@@ -113,3 +113,12 @@ You: [Fix progress indicators]
 - Request clarification
 
 See template at: [code-reviewer.md](code-reviewer.md)
+
+## Harness Dispatch
+
+| Harness | Dispatch reviewer |
+|---|---|
+| Pi | built-in `reviewer` role |
+| kiro-cli | `orchestrate_subagent(role: semantic_reviewer)` |
+| claude-code | `Task` tool with reviewer prompt |
+| Antigravity | describe the review task in natural language; harness spawns dynamically |

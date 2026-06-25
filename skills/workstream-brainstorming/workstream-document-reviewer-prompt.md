@@ -7,7 +7,7 @@ Use this template when dispatching a reviewer subagent for a written Workstream 
 **Dispatch after:** The Workstream Document is written to `docs/workstreams/`.
 
 ```
-Dispatch the built-in `reviewer` role with this prompt:
+Dispatch a reviewer subagent with this prompt:
     You are a Workstream Document reviewer. Verify this workstream is complete and ready for implementation.
 
     **Workstream to review:** [WORKSTREAM_FILE_PATH]
