@@ -1,6 +1,6 @@
 # Workstream Document Writer Prompt Template
 
-Use this template when dispatching a document-writer subagent to write the finalized Workstream Document.
+Use this template when dispatching a document-writer subagent (usually mapped to Pi's built-in `delegate` role) to write the finalized Workstream Document.
 
 **Purpose:** Take the approved brainstorming, design decisions, and slice breakdowns, and structure them into the formal canonical Workstream Document.
 

@@ -81,7 +81,7 @@ Use the table below to dispatch the document-writer and document-reviewer subage
 
 | Harness | Dispatch document-writer | Dispatch document-reviewer |
 |---|---|---|
-| Pi | built-in `planner` role (using `context: "fork"`) | built-in `oracle` role (using `context: "fresh"`) |
+| Pi | built-in `delegate` role (using `context: "fork"`) | built-in `oracle` role (using `context: "fresh"`) |
 | kiro-cli | `orchestrate_subagent(role: plan-composer)` | `orchestrate_subagent(role: architecture-oracle)` |
 | claude-code | `Task` tool with document-writer prompt | `Task` tool with document-reviewer prompt |
 | Antigravity | describe the document-writing task in natural language; harness spawns dynamically | describe the adversarial review task... |
