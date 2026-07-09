@@ -1,6 +1,6 @@
 # Workstream Document Writer Prompt Template
 
-Use this template when dispatching a document-writer subagent (usually mapped to Pi's built-in `planner` role) to write the finalized Workstream Document.
+Use this template when dispatching a document-writer subagent to write the finalized Workstream Document.
 
 **Purpose:** Take the approved brainstorming, design decisions, and slice breakdowns, and structure them into the formal canonical Workstream Document.
 
@@ -16,7 +16,7 @@ Dispatch a document-writer subagent with this prompt:
     ## Invariant Constraints
 
     1. **Single-Artifact Invariant:** This is a Workstream Document, which serves as both the design AND the implementation plan. This is NOT a separate plan or design specification. Do NOT create a separate `plan.md` or `spec.md`.
-    2. **No Implementation Code Constraint:** The workstream document must contain NO production implementation code or pseudo-code. Key file paths, test commands, API contracts, column names, and verification instructions are highly encouraged, but actual logic/code generation must be offloaded entirely to the subsequent implementer (`worker`).
+    2. **No Implementation Code Constraint:** The workstream document must contain NO production implementation code or pseudo-code. Key file paths, test commands, API contracts, column names, and verification instructions are highly encouraged, but actual logic/code generation must be offloaded entirely to the subsequent implementer.
     3. **Actionable Slices:** Ensure each slice is sized appropriately for a lightweight, low-context implementer, with clear TDD tasks (red -> green loop) and manual smoke tests.
     4. **Commit the File:** Once the file is written, commit the document to the repository.
 
