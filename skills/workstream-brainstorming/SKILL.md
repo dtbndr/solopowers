@@ -227,7 +227,7 @@ All criteria met:
 - [ ] Specific behavior 2
 ````
 
-## Self-Review and Approval
+## Adversarial Review and Approval
 
 After writing the workstream document, it must pass an adversarial review. Dispatch the reviewer subagent using the template in `workstream-document-reviewer-prompt.md` to run a strict adversarial check before presenting the document to the user.
 
