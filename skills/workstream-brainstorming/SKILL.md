@@ -42,7 +42,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design and slice breakdown** — in sections scaled to their complexity, get user approval after each section
 5. **Write Workstream Document** — dispatch a `document-writer` subagent to write the Workstream Document to `docs/workstreams/YYYY-MM-DD-<topic>.md` and commit. Provide the approved design, slice breakdown, and schema.
-6. **Workstream self-review** — check for placeholders, contradictions, completeness, and make sure slices are independently logical; dispatch `workstream-document-reviewer-prompt.md` if you want a reviewer pass before user review
+6. **Mandatory Document Review** — dispatch a `document-reviewer` subagent to adversarially review the Workstream Document before user review. Use the template in `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This step is a strict gate and is never optional. If issues are found, fix them inline or re-dispatch the `document-writer`, then re-run the review until it passes.
 7. **User reviews Workstream Document** — ask user to review the workstream file before proceeding
 8. **Transition to implementation** — invoke `workstream-driven-development` skill
 
@@ -56,7 +56,7 @@ digraph workstream_brainstorming {
     "Present design & slices" [shape=box];
     "User approves design?" [shape=diamond];
     "Dispatch document-writer to write Workstream Document" [shape=box];
-    "Workstream self-review\n(fix inline)" [shape=box];
+    "Dispatch document-reviewer to review Workstream Document" [shape=box];
     "User reviews workstream?" [shape=diamond];
     "Invoke workstream-driven-development" [shape=doublecircle];
 
@@ -66,8 +66,8 @@ digraph workstream_brainstorming {
     "Present design & slices" -> "User approves design?";
     "User approves design?" -> "Present design & slices" [label="no, revise"];
     "User approves design?" -> "Dispatch document-writer to write Workstream Document" [label="yes"];
-    "Dispatch document-writer to write Workstream Document" -> "Workstream self-review\n(fix inline)";
-    "Workstream self-review\n(fix inline)" -> "User reviews workstream?";
+    "Dispatch document-writer to write Workstream Document" -> "Dispatch document-reviewer to review Workstream Document";
+    "Dispatch document-reviewer to review Workstream Document" -> "User reviews workstream?";
     "User reviews workstream?" -> "Dispatch document-writer to write Workstream Document" [label="changes requested"];
     "User reviews workstream?" -> "Invoke workstream-driven-development" [label="approved"];
 }
@@ -77,14 +77,14 @@ digraph workstream_brainstorming {
 
 ## Harness Dispatch
 
-Use the table below to dispatch the document-writer subagent on your harness:
+Use the table below to dispatch the document-writer and document-reviewer subagents on your harness:
 
-| Harness | Dispatch document-writer |
-|---|---|
-| Pi | built-in `planner` role (using `context: "fork"`) |
-| kiro-cli | `orchestrate_subagent(role: plan-composer)` |
-| claude-code | `Task` tool with document-writer prompt |
-| Antigravity | describe the document-writing task in natural language; harness spawns dynamically |
+| Harness | Dispatch document-writer | Dispatch document-reviewer |
+|---|---|---|
+| Pi | built-in `planner` role (using `context: "fork"`) | built-in `oracle` role (using `context: "fresh"`) |
+| kiro-cli | `orchestrate_subagent(role: plan-composer)` | `orchestrate_subagent(role: architecture-oracle)` |
+| claude-code | `Task` tool with document-writer prompt | `Task` tool with document-reviewer prompt |
+| Antigravity | describe the document-writing task in natural language; harness spawns dynamically | describe the adversarial review task... |
 
 ## The Process
 
@@ -229,7 +229,7 @@ All criteria met:
 
 ## Self-Review and Approval
 
-After writing the workstream document, look at it with fresh eyes. If helpful, dispatch the reviewer template in `workstream-document-reviewer-prompt.md` before asking the user to review the document.
+After writing the workstream document, it must pass an adversarial review. Dispatch the reviewer subagent using the template in `workstream-document-reviewer-prompt.md` to run a strict adversarial check before presenting the document to the user.
 
 1. **Placeholder scan:** Any "TBD", "TODO", or vague requirements? Fix them.
 2. **Slice sizing:** Could a low-cost model with limited context implement each slice from these task descriptions alone? If a slice is too large or requires too much background, split it.
