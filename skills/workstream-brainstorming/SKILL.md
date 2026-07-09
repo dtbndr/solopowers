@@ -41,7 +41,7 @@ You MUST create a task for each of these items and complete them in order:
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design and slice breakdown** — in sections scaled to their complexity, get user approval after each section
-5. **Write Workstream Document** — save to `docs/workstreams/YYYY-MM-DD-<topic>.md` and commit
+5. **Write Workstream Document** — dispatch a `document-writer` subagent to write the Workstream Document to `docs/workstreams/YYYY-MM-DD-<topic>.md` and commit. Provide the approved design, slice breakdown, and schema.
 6. **Workstream self-review** — check for placeholders, contradictions, completeness, and make sure slices are independently logical; dispatch `workstream-document-reviewer-prompt.md` if you want a reviewer pass before user review
 7. **User reviews Workstream Document** — ask user to review the workstream file before proceeding
 8. **Transition to implementation** — invoke `workstream-driven-development` skill
@@ -55,7 +55,7 @@ digraph workstream_brainstorming {
     "Propose 2-3 approaches" [shape=box];
     "Present design & slices" [shape=box];
     "User approves design?" [shape=diamond];
-    "Write Workstream Document" [shape=box];
+    "Dispatch document-writer to write Workstream Document" [shape=box];
     "Workstream self-review\n(fix inline)" [shape=box];
     "User reviews workstream?" [shape=diamond];
     "Invoke workstream-driven-development" [shape=doublecircle];
@@ -65,15 +65,26 @@ digraph workstream_brainstorming {
     "Propose 2-3 approaches" -> "Present design & slices";
     "Present design & slices" -> "User approves design?";
     "User approves design?" -> "Present design & slices" [label="no, revise"];
-    "User approves design?" -> "Write Workstream Document" [label="yes"];
-    "Write Workstream Document" -> "Workstream self-review\n(fix inline)";
+    "User approves design?" -> "Dispatch document-writer to write Workstream Document" [label="yes"];
+    "Dispatch document-writer to write Workstream Document" -> "Workstream self-review\n(fix inline)";
     "Workstream self-review\n(fix inline)" -> "User reviews workstream?";
-    "User reviews workstream?" -> "Write Workstream Document" [label="changes requested"];
+    "User reviews workstream?" -> "Dispatch document-writer to write Workstream Document" [label="changes requested"];
     "User reviews workstream?" -> "Invoke workstream-driven-development" [label="approved"];
 }
 ```
 
 **The terminal state is invoking workstream-driven-development.** Do NOT invoke `writing-plans` or standard implementation skills.
+
+## Harness Dispatch
+
+Use the table below to dispatch the document-writer subagent on your harness:
+
+| Harness | Dispatch document-writer |
+|---|---|
+| Pi | built-in `planner` role (using `context: "fork"`) |
+| kiro-cli | `orchestrate_subagent(role: plan-composer)` |
+| claude-code | `Task` tool with document-writer prompt |
+| Antigravity | describe the document-writing task in natural language; harness spawns dynamically |
 
 ## The Process
 
