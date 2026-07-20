@@ -10,73 +10,71 @@ If you were dispatched as a subagent to execute a specific task, skip this skill
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
-
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
-
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+If there is even a 1% chance a skill applies, you MUST invoke it. No exceptions, no rationalizations.
 </EXTREMELY-IMPORTANT>
 
 ## Instruction Priority
 
-Solopowers skills override default system prompt behavior, but **user instructions always take precedence**:
+**User instructions take precedence over skills, which override default behavior.** Only skip skill workflows when the user has explicitly told you to. User instructions include explicit instruction files and direct requests.
 
-1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
-2. **Solopowers skills** — override default system behavior where they conflict
-3. **Default system prompt** — lowest priority
+## Red Flags
 
-If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+These thoughts mean STOP—you're rationalizing:
 
-## Skills in this Pack
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+
+## Routing
+
+**Feature work, multi-file changes** → `workstream-brainstorming` → `workstream-driven-development`
+
+The workstream model has four non-negotiable invariants: one canonical Workstream Document (no separate spec/plan artifacts), strictly sequential slice execution (one at a time, never parallel), one worktree per full workstream (not per slice), and a mandatory manual smoke-test pause after every review-approved slice before advancing.
+
+**Bug fixes, single-file changes** → work directly with `test-driven-development`.
+
+**Bugs, test failures, unexpected behavior** → `systematic-debugging` before proposing fixes.
+
+**Before claiming completion** → `verification-before-completion`.
+
+**Code review (non-workstream contexts)** → `dispatching-code-review`, then `handling-review-feedback`.
+
+## Skills
 
 ### Workflow
 
 | Skill | Use when... |
 |---|---|
-| `workstream-brainstorming` | Exploring feature ideas, multi-file changes, or behavior changes that need design |
+| `workstream-brainstorming` | Multi-file changes or behavior changes that need design |
 | `workstream-driven-development` | Executing an approved Workstream Document slice-by-slice |
 | `using-git-worktrees` | Starting feature work that needs workspace isolation |
 | `finishing-a-development-branch` | Work is complete and you need to merge, PR, or clean up |
-| `dispatching-parallel-agents` | Facing 2+ independent tasks with no shared state or sequential dependencies |
+| `dispatching-parallel-agents` | Facing 2+ independent tasks with no shared state |
 
 ### Implementation & Quality
 
 | Skill | Use when... |
 |---|---|
-| `test-driven-development` | Implementing any feature or bugfix — TDD enforcement |
-| `systematic-debugging` | Encountering bugs, test failures, or unexpected behavior |
-| `verification-before-completion` | About to claim work is done — run verification commands first |
-| `dispatching-code-review` | Completing a task and wanting a reviewer check (ad-hoc or non-workstream) |
-| `handling-review-feedback` | Receiving review feedback — verify before implementing, push back with evidence |
+| `test-driven-development` | Implementing any feature or bugfix |
+| `systematic-debugging` | Bugs, test failures, or unexpected behavior |
+| `verification-before-completion` | About to claim work is done |
+| `dispatching-code-review` | Completing a task and wanting a reviewer check |
+| `handling-review-feedback` | Receiving review feedback |
 
 ### Meta
 
 | Skill | Use when... |
 |---|---|
-| `using-solopowers` | Starting any conversation — tells agents which skills to invoke |
-| `authoring-skills` | Creating new skills, editing existing ones, or verifying skills before deployment |
-
-## Routing Rules
-
-**Feature work, new functionality, or multi-file changes:**
-→ `workstream-brainstorming` → `workstream-driven-development`
-
-**Bug fixes, single-file changes, refactors that don't need design:**
-→ Work directly. Use `test-driven-development` for implementation discipline.
-
-**Bugs, test failures, unexpected behavior:**
-→ `systematic-debugging` before proposing fixes.
-
-**Before claiming completion:**
-→ `verification-before-completion` — no completion claims without fresh verification evidence.
-
-**Code review (non-workstream contexts):**
-→ `dispatching-code-review` to dispatch a reviewer.
-→ `handling-review-feedback` to handle feedback with technical rigor.
+| `using-solopowers` | Starting any conversation |
+| `authoring-skills` | Creating or editing skills |
 
 ## Superseded Skills
-
-The following upstream skills are replaced by solopowers equivalents:
 
 | Upstream skill | Replaced by |
 |---|---|
