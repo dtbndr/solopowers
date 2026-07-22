@@ -24,7 +24,7 @@ We explicitly do NOT split design and implementation planning into separate docu
 A Workstream Document contains:
 
 1. **Metadata**: Title, Date, Status (Planned/In Progress/Complete), Objective, Target Branch.
-2. **Context**: Problem description, Approved simplifications, Target behavior, Deliberate simplifications, Architecture invariants.
+2. **Context**: Problem description, Approved simplifications, Target behavior, Deliberate simplifications, Architecture invariants, Design decisions and assumptions, Implementation discretion, Unresolved design blockers.
 3. **Scope**: In scope, Out of scope.
 4. **Key Files**: Table mapping file paths, packages, and their roles.
 5. **Scoped Slices**: Sequential slices (Slice A, B, C...) containing Goals, TDD-structured Tasks, Watch outs, Verification steps, Manual smoke test guidelines, and Carry-forwards.
@@ -273,7 +273,7 @@ After writing the workstream document, it must pass an adversarial review using 
 
 Use a default budget of **three full adversarial rounds**. Reaching the budget with blockers still open triggers human escalation: narrow scope, revisit the design, accept an explicit risk, or abandon the workstream. It does not auto-approve.
 
-Stop early if two consecutive rounds produce only implementation concerns or advisories, even if the nominal budget remains.
+The budget only bounds how long unresolved blockers may persist. It is not a minimum: approval happens as soon as a review round reports zero design blockers (see Review protocol above), without needing to exhaust the budget or repeat a clean round.
 
 A settled decision may be challenged only with:
 
