@@ -47,7 +47,7 @@ npx skills add https://github.com/dtbndr/solopowers
 
 ## Agent Dispatch
 
-solopowers dispatch skills include a harness routing table for Pi, kiro-cli, claude-code, and Antigravity CLI. Each dispatch-bearing skill (e.g., `workstream-driven-development`, `dispatching-parallel-agents`, `dispatching-code-review`) contains a `## Harness Dispatch` section with the concrete dispatch mechanism for your harness. No custom agent definitions or bridge skills are needed.
+solopowers dispatch skills include a platform routing table for Pi, kiro-cli, claude-code, and Antigravity CLI. Each dispatch-bearing skill (e.g., `workstream-driven-development`, `dispatching-parallel-agents`, `dispatching-code-review`, `workstream-brainstorming`) contains a dispatch section (named `## Harness Dispatch` or `## Platform-Specific Subagent Dispatch` depending on the skill) with the concrete dispatch mechanism for your platform. No custom agent definitions or bridge skills are needed.
 
 ## Pulling upstream changes
 
