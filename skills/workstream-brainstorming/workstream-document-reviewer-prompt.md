@@ -1,6 +1,6 @@
 # Workstream Document Reviewer Prompt Template
 
-Use this template when dispatching a reviewer subagent for adversarial review of a written Workstream Document.
+Use this template when dispatching the mandatory internal `document-reviewer` subagent for adversarial review of a written Workstream Document (Checklist step 6 in `workstream-brainstorming`). This is the built-in, in-process review gate; its output is a subagent result, not an external-harness filesystem report. For the supplemental external Harness A/B review model, see the External Harness Review subsection in `skills/workstream-brainstorming/SKILL.md`.
 
 **Role Mapping:** Usually mapped to Pi's built-in `oracle` role (using `context: "fresh"`), keeping the template body itself harness-agnostic.
 **Purpose:** Perform an adversarial, high-stakes review to verify completeness, structural soundness, and logical correctness of the plan.
@@ -38,6 +38,7 @@ Dispatch a reviewer subagent with this prompt:
     - **Missing Edge Cases/Failure Modes:** Are there critical error paths, validation failures, or edge cases that are completely ignored by all implementation slices?
     - **Design Decision Provenance:** Does each consequential decision in the Design decisions and assumptions table include why/evidence, the rejected alternative, relied-on assumption, and a revisit condition? Are there consequential forks missing from the table?
     - **Unresolved Blockers:** If Unresolved design blockers is not `None`, what evidence is blocking resolution?
+    - **External review reports:** This is the internal review gate. External Harness A/B review reports under `artifacts/workstream-reviews/<workstream-stem>/` are user-coordinated and supplemental. Their presence or absence is not grounds for any finding by this internal reviewer. The user is solely responsible for external review coordination.
 
     ## Process Rules
     - **DO NOT implement or edit any files.** This is a read-only review pass.
