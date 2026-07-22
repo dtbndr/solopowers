@@ -42,7 +42,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design and slice breakdown** — in sections scaled to their complexity, get user approval after each section
 5. **Write Workstream Document** — dispatch a `document-writer` subagent to write the Workstream Document to `docs/workstreams/YYYY-MM-DD-<topic>.md` and commit. Provide the approved design, slice breakdown, and schema.
-6. **Mandatory Document Review** — dispatch a `document-reviewer` subagent to adversarially review the Workstream Document before user review. Use the template in `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This step is a strict gate and is never optional. If issues are found, fix them inline or re-dispatch the `document-writer`, then re-run the review until it passes.
+6. **Mandatory Document Review** — dispatch a `document-reviewer` subagent to adversarially review the Workstream Document before user review. Use the template in `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This step is a strict gate and is never optional. Fix accepted design blockers, then run a confirmation review. Stop when zero design blockers remain. Escalate to the user if blockers persist after three rounds. Implementation concerns and advisory findings do not gate approval.
 7. **User reviews Workstream Document** — ask user to review the workstream file before proceeding
 8. **Transition to implementation** — invoke `workstream-driven-development` skill
 
@@ -125,6 +125,7 @@ Use the table below to dispatch the document-writer and document-reviewer subage
 - By the time the workstream document is finished, all design decisions that could require rework if chosen wrong MUST be resolved. If there are two or more valid ways to implement a task, and picking the wrong one would require rework — resolve it in the document. Pick one and state it explicitly.
 - The only decisions left to the implementer should be ones where any reasonable pick works fine (e.g., variable naming, internal helper decomposition, log message wording).
 - If you notice ambiguity during slice authoring where "there are two ways to do this," ask: would choosing wrong cause rework? If yes, resolve it now.
+- As consequential decisions are resolved during brainstorming, record them in the Design decisions and assumptions table under Context. Pass these explicitly to the document-writer — do not rely on the writer inheriting conversation history.
 
 ## Document Structure & Schema
 
@@ -154,6 +155,26 @@ What is explicitly deferred, out of scope, or accepted as a limitation for this 
 
 ### Architecture invariant
 What are the strict design, folder, or boundary rules that must never be violated?
+
+### Design decisions and assumptions
+
+| ID | Settled decision | Why / evidence | Rejected alternative | Relied-on assumption | Revisit when |
+| -- | ---------------- | -------------- | -------------------- | -------------------- | ------------ |
+| D1 | [decision]       | [rationale]    | [what was rejected]  | [what this depends on] | [condition that would reopen] |
+
+Only capture decisions where choosing differently would cause substantial rework, alter safety/correctness, change package or data boundaries, or invalidate later slices. Do not record incidental implementation choices.
+
+### Implementation discretion
+
+The following are intentionally left to `workstream-driven-development` and do not need resolution here:
+- Variable naming, log message wording, helper decomposition
+- Local type annotations and import mechanics (where no architecture boundary is affected)
+- Fixture construction and test data
+- Any choice where every reasonable pick works fine
+
+### Unresolved design blockers
+
+{List any remaining open design questions that block approval, or state `None`.}
 
 ---
 
@@ -229,14 +250,51 @@ All criteria met:
 
 ## Adversarial Review and Approval
 
-After writing the workstream document, it must pass an adversarial review. Dispatch the reviewer subagent using the template in `workstream-document-reviewer-prompt.md` to run a strict adversarial check before presenting the document to the user.
+After writing the workstream document, it must pass an adversarial review using two harnesses:
+
+- **Harness A — adversarial reviewer:** discovers and classifies evidence-backed findings.
+- **Harness B — reviser/gatekeeper:** adjudicates classification, accepts or rejects findings with reasons, updates the document only for accepted blockers, and applies the convergence rule.
+
+### Review protocol
+
+1. Dispatch the reviewer subagent using the template in `workstream-document-reviewer-prompt.md`.
+2. The reviewer classifies every finding into one of three categories:
+
+   - **Design blocker** — must cite evidence and explain the rework/safety consequence. Includes: unresolved or contradictory behavior; safety, correctness, data-loss, architecture, or scope flaw; unsupported assumption whose failure would invalidate the design; infeasible slice sequencing or missing contract likely to cause meaningful rework.
+   - **Implementation concern — deferred to WDD** — locally resolvable through TDD, compilation, slice review, or smoke testing without changing a settled decision, invariant, public contract, scope, or slice dependency. May be placed in a slice's Watch out when useful but does not block approval.
+   - **Advisory** — optional clarity or polish. Never triggers another review round by itself.
+
+3. **Approval condition:** zero unresolved design blockers. Implementation concerns and advisory findings may coexist with approval.
+4. Only accepted design blockers trigger document revision.
+5. After the last blocker is fixed, run one confirmation review.
+6. Stop when the confirmation review reports zero design blockers.
+
+### Round budget
+
+Use a default budget of **three full adversarial rounds**. Reaching the budget with blockers still open triggers human escalation: narrow scope, revisit the design, accept an explicit risk, or abandon the workstream. It does not auto-approve.
+
+Stop early if two consecutive rounds produce only implementation concerns or advisories, even if the nominal budget remains.
+
+A settled decision may be challenged only with:
+
+- new or contradictory evidence;
+- identification of an undocumented dependency or inconsistency; or
+- evidence that a documented revisit condition already holds.
+
+"Another implementation might be cleaner" is insufficient.
+
+### Pre-review checks
+
+Before dispatching the reviewer, verify:
 
 1. **Placeholder scan:** Any "TBD", "TODO", or vague requirements? Fix them.
 2. **Slice sizing:** Could a low-cost model with limited context implement each slice from these task descriptions alone? If a slice is too large or requires too much background, split it.
-3. **Decision completeness:** Are there any points where multiple valid approaches exist? For each, ask: would choosing wrong cause rework? If yes, resolve it here — the implementer should only face choices where any reasonable pick works fine.
+3. **Decision completeness:** Are there any points where multiple valid approaches exist? For each, ask: would choosing wrong cause rework? If yes, resolve it here.
 4. **Slice logical flow:** Does Slice B properly build on Slice A's carry-forward?
-5. **No implementation code in the document:** Tasks describe WHAT to do, not HOW in production code. Name the behavior under test, test file/target, and exact commands when useful, but do not paste implementation snippets or pseudo-code.
-6. **Manual smoke test quality:** Does every slice include a concrete manual smoke test with setup/preconditions, explicit user actions, and expected outcomes? If not, add it.
+5. **No implementation code in the document:** Tasks describe WHAT to do, not HOW in production code.
+6. **Manual smoke test quality:** Does every slice include a concrete manual smoke test with setup/preconditions, explicit user actions, and expected outcomes?
+
+### After review
 
 Ask the user to review the written Workstream Document:
 
