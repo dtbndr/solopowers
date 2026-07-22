@@ -43,7 +43,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Present design and slice breakdown** — in sections scaled to their complexity, get user approval after each section
 5. **Write Workstream Document** — dispatch a `document-writer` subagent to write the Workstream Document to `docs/workstreams/YYYY-MM-DD-<topic>.md` and commit. Provide the approved design, slice breakdown, and schema.
 6. **Mandatory Document Review** — dispatch a `document-reviewer` subagent to adversarially review the Workstream Document before user review. Use the template in `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This step is a strict gate and is never optional. Fix accepted design blockers, then run a confirmation review. Stop when zero design blockers remain. Escalate to the user if blockers persist after three rounds. Implementation concerns and advisory findings do not gate approval.
-7. **User reviews Workstream Document** — ask user to review the workstream file before proceeding
+7. **User reviews Workstream Document** — ask user to review the workstream file before proceeding. The user may optionally run the supplemental External Harness Review (see below) as part of this step; it happens in sessions the user runs themselves and is never dispatched by this skill.
 8. **Transition to implementation** — invoke `workstream-driven-development` skill
 
 ## Process Flow
@@ -252,7 +252,7 @@ All criteria met:
 
 The workstream document must pass the mandatory internal document review (Checklist step 6). The `document-reviewer` subagent dispatched above is the built-in, in-process review gate; its output is a subagent result.
 
-An additional external harness review (supplemental, user-coordinated) is described in the External Harness Review subsection below. The external review does not replace or weaken the mandatory internal gate.
+An additional external harness review (supplemental, user-coordinated) is described in the External Harness Review subsection below. It is entirely optional and user-initiated — this skill never dispatches it — and it does not replace or weaken the mandatory internal gate.
 
 ### Review protocol
 
@@ -284,18 +284,19 @@ A settled decision may be challenged only with:
 
 ### External Harness Review (Supplemental, User-Coordinated)
 
-After the mandatory internal document review (Checklist step 6), the user invokes an external Harness A adversarial review before user approval. An external Harness B independent review is optional. External harnesses are separate sessions operated by the user; they communicate **only through files in the project root** — there is no direct bridge, intercom channel, or session handoff between them.
+This review is entirely optional and user-initiated: it runs in separate sessions the user starts themselves, outside this skill's Checklist, and this skill never dispatches it. If the user chooses to run it, it happens after the mandatory internal document review (Checklist step 6) and before the user gives final approval. External harnesses communicate **only through files under `artifacts/workstream-reviews/<workstream-stem>/`** — there is no direct bridge, intercom channel, or session handoff between them.
 
-- **Harness A — adversarial reviewer (required):** reads the Workstream Document, discovers and classifies evidence-backed findings, and writes a self-contained findings report to `artifacts/workstream-reviews/<workstream-stem>/harness-a-findings.md`. The report must include the reviewed workstream revision, round, timestamp, and classified findings with evidence.
-- **Harness B — independent reviewer (optional):** reads the Workstream Document and Harness A's findings report from the same directory, performs its own review, and writes a self-contained recommendation to `artifacts/workstream-reviews/<workstream-stem>/harness-b-recommendation.md`. The report must include the harness identity, reviewed workstream revision, round, timestamp, and classified evidence-backed findings or recommendation. Harness B is entirely optional; the user may skip it without consequence.
+- **Harness A — adversarial reviewer (required whenever this optional review is run):** reads the Workstream Document, discovers and classifies evidence-backed findings, and writes a self-contained findings report to `artifacts/workstream-reviews/<workstream-stem>/harness-a-findings-round-<N>.md`, where `<N>` is the review round number starting at 1. The report must include the reviewed workstream revision, round, timestamp, and classified findings with evidence.
+- **Harness B — independent reviewer (optional even when Harness A runs):** reads the Workstream Document and Harness A's findings report from the same directory, performs its own review, and writes a self-contained recommendation to `artifacts/workstream-reviews/<workstream-stem>/harness-b-recommendation-round-<N>.md` (same round-numbering convention). The report must include the harness identity, reviewed workstream revision, round, timestamp, and classified evidence-backed findings or recommendation. Harness B may be skipped without consequence.
 
-**The user is the sole coordinator and decision-maker.** The user reads the external review reports, decides which findings to accept or reject, and directs any document changes. External harnesses do not revise the Workstream Document, approve or gate approval, or override the user's judgment. External review reports are supplemental evidence only — the Workstream Document remains the single canonical design and execution artifact. Skipping Harness B is always a valid path to the existing user review and WDD transition.
+**The user is the sole coordinator and decision-maker.** The user reads the external review reports, decides which findings to accept or reject, and directs any document changes. External harnesses do not revise the Workstream Document, approve or gate approval, or override the user's judgment. External review reports are supplemental evidence only — the Workstream Document remains the single canonical design and execution artifact. Skipping the whole external review, or just Harness B, is always a valid path to the existing user review and WDD transition.
 
 **Workflow:**
 
-1. User invokes Harness A (independent session, fresh context). A reads the Workstream Document, writes its classified findings report.
-2. Optionally, user invokes Harness B (independent session, fresh context). B reads the Workstream Document and A's report, writes its own self-contained recommendation including harness identity, revision, round, timestamp, and classified evidence-backed findings.
+1. User invokes Harness A (independent session, fresh context) for round 1. A reads the Workstream Document, writes its classified findings report to `harness-a-findings-round-1.md`.
+2. Optionally, user invokes Harness B (independent session, fresh context) for round 1. B reads the Workstream Document and A's round-1 report, writes its own self-contained recommendation to `harness-b-recommendation-round-1.md`, including harness identity, revision, round, timestamp, and classified evidence-backed findings.
 3. User reads the external reports, decides which findings to accept, then directs any document revisions.
+4. If the user re-runs external review after revisions, each subsequent invocation increments `<N>` (round 2, round 3, ...) so earlier rounds' reports are preserved rather than overwritten.
 
 When Harness B is not invoked, skip step 2. The absence of a Harness B report is never a design blocker, a failed approval condition, or grounds for an extra review round.
 
