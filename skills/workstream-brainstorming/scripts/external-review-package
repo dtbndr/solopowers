@@ -23,6 +23,11 @@ if [ "$mode" = confirmation ]; then
  prior_package=$(field Package-Path "$prior"); [ -n "$prior_package" ] && "$report_tool" verify "$prior_package" "$prior" >/dev/null || { echo 'invalid prior report' >&2; exit 5; }
  [ "$(field Mode "$prior")" = initial ] || { echo 'confirmation requires initial prior report' >&2; exit 5; }
  [ "$(field Workstream-Path "$prior")" = "$path" ] || { echo 'prior report is not in this Workstream review chain' >&2; exit 5; }
+ # A confirmation must follow an initial-review revision of this canonical document.
+ initial_commit=$(field Commit "$prior_package"); initial_blob=$(field Blob-OID "$prior_package")
+ [ -n "$initial_commit" ] && [ -n "$initial_blob" ] || { echo 'prior package lacks initial revision identity' >&2; exit 5; }
+ git merge-base --is-ancestor "$initial_commit" "$head" || { echo 'confirmation HEAD does not descend from initial review commit' >&2; exit 5; }
+ [ "$blob" != "$initial_blob" ] || { echo 'confirmation Workstream blob is unchanged from initial review' >&2; exit 5; }
  # Machine-readable accepted dispositions must name unique design-blocker IDs in prior report.
  while IFS= read -r line || [ -n "$line" ]; do
    [[ "$line" =~ ^Disposition:\ ([^'|'[:space:]]+)\|accepted\|.+$ ]] || { echo 'invalid disposition; use Disposition: ID|accepted|reason' >&2; exit 5; }
