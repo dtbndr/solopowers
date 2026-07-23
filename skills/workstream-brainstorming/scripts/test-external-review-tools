@@ -44,15 +44,15 @@ expect_fail "$pkg" confirmation 'docs/workstreams/a odd.md' --prior-report "$blo
 printf 'Disposition: D1|accepted|preserve final export\nDisposition: D1|accepted|different reason\n' > "$tmp/duplicate-dispositions"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd.md' --prior-report "$blockreport" --dispositions "$tmp/duplicate-dispositions" --affected-area 'Slice A'
 printf 'Disposition: D2|accepted|wrong lineage\n' > "$tmp/wrong-lineage"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd.md' --prior-report "$blockreport" --dispositions "$tmp/wrong-lineage" --affected-area 'Slice A'
 printf 'Disposition: D1|accepted|preserve final export\n' > "$tmp/dispositions"; relative_blockreport=${blockreport#$PWD/}; conf=$($pkg confirmation 'docs/workstreams/a odd.md' --prior-report "$relative_blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'); confpkg=$(printf '%s\n' "$conf"|sed -n 's/^PACKAGE_PATH=//p'); [ "$(field Prior-Report "$confpkg")" = "$blockreport" ] || fail 'confirmation prior report was not canonicalized'
-make_conf_draft(){ cat > "$1" <<EOF
+make_conf_draft(){ local draft=$1 conf_package=${2:-$confpkg}; cat > "$draft" <<EOF
 Schema-Version: 1
-Package-ID: $(field Package-ID "$confpkg")
+Package-ID: $(field Package-ID "$conf_package")
 Mode: confirmation
-Commit: $(field Commit "$confpkg")
+Commit: $(field Commit "$conf_package")
 Workstream-Path: docs/workstreams/a odd.md
-Blob-OID: $(field Blob-OID "$confpkg")
-Workstream-SHA256: $(field Workstream-SHA256 "$confpkg")
-Package-Path: $confpkg
+Blob-OID: $(field Blob-OID "$conf_package")
+Workstream-SHA256: $(field Workstream-SHA256 "$conf_package")
+Package-Path: $conf_package
 Recommendation: Ready for user approval/WDD
 Design-Blocker-Count: 0
 Implementation-Concern-Count: 0
@@ -60,6 +60,9 @@ Advisory-Count: 0
 EOF
 }
 confdraft="$out/drafts/confirmation"; make_conf_draft "$confdraft"; (cd "$tmp/other" && "$rpt" publish "$confpkg" "$confdraft") >/dev/null || fail 'confirmation publish with canonical prior report'
+# Preserve compatibility with hand-authored, repository-relative Prior-Report fields.
+relconf=$($pkg confirmation 'docs/workstreams/a odd.md' --prior-report "$blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'); relconfpkg=$(printf '%s\n' "$relconf"|sed -n 's/^PACKAGE_PATH=//p'); sed -i.bak "s|^Prior-Report: .*|Prior-Report: $relative_blockreport|" "$relconfpkg"; rm "$relconfpkg.bak"; shasum -a 256 "$relconfpkg" | awk '{print $1}' > "$relconfpkg.sha256"
+relconfdraft="$out/drafts/relative-confirmation"; make_conf_draft "$relconfdraft" "$relconfpkg"; relreport=$(cd "$tmp/other" && "$rpt" publish "$relconfpkg" "$relconfdraft"|sed -n 's/^REPORT_PATH=//p'); (cd "$tmp/other" && "$rpt" verify "$relconfpkg" "$relreport") >/dev/null || fail 'confirmation verify with relative prior report'
 printf '\nSlice B\n' >> "$confpkg"; expect_fail "$rpt" publish "$confpkg" "$confdraft"
 printf tamper >> "$blockreport"; expect_fail "$rpt" verify "$confpkg" "$out/drafts/r1"
 echo 'external review tool tests passed'
