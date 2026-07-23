@@ -4,6 +4,7 @@ set -euo pipefail
 self=${BASH_SOURCE[0]%/*}; workspace_tool="$self/external-review-workspace"; report_tool="$self/external-review-report"
 sha(){ shasum -a 256 "$1" | awk '{print $1}'; }
 field(){ sed -n "s/^$1: //p" "$2" | head -n1; }
+absolute(){ (cd "$(dirname "$1")" && printf '%s/%s' "$PWD" "$(basename "$1")"); }
 usage(){ echo 'usage: external-review-package initial WORKSTREAM_FILE | external-review-package confirmation WORKSTREAM_FILE --prior-report REPORT --dispositions FILE --affected-area AREA [...]' >&2; exit 2; }
 [ "$#" -ge 2 ] || usage; mode=$1; file=$2; shift 2
 case "$mode" in initial|confirmation);; *) usage;; esac
@@ -19,6 +20,7 @@ prior= dispositions=; areas=(); disposition_lines=
 if [ "$mode" = confirmation ]; then
  while [ "$#" -gt 0 ]; do case "$1" in --prior-report) prior=${2:-}; shift 2;; --dispositions) dispositions=${2:-}; shift 2;; --affected-area) areas+=("${2:-}"); shift 2;; *) usage;; esac; done
  [ -n "$prior" ] && [ -f "$prior" ] && [ -n "$dispositions" ] && [ -f "$dispositions" ] && [ ${#areas[@]} -gt 0 ] || { echo 'confirmation needs prior report, dispositions, and affected area' >&2; exit 5; }
+ prior=$(absolute "$prior")
  for area in "${areas[@]}"; do [[ "$area" =~ ^[^[:space:]].*$ ]] || { echo 'affected area must be nonempty' >&2; exit 5; }; done
  prior_package=$(field Package-Path "$prior"); [ -n "$prior_package" ] && "$report_tool" verify "$prior_package" "$prior" >/dev/null || { echo 'invalid prior report' >&2; exit 5; }
  [ "$(field Mode "$prior")" = initial ] || { echo 'confirmation requires initial prior report' >&2; exit 5; }

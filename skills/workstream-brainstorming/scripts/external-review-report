@@ -42,9 +42,11 @@ validate_report(){
 }
 validate_confirmation(){
   [ "$(package_field Mode)" = confirmation ] || return 0
-  local prior expected prior_pkg dispositions areas id ids=
-  prior=$(package_field Prior-Report); expected=$(package_field Prior-Report-SHA256)
+  local prior expected prior_pkg dispositions areas id ids= root
+  prior=$(package_field Prior-Report); expected=$(package_field Prior-Report-SHA256); root=$(package_field Repository-Root)
+  case "$prior" in /*);; *) prior="$root/$prior";; esac
   [ -f "$prior" ] && [ -n "$expected" ] && [ "$(sha "$prior")" = "$expected" ] || { echo 'confirmation prior report digest mismatch' >&2; return 3; }
+  prior=$(real "$prior")
   prior_pkg=$(field Package-Path "$prior"); [ -n "$prior_pkg" ] || { echo 'prior report lacks package identity' >&2; return 3; }
   "$0" verify "$prior_pkg" "$prior" >/dev/null || { echo 'invalid prior report linkage' >&2; return 3; }
   [ "$(field Mode "$prior")" = initial ] || { echo 'confirmation prior report is not initial' >&2; return 3; }
