@@ -18,7 +18,8 @@ Dispatch a document-writer subagent with this prompt:
     1. **Single-Artifact Invariant:** This is a Workstream Document, which serves as both the design AND the implementation plan. This is NOT a separate plan or design specification. Do NOT create a separate `plan.md` or `spec.md`.
     2. **No Implementation Code Constraint:** The workstream document must contain NO production implementation code or pseudo-code. Key file paths, test commands, API contracts, column names, and verification instructions are highly encouraged, but actual logic/code generation must be offloaded entirely to the subsequent implementer.
     3. **Actionable Slices:** Ensure each slice is sized appropriately for a lightweight, low-context implementer, with clear TDD tasks (red -> green loop) and manual smoke tests.
-    4. **Commit the File:** Once the file is written, commit the document to the repository.
+    4. **Commit the File:** Once the file is written or revised, commit the canonical document to the repository.
+    5. **Decision Record:** Every consequential choice—one affecting rework, safety/correctness, data/package boundaries, public or inter-slice contracts, or later-slice dependencies—must have a complete decision-table row. Keep incidental local choices under Implementation discretion. State `None` when no Unresolved design blockers remain.
 
     ## Required Structure & Schema
 
@@ -48,6 +49,20 @@ Dispatch a document-writer subagent with this prompt:
 
     ### Architecture invariant
     What are the strict design, folder, or boundary rules that must never be violated?
+
+    ### Design decisions and assumptions
+
+    | ID | Settled decision | Why / evidence | Rejected alternative | Relied-on assumption | Revisit when |
+    | -- | ---------------- | -------------- | -------------------- | -------------------- | ------------ |
+    | D1 | [decision] | [rationale] | [what was rejected] | [what this depends on] | [condition that reopens it] |
+
+    Include a complete row for every consequential choice.
+
+    ### Implementation discretion
+    List intentionally local choices for WDD, such as naming, helper decomposition, local type/import mechanics, and fixture construction, where they do not affect an architecture boundary.
+
+    ### Unresolved design blockers
+    List remaining approval-blocking questions, or state `None`.
 
     ---
 

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Publish a commit-anchored external Workstream review manifest; Git is snapshot.
+set -euo pipefail
+self=${BASH_SOURCE[0]%/*}; workspace_tool="$self/external-review-workspace"; report_tool="$self/external-review-report"
+sha(){ shasum -a 256 "$1" | awk '{print $1}'; }
+field(){ sed -n "s/^$1: //p" "$2" | head -n1; }
+usage(){ echo 'usage: external-review-package initial WORKSTREAM_FILE | external-review-package confirmation WORKSTREAM_FILE --prior-report REPORT --dispositions FILE --affected-area AREA [...]' >&2; exit 2; }
+[ "$#" -ge 2 ] || usage; mode=$1; file=$2; shift 2
+case "$mode" in initial|confirmation);; *) usage;; esac
+root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo 'not a Git worktree' >&2; exit 3; }
+case "$file" in /*|*'..'*|*$'\n'*|*$'\r'*) echo 'unsafe repository-relative Workstream path' >&2; exit 3;; esac
+path=$(git ls-files --full-name -- "$file" | head -n1); [ -n "$path" ] || { echo 'Workstream is not tracked' >&2; exit 3; }
+head=$(git rev-parse HEAD 2>/dev/null) || { echo 'HEAD is unresolved' >&2; exit 3; }
+git diff --quiet -- "$path" || { echo 'Workstream has unstaged changes' >&2; exit 4; }; git diff --cached --quiet -- "$path" || { echo 'Workstream has staged changes' >&2; exit 4; }
+blob=$(git rev-parse "HEAD:$path" 2>/dev/null) || { echo 'Workstream missing at HEAD' >&2; exit 3; }
+tmpblob=$(mktemp); trap 'rm -f "$tmpblob" "${tmp:-}"' EXIT; git cat-file blob "$blob" > "$tmpblob"; cmp -s "$tmpblob" "$path" || { echo 'Workstream bytes differ from committed blob' >&2; exit 4; }; digest=$(sha "$tmpblob")
+ws=$($workspace_tool "$path")
+prior= dispositions=; areas=(); disposition_lines=
+if [ "$mode" = confirmation ]; then
+ while [ "$#" -gt 0 ]; do case "$1" in --prior-report) prior=${2:-}; shift 2;; --dispositions) dispositions=${2:-}; shift 2;; --affected-area) areas+=("${2:-}"); shift 2;; *) usage;; esac; done
+ [ -n "$prior" ] && [ -f "$prior" ] && [ -n "$dispositions" ] && [ -f "$dispositions" ] && [ ${#areas[@]} -gt 0 ] || { echo 'confirmation needs prior report, dispositions, and affected area' >&2; exit 5; }
+ for area in "${areas[@]}"; do [[ "$area" =~ ^[^[:space:]].*$ ]] || { echo 'affected area must be nonempty' >&2; exit 5; }; done
+ prior_package=$(field Package-Path "$prior"); [ -n "$prior_package" ] && "$report_tool" verify "$prior_package" "$prior" >/dev/null || { echo 'invalid prior report' >&2; exit 5; }
+ [ "$(field Mode "$prior")" = initial ] || { echo 'confirmation requires initial prior report' >&2; exit 5; }
+ [ "$(field Workstream-Path "$prior")" = "$path" ] || { echo 'prior report is not in this Workstream review chain' >&2; exit 5; }
+ # Machine-readable accepted dispositions must name unique design-blocker IDs in prior report.
+ while IFS= read -r line || [ -n "$line" ]; do
+   [[ "$line" =~ ^Disposition:\ ([^'|'[:space:]]+)\|accepted\|.+$ ]] || { echo 'invalid disposition; use Disposition: ID|accepted|reason' >&2; exit 5; }
+   id=${BASH_REMATCH[1]}; grep -Fqx "Finding: design-blocker|$id|$(grep -F "Finding: design-blocker|$id|" "$prior" | head -n1 | cut -d'|' -f3)|$(grep -F "Finding: design-blocker|$id|" "$prior" | head -n1 | cut -d'|' -f4-)" "$prior" || { echo "disposition does not reference prior design blocker: $id" >&2; exit 5; }
+   grep -Fqx "$id" <<<"${disposition_ids:-}" && { echo "duplicate disposition ID: $id" >&2; exit 5; }
+   disposition_ids+="$id"$'\n'
+   disposition_lines+="$line"$'\n'
+ done < "$dispositions"
+ [ -n "$disposition_lines" ] || { echo 'at least one accepted disposition is required' >&2; exit 5; }
+fi
+stamp=${EXTERNAL_REVIEW_TEST_STAMP:-$(date -u +%Y%m%dT%H%M%S%3N 2>/dev/null || date -u +%Y%m%dT%H%M%S)}; suffix=${EXTERNAL_REVIEW_TEST_SUFFIX:-$(LC_ALL=C tr -dc 'a-f0-9' </dev/urandom | head -c 16 || true)}; [ -n "$suffix" ] || suffix=$$; id="${mode}-${stamp}-${suffix}"; final="$ws/packages/$id.review-package.md"; tmp="$ws/packages/.${id}.$$.$RANDOM.tmp"
+{ echo '# External Workstream Review Package'; echo; echo 'Schema-Version: 1'; echo "Package-ID: $id"; echo "Mode: $mode"; echo "Created-UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"; echo "Repository-Root: $root"; echo "Commit: $head"; echo "Workstream-Path: $path"; echo "Blob-OID: $blob"; echo "Workstream-SHA256: $digest"; echo "Package-Path: $final"; echo; echo 'The Git blob above is the reviewed snapshot. The canonical Workstream Document remains the only design artifact.'; if [ "$mode" = confirmation ]; then echo; echo "Prior-Report: $prior"; echo "Prior-Report-SHA256: $(sha "$prior")"; echo 'Accepted-Blocker-Dispositions:'; printf '%s' "$disposition_lines"; echo 'Affected-Areas:'; printf '%s\n' "${areas[@]}"; fi; } > "$tmp"
+ln "$tmp" "$final" 2>/dev/null || { echo 'package collision or publication failure' >&2; exit 6; }; rm -f "$tmp"
+pdigest=$(sha "$final"); (set -o noclobber; printf '%s\n' "$pdigest" > "$final.sha256") 2>/dev/null || { rm -f "$final"; echo 'package digest publication failure' >&2; exit 6; }; trap - EXIT
+echo "PACKAGE_PATH=$final"; echo "PACKAGE_SHA256=$pdigest"; cat <<EOF
+Launch Harness B with:
+Use solopowers:workstream-brainstorming external reviewer prompt to review package $final. Read evidence only through Git objects at its recorded commit; do not edit the Workstream or brainstorm. Write a draft under $ws/drafts/, then publish it with: $report_tool publish $final DRAFT_FILE
+EOF

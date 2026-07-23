@@ -42,7 +42,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design and slice breakdown** — in sections scaled to their complexity, get user approval after each section
 5. **Write Workstream Document** — dispatch a `document-writer` subagent to write the Workstream Document to `docs/workstreams/YYYY-MM-DD-<topic>.md` and commit. Provide the approved design, slice breakdown, and schema.
-6. **Mandatory Document Review** — dispatch a `document-reviewer` subagent to adversarially review the Workstream Document before user review. Use the template in `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This step is a strict gate and is never optional. Fix accepted design blockers, then run a confirmation review. Stop when zero design blockers remain. Escalate to the user if blockers persist after three rounds. Implementation concerns and advisory findings do not gate approval.
+6. **Mandatory Document Review** — dispatch a `document-reviewer` subagent to adversarially review the Workstream Document before user review. Use the template in `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This in-process gate is strict and never optional: revise accepted issues and re-review until it reports `Approved`. Commit the resulting canonical Workstream before any optional external review.
 7. **User reviews Workstream Document** — ask user to review the workstream file before proceeding. The user may optionally run the supplemental External Harness Review (see below) as part of this step; it happens in sessions the user runs themselves and is never dispatched by this skill.
 8. **Transition to implementation** — invoke `workstream-driven-development` skill
 
@@ -250,66 +250,34 @@ All criteria met:
 
 ## Adversarial Review and Approval
 
-The workstream document must pass the mandatory internal document review (Checklist step 6). The `document-reviewer` subagent dispatched above is the built-in, in-process review gate; its output is a subagent result.
+The mandatory internal document review is Harness A’s in-process, read-only gate. Dispatch it with `workstream-document-reviewer-prompt.md`; its result is `Approved | Issues Found` with evidence-backed issues and optional recommendations. Revise accepted issues, commit the canonical Workstream, and re-review until `Approved`. It neither reads external reports nor uses external-review policy.
 
-An additional external harness review (supplemental, user-coordinated) is described in the External Harness Review subsection below. It is entirely optional and user-initiated — this skill never dispatches it — and it does not replace or weaken the mandatory internal gate.
+### Pre-review and package checks
 
-### Review protocol
+Before internal review **and before creating an external package**, verify the canonical document has every Context section in the schema above: **Design decisions and assumptions**, **Implementation discretion**, and **Unresolved design blockers**. Every consequential decision must have a complete six-column provenance row; state `None` when no blocker remains. Harness B is not a mechanism for repairing omitted provenance. The Workstream must be committed and have no staged or unstaged change before package generation.
 
-1. Dispatch the reviewer subagent using the template in `workstream-document-reviewer-prompt.md`.
-2. The reviewer classifies every finding into one of three categories:
+### Optional External Harness B Review
 
-   - **Design blocker** — must cite evidence and explain the rework/safety consequence. Includes: unresolved or contradictory behavior; safety, correctness, data-loss, architecture, or scope flaw; unsupported assumption whose failure would invalidate the design; infeasible slice sequencing or missing contract likely to cause meaningful rework.
-   - **Implementation concern — deferred to WDD** — locally resolvable through TDD, compilation, slice review, or smoke testing without changing a settled decision, invariant, public contract, scope, or slice dependency. May be placed in a slice's Watch out when useful but does not block approval.
-   - **Advisory** — optional clarity or polish. Never triggers another review round by itself.
+External review is optional and user-coordinated. Harness A owns brainstorming, internal review, commits, package creation, report verification, finding adjudication, revisions, and WDD handoff. Harness B is an independent user-launched reviewer with no bridge; it is read-only for the canonical Workstream and reads only Git objects at the package commit. The Workstream remains the only canonical design artifact.
 
-3. **Approval condition:** zero unresolved design blockers. Implementation concerns and advisory findings may coexist with approval.
-4. Only accepted design blockers trigger document revision.
-5. After the last blocker is fixed, run one confirmation review.
-6. Stop when the confirmation review reports zero design blockers.
+Use these supporting tools and prompt:
 
-### Round budget
+- `scripts/external-review-workspace WORKSTREAM_FILE` creates a local self-ignoring `.solopowers/workstream-reviews/...` audit workspace. It is append-only by protocol, not durable archival storage.
+- `scripts/external-review-package initial WORKSTREAM_FILE` creates a commit/blob-anchored manifest and prints the canonical copy/paste B launch instruction.
+- `external-workstream-document-reviewer-prompt.md` is B’s dedicated contract.
+- `scripts/external-review-report publish PACKAGE DRAFT` mechanically validates and publishes B’s report; `verify PACKAGE REPORT` must be run by A before adjudication.
 
-Use a default budget of **three full adversarial rounds**. Reaching the budget with blockers still open triggers human escalation: narrow scope, revisit the design, accept an explicit risk, or abandon the workstream. It does not auto-approve.
+State machine:
 
-The budget only bounds how long unresolved blockers may persist. It is not a minimum: approval happens as soon as a review round reports zero design blockers (see Review protocol above), without needing to exhaust the budget or repeat a clean round.
+1. **A-internal-ready:** internal review has passed, decision provenance is complete, and the canonical Workstream is committed.
+2. **external-skipped:** if the user declines B, continue to ordinary user review and WDD.
+3. **initial-package:** A runs `external-review-package initial`; the user pastes its emitted instruction into B.
+4. **initial-report:** B publishes its report. A runs `external-review-report verify PACKAGE REPORT`, then always enters adjudication, even when blocker count is zero.
+5. **A-adjudication:** A accepts or rejects findings. Commit accepted implementation concerns into the relevant canonical slice’s Tasks, Watch out, or Verification guidance. Advisory-only or empty reports need no edit. If no accepted design blocker exists, external review ends after this adjudication.
+6. **confirmation-package:** only if an accepted design blocker required a committed canonical decision revision, A supplies the initial report, dispositions, and affected areas to `external-review-package confirmation`.
+7. **confirmation-report:** B verifies the prior report, then checks only accepted dispositions, listed affected areas, and resulting regressions. A verifies and adjudicates the report. If no accepted blocker remains, external review ends. A newly evidenced blocker requires explicit user authorization before any further pass; no third pass is automatic.
 
-A settled decision may be challenged only with:
-
-- new or contradictory evidence;
-- identification of an undocumented dependency or inconsistency; or
-- evidence that a documented revisit condition already holds.
-
-"Another implementation might be cleaner" is insufficient.
-
-### External Harness Review (Supplemental, User-Coordinated)
-
-This review is entirely optional and user-initiated: it runs in separate sessions the user starts themselves, outside this skill's Checklist, and this skill never dispatches it. If the user chooses to run it, it happens after the mandatory internal document review (Checklist step 6) and before the user gives final approval. External harnesses communicate **only through files under `artifacts/workstream-reviews/<workstream-stem>/`** — there is no direct bridge, intercom channel, or session handoff between them.
-
-- **Harness A — adversarial reviewer (required whenever this optional review is run):** reads the Workstream Document, discovers and classifies evidence-backed findings, and writes a self-contained findings report to `artifacts/workstream-reviews/<workstream-stem>/harness-a-findings-<timestamp>.md`, where `<timestamp>` is an ISO 8601 basic-format timestamp (e.g. `20260722-143007`) generated at write time. The report must include the reviewed workstream revision, timestamp, and classified findings with evidence.
-- **Harness B — independent reviewer (optional even when Harness A runs):** reads the Workstream Document and Harness A's most recent findings report (the lexically-latest `harness-a-findings-*.md` file, since ISO 8601 timestamps sort chronologically as text) from the same directory, performs its own review, and writes a self-contained recommendation to `artifacts/workstream-reviews/<workstream-stem>/harness-b-recommendation-<timestamp>.md` (same timestamp convention). The report must include the harness identity, reviewed workstream revision, timestamp, and classified evidence-backed findings or recommendation. Harness B may be skipped without consequence.
-
-**The user is the sole coordinator and decision-maker.** The user reads the external review reports, decides which findings to accept or reject, and directs any document changes. External harnesses do not revise the Workstream Document, approve or gate approval, or override the user's judgment. External review reports are supplemental evidence only — the Workstream Document remains the single canonical design and execution artifact. Skipping the whole external review, or just Harness B, is always a valid path to the existing user review and WDD transition.
-
-**Workflow:**
-
-1. User invokes Harness A (independent session, fresh context). A reads the Workstream Document, writes its classified findings report to a freshly timestamped `harness-a-findings-<timestamp>.md`.
-2. Optionally, user invokes Harness B (independent session, fresh context) once Harness A's report exists. B reads the Workstream Document and Harness A's most recent report, writes its own self-contained recommendation to a freshly timestamped `harness-b-recommendation-<timestamp>.md`, including harness identity, revision, timestamp, and classified evidence-backed findings.
-3. User reads the external reports, decides which findings to accept, then directs any document revisions.
-4. If the user re-runs external review after revisions, each invocation writes a new timestamped file — earlier reports are never overwritten, since every filename is unique by construction.
-
-When Harness B is not invoked, skip step 2. The absence of a Harness B report is never a design blocker, a failed approval condition, or grounds for an extra review round.
-
-### Pre-review checks
-
-Before dispatching the reviewer, verify:
-
-1. **Placeholder scan:** Any "TBD", "TODO", or vague requirements? Fix them.
-2. **Slice sizing:** Could a low-cost model with limited context implement each slice from these task descriptions alone? If a slice is too large or requires too much background, split it.
-3. **Decision completeness:** Are there any points where multiple valid approaches exist? For each, ask: would choosing wrong cause rework? If yes, resolve it here.
-4. **Slice logical flow:** Does Slice B properly build on Slice A's carry-forward?
-5. **No implementation code in the document:** Tasks describe WHAT to do, not HOW in production code.
-6. **Manual smoke test quality:** Does every slice include a concrete manual smoke test with setup/preconditions, explicit user actions, and expected outcomes?
+A **design blocker** requires changing a settled decision/invariant, public or inter-slice contract, safety/correctness/data-loss property, scope or feasibility premise, or slice sequencing/dependency. Everything else is an implementation handoff concern unless it proves infeasibility or unsafety. A concern that changes a foundation was misclassified and follows the design-blocker path. B’s `Ready for user approval/WDD` result does not override the user, who remains the sole coordinator and decision-maker.
 
 ### After review
 

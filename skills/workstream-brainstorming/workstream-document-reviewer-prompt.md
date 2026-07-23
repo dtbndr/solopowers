@@ -1,6 +1,6 @@
 # Workstream Document Reviewer Prompt Template
 
-Use this template when dispatching the mandatory internal `document-reviewer` subagent for adversarial review of a written Workstream Document (Checklist step 6 in `workstream-brainstorming`). This is the built-in, in-process review gate; its output is a subagent result, not an external-harness filesystem report. For the supplemental external Harness A/B review model, see the External Harness Review subsection in `skills/workstream-brainstorming/SKILL.md`.
+Use this template when dispatching a reviewer subagent for adversarial review of a written Workstream Document.
 
 **Role Mapping:** Usually mapped to Pi's built-in `oracle` role (using `context: "fresh"`), keeping the template body itself harness-agnostic.
 **Purpose:** Perform an adversarial, high-stakes review to verify completeness, structural soundness, and logical correctness of the plan.
@@ -23,7 +23,7 @@ Dispatch a reviewer subagent with this prompt:
 
     ### 1. Generic Formatting & Correctness
     - Verify the document is well-formed Markdown with no missing headers, broken links, or syntax issues.
-    - Confirm there are absolutely NO legacy upstream references ("human partner", "superpowers:").
+    - Confirm there are absolutely no legacy upstream-specific references.
 
     ### 2. High-Level Compliance
     - **Correctness:** Does the plan directly achieve the stated objective without regressions?
@@ -36,31 +36,23 @@ Dispatch a reviewer subagent with this prompt:
     - **Unstated Assumptions:** What unstated assumptions does this plan implicitly depend on (e.g., specific environment state, third-party API behavior)?
     - **Slice Sequencing Errors:** Does a later slice silently depend on something an earlier slice doesn't actually deliver or establish in its carry-forward?
     - **Missing Edge Cases/Failure Modes:** Are there critical error paths, validation failures, or edge cases that are completely ignored by all implementation slices?
-    - **Design Decision Provenance:** Does each consequential decision in the Design decisions and assumptions table include why/evidence, the rejected alternative, relied-on assumption, and a revisit condition? Are there consequential forks missing from the table?
-    - **Unresolved Blockers:** If Unresolved design blockers is not `None`, what evidence is blocking resolution?
-    - **External review reports:** This is the internal review gate. External Harness A/B review reports under `artifacts/workstream-reviews/<workstream-stem>/` are user-coordinated and supplemental. Their presence or absence is not grounds for any finding by this internal reviewer. The user is solely responsible for external review coordination.
 
     ## Process Rules
     - **DO NOT implement or edit any files.** This is a read-only review pass.
     - **If you encounter an ambiguous decision:** Do NOT make assumptions. Use the `contact_supervisor` tool with `reason: "need_decision"` to escalate to the user instead of assuming.
-    - **Challenging a settled decision:** Only reopen a decision from the Design decisions and assumptions table when you can cite: new/contradictory evidence, an undocumented dependency or inconsistency, or evidence that a documented revisit condition already holds. "Another implementation might be cleaner" is not sufficient evidence.
 
     ## Output Format
     Produce an evidence-based findings report citing the specific section or slice each finding refers to:
 
     # Workstream Adversarial Review
 
-    **Status:** Approved | Design Blockers Found
+    **Status:** Approved | Issues Found
 
-    **Design blockers (must resolve before approval):**
-    - [Section/Slice Path]: [Specific design or safety flaw]
-      - *Why it matters:* [Concrete rework or safety consequence]
+    **Issues (if any):**
+    - [Section/Slice Path]: [Specific adversarial or structural issue]
+      - *Why it matters:* [Reason it would lead to a flawed implementation or rework]
       - *Evidence/Citation:* [Link or quote from the files/codebase]
 
-    **Implementation concerns — deferred to WDD (do not block approval):**
-    - [Section/Slice Path]: [Concern solvable through TDD, compilation, slice review, or smoke testing]
-      - *Why deferred:* [Reason it does not require changing a settled decision, invariant, contract, scope, or slice dependency]
-
-    **Advisory (do not block approval):**
-    - [Optional suggestions]
+    **Recommendations (advisory suggestions):**
+    - [Optional suggestions that do not block approval]
 ```

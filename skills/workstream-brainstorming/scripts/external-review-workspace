@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Resolve a repository-local, Git-ignored audit workspace for one Workstream.
+set -euo pipefail
+[ "$#" -eq 1 ] && [ -n "$1" ] || { echo 'usage: external-review-workspace WORKSTREAM_FILE' >&2; exit 2; }
+file=$1
+root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo 'not a Git worktree' >&2; exit 3; }
+case "$file" in /*|*'..'*|*$'\n'*|*$'\r'*) echo 'WORKSTREAM_FILE must be a safe repository-relative path' >&2; exit 2;; esac
+path=$(git ls-files --full-name -- "$file" | head -n1)
+[ -n "$path" ] || { echo 'WORKSTREAM_FILE must be tracked' >&2; exit 2; }
+stem=$(printf '%s' "$path" | sed 's#[^A-Za-z0-9._-]#-#g; s#-\{2,\}#-#g; s#^-\|-$##g')
+[ -n "$stem" ] || { echo 'unsafe workstream stem' >&2; exit 4; }
+digest=$(printf '%s' "$path" | shasum -a 256 | awk '{print $1}')
+rel=".solopowers/workstream-reviews/${stem}-${digest:0:12}"
+dir="$root/$rel"
+# .git/info/exclude is repository-local metadata: it prevents status noise without
+# adding a file to the project tree.  A mkdir lock serializes concurrent updates.
+exclude="$root/$(git rev-parse --git-path info/exclude)"
+lock="$root/$(git rev-parse --git-path external-review-workspace.lock)"
+locked=false
+for _ in $(seq 1 100); do if mkdir "$lock" 2>/dev/null; then locked=true; break; fi; sleep 0.01; done
+[ "$locked" = true ] || { echo 'workspace setup is busy; retry' >&2; exit 6; }
+trap 'rmdir "$lock"' EXIT
+pattern="/$rel/"
+mkdir -p "$dir/packages" "$dir/reports" "$dir/drafts"
+touch "$exclude"
+if ! grep -Fqx -- "$pattern" "$exclude"; then printf '\n# solopowers external review workspace\n%s\n' "$pattern" >> "$exclude"; fi
+# Prove the workspace is ignored before returning it.
+git check-ignore -q "$rel/.ignore-probe" || { echo 'failed to configure ignored workspace' >&2; exit 5; }
+printf '%s\n' "$dir"

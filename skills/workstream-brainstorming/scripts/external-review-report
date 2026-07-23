@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Validate and atomically publish/verify a Harness B review report.
+set -euo pipefail
+self=${BASH_SOURCE[0]%/*}; workspace_tool="$self/external-review-workspace"
+sha(){ shasum -a 256 "$1" | awk '{print $1}'; }
+field(){ sed -n "s/^$1: //p" "$2" | head -n1; }
+real(){ (cd "$(dirname "$1")" && printf '%s/%s' "$PWD" "$(basename "$1")"); }
+usage(){ echo 'usage: external-review-report publish PACKAGE_FILE DRAFT_FILE | verify PACKAGE_FILE REPORT_FILE' >&2; exit 2; }
+[ "$#" -eq 3 ] || usage; action=$1; package=$(real "$2"); report=$(real "$3")
+[ -f "$package" ] || { echo 'package missing' >&2; exit 3; }
+package_field(){ field "$1" "$package"; }
+validate_package(){
+  local root commit path blob digest declared actual
+  for k in Schema-Version Package-ID Mode Repository-Root Commit Workstream-Path Blob-OID Workstream-SHA256 Package-Path; do [ -n "$(package_field "$k")" ] || { echo "malformed package: $k" >&2; return 3; }; done
+  [ "$(package_field Schema-Version)" = 1 ] || { echo 'unsupported package schema' >&2; return 3; }
+  case "$(package_field Mode)" in initial|confirmation);; *) echo 'invalid package mode' >&2; return 3;; esac
+  [ "$(real "$(package_field Package-Path)")" = "$package" ] || { echo 'package path identity mismatch' >&2; return 3; }
+  [ -f "$package.sha256" ] && [ "$(cat "$package.sha256")" = "$(sha "$package")" ] || { echo 'package digest sidecar mismatch' >&2; return 3; }
+  root=$(package_field Repository-Root); commit=$(package_field Commit); path=$(package_field Workstream-Path); blob=$(package_field Blob-OID); digest=$(package_field Workstream-SHA256)
+  [ "$(git -C "$root" rev-parse --show-toplevel 2>/dev/null)" = "$root" ] || { echo 'package repository unavailable or mismatched' >&2; return 3; }
+  case "$path" in /*|*'..'*|*$'\n'*|*$'\r'*) echo 'unsafe package workstream path' >&2; return 3;; esac
+  git -C "$root" cat-file -e "$commit^{commit}" 2>/dev/null || { echo 'package commit is invalid' >&2; return 3; }
+  actual=$(git -C "$root" rev-parse "$commit:$path" 2>/dev/null) || { echo 'package path missing at commit' >&2; return 3; }
+  [ "$actual" = "$blob" ] || { echo 'package blob does not match commit tree' >&2; return 3; }
+  actual=$(git -C "$root" cat-file blob "$blob" | shasum -a 256 | awk '{print $1}')
+  [ "$actual" = "$digest" ] || { echo 'package blob digest mismatch' >&2; return 3; }
+}
+find_count(){ grep -Ec "^Finding: $1\|" "$2" || true; }
+validate_report(){
+  local f=$1 k declared actual
+  for k in Schema-Version Package-ID Mode Commit Workstream-Path Blob-OID Workstream-SHA256 Package-Path Recommendation Design-Blocker-Count Implementation-Concern-Count Advisory-Count; do [ -n "$(field "$k" "$f")" ] || { echo "missing report field: $k" >&2; return 3; }; done
+  for k in Package-ID Mode Commit Workstream-Path Blob-OID Workstream-SHA256 Package-Path; do [ "$(field "$k" "$f")" = "$(package_field "$k")" ] || { echo "report/package mismatch: $k" >&2; return 3; }; done
+  [ "$(field Schema-Version "$f")" = 1 ] || { echo 'unsupported report schema' >&2; return 3; }
+  case "$(field Recommendation "$f")" in 'Revise design'|'Ready for user approval/WDD');; *) echo 'invalid recommendation' >&2; return 4;; esac
+  for k in Design-Blocker-Count Implementation-Concern-Count Advisory-Count; do [[ $(field "$k" "$f") =~ ^[0-9]+$ ]] || { echo "invalid $k" >&2; return 4; }; done
+  for pair in 'Design-Blocker-Count design-blocker' 'Implementation-Concern-Count implementation-concern' 'Advisory-Count advisory'; do set -- $pair; declared=$(field "$1" "$f"); actual=$(find_count "$2" "$f"); [ "$declared" = "$actual" ] || { echo "declared $1 does not match Finding records" >&2; return 4; }; done
+  [ "$(field Recommendation "$f")" != 'Ready for user approval/WDD' ] || [ "$(field Design-Blocker-Count "$f")" = 0 ] || { echo 'Ready cannot include design blockers' >&2; return 4; }
+  # All findings have a nonempty stable ID and payload: Finding: type|ID|slice|text.
+  ! grep '^Finding:' "$f" | grep -Ev '^Finding: (design-blocker|implementation-concern|advisory)\|[^|[:space:]][^|]*\|[^|[:space:]][^|]*\|.+' >/dev/null || { echo 'malformed Finding record' >&2; return 4; }
+  duplicates=$({ grep '^Finding:' "$f" || true; } | cut -d'|' -f2 | sort | uniq -d)
+  [ -z "$duplicates" ] || { echo 'duplicate finding ID' >&2; return 4; }
+}
+validate_confirmation(){
+  [ "$(package_field Mode)" = confirmation ] || return 0
+  local prior expected prior_pkg dispositions areas id ids=
+  prior=$(package_field Prior-Report); expected=$(package_field Prior-Report-SHA256)
+  [ -f "$prior" ] && [ -n "$expected" ] && [ "$(sha "$prior")" = "$expected" ] || { echo 'confirmation prior report digest mismatch' >&2; return 3; }
+  prior_pkg=$(field Package-Path "$prior"); [ -n "$prior_pkg" ] || { echo 'prior report lacks package identity' >&2; return 3; }
+  "$0" verify "$prior_pkg" "$prior" >/dev/null || { echo 'invalid prior report linkage' >&2; return 3; }
+  [ "$(field Mode "$prior")" = initial ] || { echo 'confirmation prior report is not initial' >&2; return 3; }
+  [ "$(field Workstream-Path "$prior")" = "$(package_field Workstream-Path)" ] || { echo 'confirmation prior report Workstream mismatch' >&2; return 3; }
+  [ "$(grep -c '^Accepted-Blocker-Dispositions:$' "$package")" = 1 ] && [ "$(grep -c '^Affected-Areas:$' "$package")" = 1 ] || { echo 'malformed confirmation sections' >&2; return 3; }
+  dispositions=$(awk '/^Accepted-Blocker-Dispositions:$/ { in_section=1; next } /^Affected-Areas:$/ { in_section=0 } in_section { print }' "$package")
+  [ -n "$dispositions" ] || { echo 'confirmation has no dispositions' >&2; return 3; }
+  while IFS= read -r line || [ -n "$line" ]; do
+    [[ "$line" =~ ^Disposition:\ ([^'|'[:space:]]+)\|accepted\|.+$ ]] || { echo 'malformed confirmation disposition' >&2; return 3; }
+    id=${BASH_REMATCH[1]}; grep -Fqx "$id" <<<"$ids" && { echo 'duplicate confirmation disposition ID' >&2; return 3; }; ids+="$id"$'\n'
+    grep -Fq "Finding: design-blocker|$id|" "$prior" || { echo 'confirmation disposition lacks prior design-blocker lineage' >&2; return 3; }
+  done <<< "$dispositions"
+  areas=$(awk '/^Affected-Areas:$/ { in_section=1; next } in_section { print }' "$package")
+  [ -n "$areas" ] || { echo 'confirmation has no affected areas' >&2; return 3; }
+  while IFS= read -r area || [ -n "$area" ]; do
+    [[ "$area" =~ ^[^[:space:]].*$ ]] || { echo 'malformed confirmation affected area' >&2; return 3; }
+  done <<< "$areas"
+}
+validate_package; validate_confirmation
+case "$action" in
+ verify)
+  [ -f "$report" ] || { echo 'report missing' >&2; exit 3; }; validate_report "$report"
+  sidecar="$report.sha256"; [ -f "$sidecar" ] && [ "$(cat "$sidecar")" = "$(sha "$report")" ] || { echo 'report digest sidecar mismatch' >&2; exit 3; }
+  echo "PACKAGE_ID=$(package_field Package-ID)"; echo "MODE=$(package_field Mode)"; echo "REPORT_SHA256=$(sha "$report")";;
+ publish)
+  [ -f "$report" ] || { echo 'draft missing' >&2; exit 2; }; validate_report "$report"
+  root=$(package_field Repository-Root); path=$(package_field Workstream-Path)
+  ws=$(cd "$root" && "$workspace_tool" "$path") || exit $?
+  stamp=${EXTERNAL_REVIEW_TEST_STAMP:-$(date -u +%Y%m%dT%H%M%S%3N 2>/dev/null || date -u +%Y%m%dT%H%M%S)}; suffix=${EXTERNAL_REVIEW_TEST_SUFFIX:-$(LC_ALL=C tr -dc 'a-f0-9' </dev/urandom | head -c 16 || true)}; [ -n "$suffix" ] || suffix=$$
+  final="$ws/reports/$(package_field Mode)-${stamp}-${suffix}.review-report.md"; tmp="$ws/reports/.$$.${RANDOM}.tmp"
+  cp "$report" "$tmp"; ln "$tmp" "$final" 2>/dev/null || { rm -f "$tmp"; echo 'report collision or publication failure' >&2; exit 5; }; rm -f "$tmp"
+  digest=$(sha "$final"); (set -o noclobber; printf '%s\n' "$digest" > "$final.sha256") 2>/dev/null || { rm -f "$final"; echo 'report digest publication failure' >&2; exit 5; }
+  echo "REPORT_PATH=$final"; echo "REPORT_SHA256=$digest";;
+ *) usage;; esac
