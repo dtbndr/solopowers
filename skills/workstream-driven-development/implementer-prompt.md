@@ -68,6 +68,10 @@ implementer subagent:
     It is always OK to stop and say "this is too hard for me" or "I need more context."
     Bad work is worse than no work. You will not be penalized for escalating.
 
+    Do not delegate implementation, investigation, testing, or self-review to nested
+    subagents or child agents. Perform the slice work yourself; if blocked or lacking
+    context, escalate directly to the controller.
+
     **STOP and escalate when:**
     - You encounter architectural conflicts that affect other slices or packages
     - You need to understand code beyond what was provided and cannot find clarity

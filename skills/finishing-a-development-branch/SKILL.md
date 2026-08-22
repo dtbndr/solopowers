@@ -25,6 +25,7 @@ npm test / cargo test / pytest / go test ./...
 ```
 
 **If tests fail:**
+
 ```
 Tests failing (<N> failures). Must fix before completing:
 
@@ -45,8 +46,9 @@ Stop. Don't proceed to Step 2.
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
 GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 # Capture now, while still inside the workspace — Step 5 changes directory
-# before cleanup (Step 6) needs this value
+# before cleanup (Step 6) needs these values
 WORKTREE_PATH=$(git rev-parse --show-toplevel)
+MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 ```
 
 This determines which menu to show and how cleanup works:
@@ -98,8 +100,7 @@ Which option?
 #### Option 1: Merge Locally
 
 ```bash
-# Get main repo root for CWD safety
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
+# Ensure CWD is in the main repository root
 cd "$MAIN_ROOT"
 
 # Merge first — verify success before removing anything
@@ -137,6 +138,7 @@ Report: "Keeping branch <name>. Worktree preserved at <path>."
 #### If user asks to discard
 
 **Confirm first:**
+
 ```
 This will permanently delete:
 - Branch <name>
@@ -149,36 +151,74 @@ Type 'discard' to confirm.
 Wait for exact confirmation.
 
 If confirmed:
+
 ```bash
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
 ```
 
 Then: Cleanup worktree (Step 6), then force-delete branch:
+
 ```bash
 git branch -D <feature-branch>
 ```
 
 ### Step 6: Cleanup Workspace
 
-**Only runs for Options 1 and 4.** Options 2 and 3 always preserve the worktree.
+**Only runs for Option 1 (Merge Locally) and confirmed discard.** Options 2 and 3 always preserve the worktree.
 
-```bash
-GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-WORKTREE_PATH=$(git rev-parse --show-toplevel)
-```
+Uses the `GIT_DIR`, `GIT_COMMON`, `WORKTREE_PATH`, and `MAIN_ROOT` values captured in Step 2 before the directory change (do not re-query them here, as `cd "$MAIN_ROOT"` has already changed the working directory).
 
 **If `GIT_DIR == GIT_COMMON`:** Normal repo, no worktree to clean up. Done.
 
-**If worktree path is under `.worktrees/` or `worktrees/`:** Superpowers created this worktree — we own cleanup.
+**If worktree path is under `.worktrees/` or `worktrees/`:** Solopowers created this worktree — we own cleanup.
 
 ```bash
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
 cd "$MAIN_ROOT"
 git worktree remove "$WORKTREE_PATH"
 git worktree prune  # Self-healing: clean up any stale registrations
 ```
+
+**If removal is refused** (`contains modified or untracked files`): The worktree holds uncommitted changes or untracked files that may be lost. Never run `git worktree remove --force` on your own initiative. Inspect what is at stake:
+
+```bash
+git -C "$WORKTREE_PATH" status --porcelain -uall
+```
+
+Present context-safe options based on the active flow:
+
+**For Option 1 (Merge Locally):**
+
+```
+The worktree contains uncommitted changes or untracked files that were not part of the merge:
+
+<file list>
+
+1. Commit them to <feature-branch>, re-merge into <base-branch>, and re-verify tests
+2. Move them into <main repo root>
+3. Delete them (unrecoverable)
+
+Which?
+```
+
+*(Note: If Option 1 is chosen, commit the files, re-run `git merge <feature-branch>` on `<base-branch>`, and re-verify tests before proceeding to worktree removal and branch deletion. `git branch -d` will refuse if new commits remain unmerged.)*
+
+**For Confirmed Discard:**
+
+```
+The worktree contains uncommitted changes or untracked files:
+
+<file list>
+
+1. Save them to a new backup branch (e.g. backup/<feature-branch>) before discarding
+2. Move them into <main repo root>
+3. Delete them (unrecoverable)
+
+Which?
+```
+
+*(Note: Do not commit to <feature-branch> during discard, as `git branch -D <feature-branch>` will immediately destroy the branch and any new commit on it. Use a separate backup branch or move them to main repo root if preserving.)*
+
+Carry out the choice, then retry removing the worktree.
 
 **Otherwise:** The host environment (harness) owns this workspace. Do NOT remove it. If your platform provides a workspace-exit tool, use it. Otherwise, leave the workspace in place.
 
@@ -194,36 +234,56 @@ git worktree prune  # Self-healing: clean up any stale registrations
 ## Common Mistakes
 
 **Skipping test verification**
+
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
 
 **Open-ended questions**
+
 - **Problem:** "What should I do next?" is ambiguous
 - **Fix:** Present exactly 3 structured options (or 2 for detached HEAD)
 
 **Cleaning up worktree for Option 2**
+
 - **Problem:** Remove worktree user needs for PR iteration
-- **Fix:** Only cleanup for Options 1 and 4
+- **Fix:** Only cleanup for Option 1 (Merge Locally) and confirmed discard
 
 **Deleting branch before removing worktree**
+
 - **Problem:** `git branch -d` fails because worktree still references the branch
 - **Fix:** Merge first, remove worktree, then delete branch
 
 **Running git worktree remove from inside the worktree**
+
 - **Problem:** Command fails silently when CWD is inside the worktree being removed
 - **Fix:** Always `cd` to main repo root before `git worktree remove`
 
+**Re-querying environment variables after changing directories**
+
+- **Problem:** Running `git rev-parse` after `cd "$MAIN_ROOT"` resolves the main repository instead of the worktree, causing cleanup to falsely detect `GIT_DIR == GIT_COMMON` and skip cleanup or target the wrong path
+- **Fix:** Use the `GIT_DIR`, `GIT_COMMON`, `WORKTREE_PATH`, and `MAIN_ROOT` values captured in Step 2
+
+**Force-removing a dirty or refused worktree**
+
+- **Problem:** Running `git worktree remove --force` permanently destroys uncommitted changes and untracked files
+- **Fix:** List files with `git status --porcelain -uall` and ask the user how to resolve them before removing (re-merging if committing during local merge, or backing up to a separate branch during discard)
+
 **Cleaning up harness-owned worktrees**
+
 - **Problem:** Removing a worktree the harness created causes phantom state
 - **Fix:** Only clean up worktrees under `.worktrees/` or `worktrees/`
 
 **No confirmation for discard**
+
 - **Problem:** Accidentally delete work
 - **Fix:** Require typed "discard" confirmation
 
 ## Red Flags
 
 **Never:**
+
+- Force-remove a refused worktree without user confirmation
+- Re-query workspace environment variables after changing directory to the main repo
 - Proceed with failing tests
 - Merge without verifying tests on result
 - Delete work without confirmation
@@ -233,6 +293,9 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - Run `git worktree remove` from inside the worktree
 
 **Always:**
+
+- Use Step 2 captured variables (`WORKTREE_PATH`, `GIT_DIR`, `GIT_COMMON`, `MAIN_ROOT`) for cleanup in Step 6
+- Show uncommitted/untracked files and ask the user before cleaning up a dirty worktree
 - Verify tests before offering options
 - Detect environment before presenting menu
 - Present exactly 3 options (or 2 for detached HEAD)

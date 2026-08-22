@@ -50,8 +50,18 @@ reviewer subagent:
     lock ordering, a function or API contract, or shared mutable state,
     checking the call sites is the right method.
 
+    If the supplied diff file, report, or verification evidence appears
+    truncated or cut off mid-function/mid-output, do not declare evidence
+    absent immediately. Re-read the relevant section using a focused
+    range/continuation first. State in your report what was re-read and what
+    was found; only declare evidence absent if it remains missing after the
+    re-read.
+
     Your review is read-only on this checkout. Do not mutate the working
-    tree, the index, HEAD, or branch state in any way.
+    tree, the index, HEAD, or branch state in any way. Do not delegate any
+    part of this review, testing, or verification to nested subagents or
+    spawn child agents. Perform the review yourself; if blocked or needing
+    context, report that directly to the controller.
 
     ## Do Not Trust the Report
 

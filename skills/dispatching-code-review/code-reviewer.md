@@ -32,6 +32,8 @@ Dispatch a reviewer subagent with this prompt:
 
     Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
 
+    Do not delegate any part of this review, testing, or investigation to nested subagents or spawn child agents. Perform the review yourself; if blocked or needing additional context, report that directly to the controller alongside your findings.
+
     ## What to Check
 
     **Plan alignment:**
@@ -121,6 +123,7 @@ Dispatch a reviewer subagent with this prompt:
     - Give feedback on code you didn't actually read
     - Be vague ("improve error handling")
     - Avoid giving a clear verdict
+    - Delegate review, investigation, or testing to nested subagents
 ```
 
 **Placeholders:**
