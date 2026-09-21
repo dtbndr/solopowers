@@ -45,8 +45,16 @@ implementer subagent:
 
     Work from: [DIRECTORY]
 
-    **While you work:** If you encounter something unexpected or unclear, **ask questions**.
-    It's always OK to pause and clarify. Don't guess or make assumptions.
+    **While you work:** A running slice does not pause for minor ambiguities. When the
+    slice brief, workstream objective, and codebase together don't answer a question,
+    decide. Record every such decision in your report as:
+    `Ruling: <what you decided> — <why> — <what it costs if wrong>`
+    then keep going. A wrong ruling costs rework the controller can see and undo;
+    a stalled slice costs the whole workstream.
+
+    **Escalate only for genuine blockers** (architectural conflicts that affect other
+    slices, information that isn't in scope to infer, or a loop of failing tests you
+    cannot break). For those, report BLOCKED or NEEDS_CONTEXT.
 
     While iterating, run the focused test for what you're changing; first verify RED, then verify GREEN, and run broader verification before committing rather than after every edit.
 
