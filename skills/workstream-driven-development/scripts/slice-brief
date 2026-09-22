@@ -54,17 +54,23 @@ awk -v requested="$slice_id" '
             infence = 0
             fence_marker = ""
             fence_length = 0
-            if (inslice) print
           }
+          if (inslice) print
           next
         }
-        infence = 1
-        fence_marker = marker
-        fence_length = run
-        next
+        if (marker == "~" || remainder !~ /`/) {
+          infence = 1
+          fence_marker = marker
+          fence_length = run
+          if (inslice) print
+          next
+        }
       }
     }
-    if (infence) next
+    if (infence) {
+      if (inslice) print
+      next
+    }
     if (/^###[[:space:]]+Slice[[:space:]]+[A-Z][0-9]*:/) {
       heading = $0
       sub(/^###[[:space:]]+Slice[[:space:]]+/, "", heading)
