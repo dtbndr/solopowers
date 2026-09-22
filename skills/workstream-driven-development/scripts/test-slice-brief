@@ -50,6 +50,36 @@ second-numbered-body
 ### Slice B: Following legacy slice
 
 following-body
+
+### Slice C: Tilde-fenced example
+
+tilde-before
+
+~~~markdown
+### Slice C1: Tilde-fenced duplicate
+fake-tilde-body
+~~~
+
+tilde-after
+
+### Slice C1: Actual tilde-numbered slice
+
+tilde-real-body
+
+### Slice D: Indented-backtick example
+
+backtick-before
+
+   ```markdown
+### Slice D1: Indented-backtick duplicate
+fake-backtick-body
+   ```
+
+backtick-after
+
+### Slice D1: Actual backtick-numbered slice
+
+backtick-real-body
 EOF
 
 git -C repo add .
@@ -63,7 +93,7 @@ brief_a=$($slice_brief "$workstream" A)
 grep -q '^### Slice A: Legacy slice$' "$workspace/slice-A-brief.md" || fail "legacy heading missing"
 grep -q '^legacy-body$' "$workspace/slice-A-brief.md" || fail "legacy body missing"
 ! grep -q 'Slice A1\|Slice A2\|following-body' "$workspace/slice-A-brief.md" || fail "legacy brief crossed a boundary"
-grep -q '^### Slice F: Fenced heading must not be a boundary$' "$workspace/slice-A-brief.md" || fail "fenced heading handling changed"
+! grep -q '^### Slice F: Fenced heading must not be a boundary$' "$workspace/slice-A-brief.md" || fail "fenced heading became a boundary"
 [[ "$brief_a" == *"slice-A-brief.md"* ]] || fail "legacy output path missing"
 
 brief_a1=$($slice_brief "$workstream" A1)
@@ -79,6 +109,26 @@ grep -q '^### Slice A2: Second numbered slice$' "$workspace/slice-A2-brief.md" |
 grep -q '^second-numbered-body$' "$workspace/slice-A2-brief.md" || fail "A2 body missing"
 ! grep -q 'Slice B\|following-body' "$workspace/slice-A2-brief.md" || fail "A2 brief crossed a boundary"
 [[ "$brief_a2" == *"slice-A2-brief.md"* ]] || fail "A2 output path missing"
+
+$slice_brief "$workstream" C >/dev/null
+! grep -q 'Slice C1\|fake-tilde-body\|tilde-real-body' "$workspace/slice-C-brief.md" || fail "tilde fence or boundary affected C"
+grep -q '^tilde-before$' "$workspace/slice-C-brief.md" || fail "tilde slice lost preceding body"
+grep -q '^tilde-after$' "$workspace/slice-C-brief.md" || fail "tilde slice lost following body"
+
+$slice_brief "$workstream" C1 >/dev/null
+grep -q '^### Slice C1: Actual tilde-numbered slice$' "$workspace/slice-C1-brief.md" || fail "tilde C1 selected fenced duplicate"
+grep -q '^tilde-real-body$' "$workspace/slice-C1-brief.md" || fail "actual tilde C1 body missing"
+! grep -q 'fake-tilde-body' "$workspace/slice-C1-brief.md" || fail "tilde C1 brief included fenced body"
+
+$slice_brief "$workstream" D >/dev/null
+! grep -q 'Slice D1\|fake-backtick-body\|backtick-real-body' "$workspace/slice-D-brief.md" || fail "indented backtick or boundary affected D"
+grep -q '^backtick-before$' "$workspace/slice-D-brief.md" || fail "backtick slice lost preceding body"
+grep -q '^backtick-after$' "$workspace/slice-D-brief.md" || fail "backtick slice lost following body"
+
+$slice_brief "$workstream" D1 >/dev/null
+grep -q '^### Slice D1: Actual backtick-numbered slice$' "$workspace/slice-D1-brief.md" || fail "backtick D1 selected fenced duplicate"
+grep -q '^backtick-real-body$' "$workspace/slice-D1-brief.md" || fail "actual backtick D1 body missing"
+! grep -q 'fake-backtick-body' "$workspace/slice-D1-brief.md" || fail "backtick D1 brief included fenced body"
 
 expect_exit 2 "$slice_brief" "$workstream" A-1
 expect_exit 2 "$slice_brief" "$workstream" A/1

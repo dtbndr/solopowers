@@ -36,15 +36,44 @@ dir=$("${BASH_SOURCE[0]%/*}/wsd-workspace" "$slug")
 out="$dir/slice-${slice_id}-brief.md"
 
 awk -v requested="$slice_id" '
-  /^```/ { infence = !infence }
-  !infence && /^###[[:space:]]+Slice[[:space:]]+[A-Z][0-9]*:/ {
-    heading = $0
-    sub(/^###[[:space:]]+Slice[[:space:]]+/, "", heading)
-    sub(/:.*/, "", heading)
-    if (inslice) exit
-    inslice = (heading == requested)
+  function delimiter_run(line, start, marker,    run) {
+    run = 0
+    while (substr(line, start + run, 1) == marker) run++
+    return run
   }
-  inslice { print }
+  {
+    indent = 0
+    while (substr($0, indent + 1, 1) == " ") indent++
+    marker = substr($0, indent + 1, 1)
+    if (indent <= 3 && (marker == "`" || marker == "~")) {
+      run = delimiter_run($0, indent + 1, marker)
+      if (run >= 3) {
+        remainder = substr($0, indent + 1 + run)
+        if (infence) {
+          if (marker == fence_marker && run >= fence_length && remainder ~ /^[[:space:]]*$/) {
+            infence = 0
+            fence_marker = ""
+            fence_length = 0
+            if (inslice) print
+          }
+          next
+        }
+        infence = 1
+        fence_marker = marker
+        fence_length = run
+        next
+      }
+    }
+    if (infence) next
+    if (/^###[[:space:]]+Slice[[:space:]]+[A-Z][0-9]*:/) {
+      heading = $0
+      sub(/^###[[:space:]]+Slice[[:space:]]+/, "", heading)
+      sub(/:.*/, "", heading)
+      if (inslice) exit
+      inslice = (heading == requested)
+    }
+    if (inslice) print
+  }
 ' "$workstream" > "$out"
 
 if [ ! -s "$out" ]; then
