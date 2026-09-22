@@ -11,8 +11,10 @@ Execute a Workstream Document by dispatching a fresh subagent per slice, with a 
 
 **Core principles:**
 
+Slice IDs use the grammar `[A-Z][0-9]*`: an uppercase letter followed by zero or more digits. For example, `A`, `A1`, and `A2` are valid IDs and are matched exactly; the IDs do not establish ordering.
+
 1. **Single Git Worktree**: The entire workstream is executed within a single, isolated git worktree folder. We use the `using-git-worktrees` skill ONCE at the start of the workstream, and `finishing-a-development-branch` ONCE after the final slice is fully verified and completed. We do NOT create separate worktrees for each slice.
-2. **Sequential Slice Execution**: Slices (Slice A, B, C...) are completed one by one in order.
+2. **Sequential Slice Execution**: Slices (for example, Slice A, A1, and A2) are completed one by one in document order.
 3. **Curated Input**: The controller (you) extracts the slice goal, tasks, watch-outs, verification, manual smoke test steps, and carry-forward from the Workstream Document, presenting a highly focused prompt to the worker subagent.
 4. **Combined Review**: For every slice, one reviewer checks both requirements compliance and code quality in a single pass, returning separate verdicts for each.
 5. **Pause After Review Pass**: Preserve the worker ↔ reviewer retry loop until review passes. Only after the reviewer reports both compliance ✅ and quality Approved do you pause for the user's manual smoke test for that slice.
@@ -28,7 +30,7 @@ digraph workstream_execution {
     rankdir=TB;
 
     subgraph cluster_per_slice {
-        label="Per Slice (Slice A, B, C...)";
+        label="Per Slice (for example Slice A, A1, A2...)";
         "Dispatch implementer subagent\n(./implementer-prompt.md)" [shape=box];
         "Implementer asks clarifying questions?" [shape=diamond];
         "Answer questions & supply context" [shape=box];
@@ -151,7 +153,7 @@ Worker subagents report one of four statuses. Handle each appropriately:
 - Use the `using-git-worktrees` skill to verify/create an isolated git worktree for the entire workstream.
 - Read the Workstream Document at `docs/workstreams/YYYY-MM-DD-<topic>.md` and extract all slices.
 - Derive the workspace slug from the Workstream Document filename: strip directory path, `.md` extension, and leading `YYYY-MM-DD-` date prefix (e.g., `2026-06-20-previous-uploads-panel.md` → `previous-uploads-panel`). Record this slug — every script invocation needs it.
-- Before dispatching Slice A, scan the workstream once for conflicts, oversized slices, or requirements that contradict architecture invariants. Raise those with the user before implementation instead of discovering them mid-slice.
+- Before dispatching the first slice, scan the workstream once for conflicts, oversized slices, or requirements that contradict architecture invariants. Raise those with the user before implementation instead of discovering them mid-slice.
 - Create a `todo` task list with one task per slice, plus a final task for "Final verification and close branch".
 - Check for a durable progress ledger at `$(scripts/wsd-workspace <workspace-slug>)/progress.md` before resuming or dispatching any slice. If the ledger already marks a slice complete, do not re-dispatch it.
 
@@ -159,7 +161,7 @@ Worker subagents report one of four statuses. Handle each appropriately:
 
 For each slice, dispatch the worker subagent. Prefer file handoffs over pasted text:
 
-- Generate a slice brief with `scripts/slice-brief WORKSTREAM_FILE SLICE_LETTER` and pass the printed file path to the worker.
+- Generate a slice brief with `scripts/slice-brief WORKSTREAM_FILE SLICE_ID` and pass the printed file path to the worker. `SLICE_ID` must match `[A-Z][0-9]*`, such as `A`, `A1`, or `A2`.
 - Explicitly inject `solopowers:test-driven-development` into the worker dispatch. Do not rely on ambient skill discovery or a vague mention of testing.
 - Provide the Workstream Objective, in-scope details, and any carry-forward context the brief cannot know.
 - Name a report file for the worker so detailed implementation notes and test evidence live on disk, not in controller context.
@@ -187,7 +189,7 @@ For each slice, dispatch the worker subagent. Prefer file handoffs over pasted t
 
 Everything you paste into a dispatch prompt — and everything a subagent prints back — stays resident in your context for the rest of the session. Prefer artifacts on disk:
 
-- **Slice brief:** Use `scripts/slice-brief WORKSTREAM_FILE SLICE_LETTER` to extract one slice into its own file. The script auto-derives the workspace slug from the workstream filename.
+- **Slice brief:** Use `scripts/slice-brief WORKSTREAM_FILE SLICE_ID` to extract one slice into its own file. The script auto-derives the workspace slug from the workstream filename and matches the ID exactly.
 - **Worker report:** Give each slice a report file path. The worker writes the full report and test evidence there, then returns only status, commits, a one-line test summary, concerns, and the report path.
 - **Reviewer inputs:** The slice reviewer receives the slice brief path, worker report path, and diff package path.
 - **Review package:** Use `scripts/review-package BASE HEAD <workspace-slug>` so the reviewer reads one artifact containing commit list, stat summary, and diff context.
@@ -215,7 +217,7 @@ Conversation memory does not survive compaction. Track durable slice progress in
 The ledger file lives inside the per-workstream workspace directory (`.solopowers/wsd/<slug>/`), so successive workstreams never collide.
 
 - At skill start, check the ledger before dispatching any slice.
-- When a slice passes review and the user confirms the manual smoke test, append one line such as `Slice A: complete (commits <base7>..<head7>, review clean, smoke test passed)`.
+- When a slice passes review and the user confirms the manual smoke test, append one line such as `Slice A1: complete (commits <base7>..<head7>, review clean, smoke test passed)`.
 - On resume, trust the ledger and git log over memory.
 
 ## Red Flags / Anti-patterns

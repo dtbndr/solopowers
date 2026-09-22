@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Integration tests for slice-brief slice-ID parsing and section boundaries.
+set -euo pipefail
+
+base=$(cd "${BASH_SOURCE[0]%/*}" && pwd)
+slice_brief="$base/slice-brief"
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+fail() {
+  echo "FAIL: $*" >&2
+  exit 1
+}
+expect_exit() {
+  expected=$1
+  shift
+  if "$@" >/dev/null 2>&1; then
+    status=0
+  else
+    status=$?
+  fi
+  [ "$status" -eq "$expected" ] || fail "expected exit $expected, got $status: $*"
+}
+
+cd "$tmp"
+git init -q repo
+git -C repo config user.email test@example.invalid
+git -C repo config user.name test
+mkdir -p repo/docs/workstreams
+cat > repo/docs/workstreams/2026-01-01-slice-ids.md <<'EOF'
+# Slice ID test workstream
+
+### Slice A: Legacy slice
+
+legacy-body
+
+```
+### Slice F: Fenced heading must not be a boundary
+fenced-body
+```
+
+### Slice A1: First numbered slice
+
+first-numbered-body
+
+### Slice A2: Second numbered slice
+
+second-numbered-body
+
+### Slice B: Following legacy slice
+
+following-body
+EOF
+
+git -C repo add .
+git -C repo commit -qm initial
+workstream="$tmp/repo/docs/workstreams/2026-01-01-slice-ids.md"
+workspace="$tmp/repo/.solopowers/wsd/slice-ids"
+cd "$tmp/repo"
+
+brief_a=$($slice_brief "$workstream" A)
+[ -f "$workspace/slice-A-brief.md" ] || fail "legacy brief missing"
+grep -q '^### Slice A: Legacy slice$' "$workspace/slice-A-brief.md" || fail "legacy heading missing"
+grep -q '^legacy-body$' "$workspace/slice-A-brief.md" || fail "legacy body missing"
+! grep -q 'Slice A1\|Slice A2\|following-body' "$workspace/slice-A-brief.md" || fail "legacy brief crossed a boundary"
+grep -q '^### Slice F: Fenced heading must not be a boundary$' "$workspace/slice-A-brief.md" || fail "fenced heading handling changed"
+[[ "$brief_a" == *"slice-A-brief.md"* ]] || fail "legacy output path missing"
+
+brief_a1=$($slice_brief "$workstream" A1)
+[ -f "$workspace/slice-A1-brief.md" ] || fail "A1 brief missing"
+grep -q '^### Slice A1: First numbered slice$' "$workspace/slice-A1-brief.md" || fail "A1 heading missing"
+grep -q '^first-numbered-body$' "$workspace/slice-A1-brief.md" || fail "A1 body missing"
+! grep -q 'Slice A2\|second-numbered-body\|following-body' "$workspace/slice-A1-brief.md" || fail "A1 brief crossed a boundary"
+[[ "$brief_a1" == *"slice-A1-brief.md"* ]] || fail "A1 output path missing"
+
+brief_a2=$($slice_brief "$workstream" A2)
+[ -f "$workspace/slice-A2-brief.md" ] || fail "A2 brief missing"
+grep -q '^### Slice A2: Second numbered slice$' "$workspace/slice-A2-brief.md" || fail "A2 heading missing"
+grep -q '^second-numbered-body$' "$workspace/slice-A2-brief.md" || fail "A2 body missing"
+! grep -q 'Slice B\|following-body' "$workspace/slice-A2-brief.md" || fail "A2 brief crossed a boundary"
+[[ "$brief_a2" == *"slice-A2-brief.md"* ]] || fail "A2 output path missing"
+
+expect_exit 2 "$slice_brief" "$workstream" A-1
+expect_exit 2 "$slice_brief" "$workstream" A/1
+[ ! -e "$workspace/slice-A-1-brief.md" ] || fail "invalid ID created an output"
+[ ! -e "$workspace/slice-A/1-brief.md" ] || fail "slash ID created an output"
+
+echo 'slice-brief tests passed'

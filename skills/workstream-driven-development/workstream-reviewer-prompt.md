@@ -10,7 +10,7 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 
 ```
 reviewer subagent:
-  description: "Review Slice [SLICE_LETTER] (compliance + quality)"
+  description: "Review Slice [SLICE_ID] (compliance + quality)"
   model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
          model silently inherits the session's most expensive one]
   prompt: |
@@ -199,7 +199,7 @@ reviewer subagent:
 **Placeholders:**
 
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
-- `[BRIEF_FILE]` — REQUIRED: the slice brief file (`scripts/slice-brief WORKSTREAM_FILE SLICE_LETTER`
+- `[BRIEF_FILE]` — REQUIRED: the slice brief file (`scripts/slice-brief WORKSTREAM_FILE SLICE_ID`
   prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
   the Workstream Document's Slice header: exact values, formats, watch-outs,

@@ -3,18 +3,23 @@
 # implementer reads in one call, so the slice text never has to be pasted
 # through the controller's context.
 #
-# Usage: slice-brief WORKSTREAM_FILE SLICE_LETTER [SLUG_OVERRIDE]
-# Default output: .solopowers/wsd/<slug>/slice-<LETTER>-brief.md
+# Usage: slice-brief WORKSTREAM_FILE SLICE_ID [SLUG_OVERRIDE]
+# Default output: .solopowers/wsd/<slug>/slice-<ID>-brief.md
 # slug is auto-derived from the workstream filename (date prefix stripped)
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-  echo "usage: slice-brief WORKSTREAM_FILE SLICE_LETTER [SLUG_OVERRIDE]" >&2
+  echo "usage: slice-brief WORKSTREAM_FILE SLICE_ID [SLUG_OVERRIDE]" >&2
   exit 2
 fi
 
 workstream=$1
-letter=$2
+slice_id=$2
+if [[ ! "$slice_id" =~ ^[A-Z][0-9]*$ ]]; then
+  echo "invalid slice ID: ${slice_id} (expected an uppercase letter followed by zero or more digits)" >&2
+  exit 2
+fi
+
 [ -f "$workstream" ] || {
   echo "no such workstream file: $workstream" >&2
   exit 2
@@ -28,18 +33,22 @@ else
 fi
 
 dir=$("${BASH_SOURCE[0]%/*}/wsd-workspace" "$slug")
-out="$dir/slice-${letter}-brief.md"
+out="$dir/slice-${slice_id}-brief.md"
 
-awk -v letter="$letter" '
+awk -v requested="$slice_id" '
   /^```/ { infence = !infence }
-  !infence && /^###[[:space:]]+Slice[[:space:]]+[A-Z]:/ {
-    inslice = ($0 ~ ("^###[[:space:]]+Slice[[:space:]]+" letter ":"))
+  !infence && /^###[[:space:]]+Slice[[:space:]]+[A-Z][0-9]*:/ {
+    heading = $0
+    sub(/^###[[:space:]]+Slice[[:space:]]+/, "", heading)
+    sub(/:.*/, "", heading)
+    if (inslice) exit
+    inslice = (heading == requested)
   }
   inslice { print }
 ' "$workstream" > "$out"
 
 if [ ! -s "$out" ]; then
-  echo "slice ${letter} not found in ${workstream} (no heading matching '### Slice ${letter}:')" >&2
+  echo "slice ${slice_id} not found in ${workstream} (no heading matching '### Slice ${slice_id}:')" >&2
   exit 3
 fi
 

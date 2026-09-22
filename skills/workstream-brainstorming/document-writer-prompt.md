@@ -88,6 +88,8 @@ Dispatch a document-writer subagent with this prompt:
 
     ## Scoped workstream slices
 
+    Slice headings use the exact format `### Slice <SLICE_ID>: <Slice Title>`, where `<SLICE_ID>` matches `[A-Z][0-9]*`. `A` is the baseline example; `A1` and `A2` are also valid.
+
     ### Slice A: [Slice Title]
 
     **Goal**: What does this slice achieve?
@@ -115,7 +117,7 @@ Dispatch a document-writer subagent with this prompt:
     #### Carry-forward
     - State, APIs, or schema elements established in this slice that the next slice assumes to be present.
 
-    *(Repeat for Slice B, Slice C, etc.)*
+    *(Repeat for Slice A1, Slice A2, or other sequentially ordered slice IDs.)*
 
     ---
 

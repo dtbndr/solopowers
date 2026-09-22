@@ -27,7 +27,7 @@ A Workstream Document contains:
 2. **Context**: Problem description, Approved simplifications, Target behavior, Deliberate simplifications, Architecture invariants, Design decisions and assumptions, Implementation discretion, Unresolved design blockers.
 3. **Scope**: In scope, Out of scope.
 4. **Key Files**: Table mapping file paths, packages, and their roles.
-5. **Scoped Slices**: Sequential slices (Slice A, B, C...) containing Goals, TDD-structured Tasks, Watch outs, Verification steps, Manual smoke test guidelines, and Carry-forwards.
+5. **Scoped Slices**: Sequential slices (for example Slice A, A1, A2) containing Goals, TDD-structured Tasks, Watch outs, Verification steps, Manual smoke test guidelines, and Carry-forwards. Slice heading IDs use `[A-Z][0-9]*` and are matched exactly.
 6. **Final Verification**: Comprehensive validation checklist (compilation, typecheck, tests, lint, format).
 7. **Success Criteria**: Clear, testable outcomes that must be met.
 
@@ -103,7 +103,7 @@ Use the table below to dispatch the document-writer and document-reviewer subage
 
 - Once you understand what you're building, present the design.
 - Scale each section to its complexity: cover architecture, components, data flow, testing.
-- **Decompose into slices**: Break down the execution plan into sequential, logical groupings of tasks (Slice A, Slice B, Slice C...). Slices must represent clean milestones that can be independently developed, compiled, and tested.
+- **Decompose into slices**: Break down the execution plan into sequential, logical groupings of tasks (for example Slice A, Slice A1, Slice A2). Slice IDs use `[A-Z][0-9]*`; IDs do not establish ordering. Slices must represent clean milestones that can be independently developed, compiled, and tested.
 - **Structure tasks for TDD**: Each slice should make the red → green → broader verification flow explicit. Do not leave testing as an afterthought or a vague final bullet.
 
 **Working in existing codebases:**
@@ -200,6 +200,8 @@ The following are intentionally left to `workstream-driven-development` and do n
 
 ## Scoped workstream slices
 
+Slice headings use the exact format `### Slice <SLICE_ID>: <Slice Title>`, where `<SLICE_ID>` matches `[A-Z][0-9]*`. `A` remains the baseline example, while `A1` and `A2` are also valid.
+
 ### Slice A: <Slice Title>
 
 **Goal**: What does this slice achieve?
@@ -227,7 +229,7 @@ The following are intentionally left to `workstream-driven-development` and do n
 #### Carry-forward
 - State, APIs, or schema elements established in this slice that the next slice assumes to be present.
 
-*(Repeat for Slice B, Slice C, etc.)*
+*(Repeat for Slice A1, Slice A2, or other sequentially ordered slice IDs.)*
 
 ---
 
