@@ -21,14 +21,17 @@ These principles drive fork/adapt/eliminate decisions when upstream (superpowers
 ## Directory Structure
 
 ```
+AGENTS.md, CLAUDE.md          # Agent guidance
 skills/
   <skill-name>/
-    SKILL.md              # Main skill file (required)
-    *.md                  # Supporting docs (optional)
-    scripts/              # Executable helpers (optional)
+    SKILL.md                  # Main skill file (required)
+    *.md                      # Supporting docs (optional)
+    scripts/                  # Executable helpers (optional)
+tests/                        # Skill validation scripts
+.solopowers/wsd/              # Durable workstream state (local)
 ```
 
-Each skill lives in its own directory under `skills/`. The `SKILL.md` frontmatter (`name`, `description`) drives skill discovery.
+Each skill lives in its own directory under `skills/`. Its `SKILL.md` frontmatter (`name`, `description`) is consumed by the skills CLI for discovery.
 
 ## Skill Lifecycle
 
@@ -53,7 +56,7 @@ Changes to these skills have downstream impact on WSD. Verify compatibility befo
 
 ## Agent Instructions
 
-- Skills use `solopowers:` namespace for cross-references (e.g., `solopowers:test-driven-development`)
+- Use the `solopowers:` namespace for new normative skill cross-references (e.g., `solopowers:test-driven-development`)
 - When adding or modifying skills, follow the TDD-for-skills methodology in `authoring-skills`
 - Update `using-solopowers/SKILL.md` skill table when adding new skills
 
@@ -63,8 +66,12 @@ Run before committing skill changes:
 
 ```bash
 grep -rn "human partner" skills/        # must be 0
-grep -rn "superpowers:" skills/         # must be 0 (unless intentionally referencing upstream)
-diff <(ls skills/) <(grep '|' skills/using-solopowers/SKILL.md | awk '{print $2}' | sort)
+grep -rn "superpowers:" skills/         # must be 0; exceptions require an intentional upstream-compatibility reference
+diff \
+  <(find skills -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort) \
+  <(awk -F'`' '/^## Superseded Skills/{exit} /^\| `/{print $2}' \
+    skills/using-solopowers/SKILL.md | sort)
+bash tests/authoring-skills/test-render-graphs.sh
 ```
 
-The last command verifies the skill table in `using-solopowers` matches the actual skill directories.
+The inventory comparison verifies the current skill table in `using-solopowers` against the actual skill directories; migration aliases in `## Superseded Skills` are intentionally excluded.

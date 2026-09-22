@@ -6,6 +6,8 @@ A curated skill pack for solo development workflows, derived from [obra/superpow
 
 solopowers began as local adaptations of superpowers for a workflow where **a single workstream document** replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one git worktree per workstream, with **manual smoke-test pauses** between slices after automated review gates pass. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
 
+Workstream Documents are stored at `docs/workstreams/YYYY-MM-DD-<topic>.md`. `workstream-brainstorming` creates the document; `workstream-driven-development` executes it sequentially in one worktree.
+
 ## Skills
 
 ### Workflow
@@ -35,6 +37,14 @@ solopowers began as local adaptations of superpowers for a workflow where **a si
 | `using-solopowers` | Original | Meta-skill for discovering and using skills in this pack |
 | `authoring-skills` | [superpowers](https://github.com/obra/superpowers) | Create, edit, and verify skills before deployment |
 
+## Repository layout
+
+```text
+skills/<skill-name>/SKILL.md  # Skill definitions, with supporting docs/scripts as needed
+tests/                        # Skill validation scripts
+AGENTS.md, CLAUDE.md          # Agent guidance
+```
+
 ## Install
 
 ```bash
@@ -47,7 +57,7 @@ npx skills add https://github.com/dtbndr/solopowers
 
 ## Agent Dispatch
 
-solopowers dispatch skills include a platform routing table for Pi, kiro-cli, claude-code, and Antigravity CLI. Each dispatch-bearing skill (e.g., `workstream-driven-development`, `dispatching-parallel-agents`, `dispatching-code-review`, `workstream-brainstorming`) contains a dispatch section (named `## Harness Dispatch` or `## Platform-Specific Subagent Dispatch` depending on the skill) with the concrete dispatch mechanism for your platform. No custom agent definitions or bridge skills are needed.
+solopowers dispatch skills include a platform routing table for Pi, kiro-cli, claude-code, and Antigravity. Each dispatch-bearing skill (e.g., `workstream-driven-development`, `dispatching-parallel-agents`, `dispatching-code-review`, `workstream-brainstorming`) contains a dispatch section (named `## Harness Dispatch` or `## Platform-Specific Subagent Dispatch` depending on the skill) with the concrete dispatch mechanism for your platform. No custom agent definitions or bridge skills are needed.
 
 ## Pulling upstream changes
 
