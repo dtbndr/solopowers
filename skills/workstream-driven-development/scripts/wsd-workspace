@@ -12,24 +12,111 @@
 # Single source of truth for the workspace location, so slice-brief and
 # review-package cannot drift to different directories.
 #
-# Each workstream gets its own subdirectory derived from the workstream
-# filename (date prefix stripped). This prevents artifact collisions between
-# successive workstreams — progress.md, slice briefs, and review packages
-# no longer overwrite each other.
+# Basename slugs collide when two Workstream Documents share a slug (dropping
+# the date prefix, e.g. 2026-01-01-auth.md vs 2026-02-01-auth.md), so each
+# workspace records its owning Workstream Document's path in a ledger header
+# at create time. A workspace owned by a different Workstream Document is
+# skipped and the slug disambiguated (with the date prefix or counter) so stale
+# ledgers are never reused.
 #
-# Usage: wsd-workspace <slug>
-#   slug  short kebab-case identifier derived from the workstream filename,
-#         e.g. "previous-uploads-panel" from "2026-06-20-previous-uploads-panel.md"
+# Usage: wsd-workspace <slug_or_file> [workstream_file]
 set -euo pipefail
 
-if [ $# -ne 1 ] || [ -z "$1" ]; then
-  echo "usage: wsd-workspace <slug>" >&2
+if [ $# -lt 1 ] || [ $# -gt 2 ] || [ -z "$1" ]; then
+  echo "usage: wsd-workspace <slug_or_file> [workstream_file]" >&2
   exit 2
 fi
 
-slug=$1
-root=$(git rev-parse --show-toplevel)
-dir="$root/.solopowers/wsd/$slug"
+root=$(CDPATH='' cd -- "$(git rev-parse --show-toplevel)" && pwd -P)
+base="$root/.solopowers/wsd"
+
+workstream_file=""
+slug=""
+
+if [ $# -eq 2 ]; then
+  if [[ "$1" == *.md || "$1" == */* ]]; then
+    workstream_file=$1
+    slug=$2
+  else
+    slug=$1
+    workstream_file=$2
+  fi
+else
+  if [[ "$1" == *.md || "$1" == */* ]]; then
+    workstream_file=$1
+    slug=$(basename "$workstream_file" .md | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//')
+  else
+    slug=$1
+  fi
+fi
+
+[ -n "$slug" ] && [ "$slug" != "." ] && [ "$slug" != ".." ] \
+  || { echo "cannot derive a workspace name from: $1" >&2; exit 2; }
+
+workstream_id=""
+date_prefix=""
+if [ -n "$workstream_file" ]; then
+  [ -f "$workstream_file" ] || { echo "no such workstream file: $workstream_file" >&2; exit 2; }
+  workstream_dir=$(CDPATH='' cd -- "$(dirname "$workstream_file")" && pwd -P)
+  workstream_abs="$workstream_dir/$(basename "$workstream_file")"
+  case "$workstream_abs" in
+    "$root"/*) workstream_id=${workstream_abs#"$root"/} ;;
+    *)         workstream_id=$workstream_abs ;;
+  esac
+  date_prefix=$(basename "$workstream_file" | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
+fi
+
+owns() {
+  local target="$1"
+  local ledger="$target/progress.md"
+  if [ -z "$workstream_id" ]; then
+    mkdir -p "$target"
+    [ -e "$target/.gitignore" ] || printf '*\n' > "$target/.gitignore"
+    return 0
+  fi
+
+  if [ -f "$ledger" ]; then
+    local first_line
+    first_line=$(head -n1 "$ledger" | tr -d '\r' | sed -E 's/[[:space:]]+$//')
+    if [[ "$first_line" =~ ^#\ Workstream:\ (.*\.md)$ ]]; then
+      local header="${BASH_REMATCH[1]}"
+      header=$(printf '%s' "$header" | sed -E 's/[[:space:]]+$//')
+      [ "$header" = "$workstream_id" ]
+    else
+      # Legacy headerless ledger (no header or not matching ^# Workstream: ...\.md)
+      echo "warning: adopting legacy headerless ledger at $ledger for $workstream_id" >&2
+      local existing
+      existing=$(cat "$ledger")
+      printf '# Workstream: %s\n\n%s\n' "$workstream_id" "$existing" > "$ledger"
+      return 0
+    fi
+  else
+    mkdir -p "$target"
+    [ -e "$target/.gitignore" ] || printf '*\n' > "$target/.gitignore"
+    printf '# Workstream: %s\n\n' "$workstream_id" > "$ledger"
+    return 0
+  fi
+}
+
+dir="$base/$slug"
+if ! owns "$dir"; then
+  if [ -n "$date_prefix" ]; then
+    candidate="$base/$slug-$date_prefix"
+    if owns "$candidate"; then
+      dir="$candidate"
+    else
+      n=2
+      while ! owns "$base/$slug-$date_prefix-$n"; do n=$((n + 1)); done
+      dir="$base/$slug-$date_prefix-$n"
+    fi
+  else
+    n=2
+    while ! owns "$base/$slug-$n"; do n=$((n + 1)); done
+    dir="$base/$slug-$n"
+  fi
+fi
+
 mkdir -p "$dir"
-printf '*\n' > "$dir/.gitignore"
-cd "$dir" && pwd
+[ -e "$dir/.gitignore" ] || printf '*\n' > "$dir/.gitignore"
+[ -e "$base/.gitignore" ] || printf '*\n' > "$base/.gitignore"
+CDPATH='' cd -- "$dir" && pwd

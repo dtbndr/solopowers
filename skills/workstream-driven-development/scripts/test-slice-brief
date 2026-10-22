@@ -156,4 +156,158 @@ expect_exit 2 "$slice_brief" "$workstream" A/1
 [ ! -e "$workspace/slice-A-1-brief.md" ] || fail "invalid ID created an output"
 [ ! -e "$workspace/slice-A/1-brief.md" ] || fail "slash ID created an output"
 
+# --- review-package tests ---
+review_package="$base/review-package"
+
+# Exit 2 on bad ref
+expect_exit 2 "$review_package" invalid-base HEAD slice-ids
+expect_exit 2 "$review_package" HEAD invalid-head slice-ids
+
+# Exit 3 on empty commit range (BASE == HEAD)
+expect_exit 3 "$review_package" HEAD HEAD slice-ids
+
+# Exit 3 on BASE not ancestor of HEAD
+divergent=$(git commit-tree 'HEAD^{tree}' -m divergent)
+expect_exit 3 "$review_package" "$divergent" HEAD slice-ids
+
+# Commit a change so BASE..HEAD has at least 1 commit
+echo "new change" >> "$workstream"
+git commit -qam "second commit"
+expect_exit 0 "$review_package" HEAD~1 HEAD slice-ids
+[ -f "$workspace/review-$(git rev-parse --short HEAD~1)..$(git rev-parse --short HEAD).diff" ] || fail "review package diff missing"
+
+# --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---
+stripped="$tmp/stripped-scripts"
+mkdir -p "$stripped"
+cp "$base/wsd-workspace" "$base/slice-brief" "$base/review-package" "$stripped/"
+chmod -x "$stripped"/*
+noexec_out=$(bash "$stripped/slice-brief" "$workstream" A1) || fail "slice-brief failed when wsd-workspace lacked exec bit"
+noexec_rev=$(bash "$stripped/review-package" HEAD~1 HEAD slice-ids) || fail "review-package failed when wsd-workspace lacked exec bit"
+
+# --- Workspace identity and disambiguation ---
+wsd_workspace="$base/wsd-workspace"
+
+# 1. Ledger header written at create time
+ws1="$tmp/repo/docs/workstreams/2026-01-01-feature.md"
+cat > "$ws1" <<'EOF'
+# Feature 1
+### Slice A1: Feature 1 Slice
+feat 1 body
+EOF
+git add docs/workstreams/2026-01-01-feature.md
+git commit -qm "add feature 1"
+
+dir1=$("$wsd_workspace" "$ws1")
+[ -f "$dir1/progress.md" ] || fail "progress.md not created"
+grep -q "Workstream: docs/workstreams/2026-01-01-feature.md" "$dir1/progress.md" || fail "ledger header missing or wrong in dir1"
+
+# Same workstream resolves to the same workspace
+dir1_again=$("$wsd_workspace" "$ws1")
+[ "$dir1" = "$dir1_again" ] || fail "same workstream did not resolve to same workspace"
+
+# 2. Colliding slug disambiguates and preserves original
+ws2="$tmp/repo/docs/workstreams/2026-02-01-feature.md"
+cat > "$ws2" <<'EOF'
+# Feature 2
+### Slice A1: Feature 2 Slice
+feat 2 body
+EOF
+git add docs/workstreams/2026-02-01-feature.md
+git commit -qm "add feature 2"
+
+dir2=$("$wsd_workspace" "$ws2")
+[ "$dir1" != "$dir2" ] || fail "colliding slug did not disambiguate"
+grep -q "Workstream: docs/workstreams/2026-01-01-feature.md" "$dir1/progress.md" || fail "original ledger corrupted"
+grep -q "Workstream: docs/workstreams/2026-02-01-feature.md" "$dir2/progress.md" || fail "new ledger header missing or wrong in dir2"
+
+# Second call for second workstream returns same disambiguated workspace
+dir2_again=$("$wsd_workspace" "$ws2")
+[ "$dir2" = "$dir2_again" ] || fail "second call for second workstream did not return same disambiguated workspace"
+
+# Direct two-arg form wsd-workspace SLUG WORKSTREAM_FILE
+dir_two_arg=$("$wsd_workspace" feature "$ws2")
+[ "$dir_two_arg" = "$dir2" ] || fail "direct two-arg form did not return disambiguated workspace"
+
+# review-package after collision writes to the disambiguated workspace
+echo "ws2 change" >> "$ws2"
+git commit -qam "ws2 commit"
+$review_package HEAD~1 HEAD feature "$ws2" >/dev/null
+[ -f "$dir2/review-$(git rev-parse --short HEAD~1)..$(git rev-parse --short HEAD).diff" ] || fail "review-package did not write to disambiguated workspace"
+[ ! -f "$dir1/review-$(git rev-parse --short HEAD~1)..$(git rev-parse --short HEAD).diff" ] || fail "review-package leaked into first workspace"
+
+# 3. slice-brief creates briefs in distinct workspaces
+$slice_brief "$ws1" A1 >/dev/null
+$slice_brief "$ws2" A1 >/dev/null
+[ -f "$dir1/slice-A1-brief.md" ] || fail "brief missing in dir1"
+[ -f "$dir2/slice-A1-brief.md" ] || fail "brief missing in dir2"
+grep -q "feat 1 body" "$dir1/slice-A1-brief.md" || fail "dir1 brief content mismatch"
+grep -q "feat 2 body" "$dir2/slice-A1-brief.md" || fail "dir2 brief content mismatch"
+
+# 4. -N counter fallback when workstream has no date prefix
+mkdir -p "$tmp/repo/docs/workstreams/nodate"
+ws_nd1="$tmp/repo/docs/workstreams/counter.md"
+ws_nd2="$tmp/repo/docs/workstreams/nodate/counter.md"
+printf '# ND1\n### Slice A: ND1\nnd1\n' > "$ws_nd1"
+printf '# ND2\n### Slice A: ND2\nnd2\n' > "$ws_nd2"
+git add "$ws_nd1" "$ws_nd2"
+git commit -qm "add nodate workstreams"
+
+dir_nd1=$("$wsd_workspace" "$ws_nd1")
+dir_nd2=$("$wsd_workspace" "$ws_nd2")
+[ "$dir_nd1" != "$dir_nd2" ] || fail "nodate workstreams collided"
+[[ "$dir_nd1" == *"/counter" ]] || fail "first nodate workspace did not get bare slug (got $dir_nd1)"
+[[ "$dir_nd2" == *"/counter-2" ]] || fail "second nodate workspace did not get -2 suffix (got $dir_nd2)"
+
+# 5. Legacy headerless ledger adoption (including # Workstream: Payments, # Progress for x.md)
+ws_legacy="$tmp/repo/docs/workstreams/2026-03-01-legacy.md"
+cat > "$ws_legacy" <<'EOF'
+# Legacy
+### Slice A1: Legacy Slice
+legacy
+EOF
+git add docs/workstreams/2026-03-01-legacy.md
+git commit -qm "add legacy workstream"
+mkdir -p "$tmp/repo/.solopowers/wsd/legacy"
+printf "Slice A1: complete\n" > "$tmp/repo/.solopowers/wsd/legacy/progress.md"
+warn_output=$("$wsd_workspace" "$ws_legacy" 2>&1 >/dev/null)
+dir_legacy=$("$wsd_workspace" "$ws_legacy")
+expected_legacy=$(cd "$tmp/repo/.solopowers/wsd/legacy" && pwd -P)
+[ "$dir_legacy" = "$expected_legacy" ] || fail "legacy workspace not adopted (got $dir_legacy, expected $expected_legacy)"
+[[ "$warn_output" == *"adopting legacy headerless ledger"* ]] || fail "legacy adoption warning missing on stderr"
+grep -q "Workstream: docs/workstreams/2026-03-01-legacy.md" "$dir_legacy/progress.md" || fail "legacy ledger missing adopted header"
+grep -q "Slice A1: complete" "$dir_legacy/progress.md" || fail "legacy ledger lost existing content"
+
+# Non-.md value: # Workstream: Payments treated as legacy headerless, not a mismatch
+mkdir -p "$tmp/repo/.solopowers/wsd/payments"
+printf "# Workstream: Payments\nSlice A: complete\n" > "$tmp/repo/.solopowers/wsd/payments/progress.md"
+ws_payments="$tmp/repo/docs/workstreams/payments.md"
+printf '# Payments\n' > "$ws_payments"
+git add "$ws_payments"
+git commit -qm "add payments workstream"
+dir_payments=$("$wsd_workspace" "$ws_payments" 2>/dev/null)
+expected_payments=$(cd "$tmp/repo/.solopowers/wsd/payments" && pwd -P)
+[ "$dir_payments" = "$expected_payments" ] || fail "Payments header was misidentified as mismatch instead of legacy"
+
+# Non-matching prefix: # Progress for x.md treated as legacy headerless
+mkdir -p "$tmp/repo/.solopowers/wsd/progress-test"
+printf "# Progress for x.md\nSlice A: complete\n" > "$tmp/repo/.solopowers/wsd/progress-test/progress.md"
+ws_ptest="$tmp/repo/docs/workstreams/progress-test.md"
+printf '# Progress Test\n' > "$ws_ptest"
+git add "$ws_ptest"
+git commit -qm "add progress-test workstream"
+dir_ptest=$("$wsd_workspace" "$ws_ptest" 2>/dev/null)
+expected_ptest=$(cd "$tmp/repo/.solopowers/wsd/progress-test" && pwd -P)
+[ "$dir_ptest" = "$expected_ptest" ] || fail "Progress for x.md was misidentified as mismatch instead of legacy"
+
+# 6. CRLF and trailing whitespace in ledger header compared cleanly
+ws_crlf="$tmp/repo/docs/workstreams/2026-04-01-crlf.md"
+printf '# CRLF\n' > "$ws_crlf"
+git add "$ws_crlf"
+git commit -qm "add crlf workstream"
+mkdir -p "$tmp/repo/.solopowers/wsd/crlf"
+printf "# Workstream: docs/workstreams/2026-04-01-crlf.md   \r\n\n" > "$tmp/repo/.solopowers/wsd/crlf/progress.md"
+dir_crlf=$("$wsd_workspace" "$ws_crlf" 2>/dev/null)
+expected_crlf=$(cd "$tmp/repo/.solopowers/wsd/crlf" && pwd -P)
+[ "$dir_crlf" = "$expected_crlf" ] || fail "CRLF header failed to match cleanly"
+
 echo 'slice-brief tests passed'

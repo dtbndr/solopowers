@@ -32,7 +32,9 @@ else
   slug=$(basename "$workstream" .md | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//')
 fi
 
-dir=$("${BASH_SOURCE[0]%/*}/wsd-workspace" "$slug")
+# Invoke via bash rather than direct exec: some extractors (Python zipfile)
+# strip Unix exec bits when unpacking marketplace packages (#2040).
+dir=$("${BASH:-bash}" "${BASH_SOURCE[0]%/*}/wsd-workspace" "$slug" "$workstream")
 out="$dir/slice-${slice_id}-brief.md"
 
 awk -v requested="$slice_id" '
@@ -87,4 +89,4 @@ if [ ! -s "$out" ]; then
   exit 3
 fi
 
-echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines (workspace: ${slug})"
+echo "wrote ${out}: $(wc -l < "$out" | tr -d ' ') lines (workspace: $(basename "$dir"))"

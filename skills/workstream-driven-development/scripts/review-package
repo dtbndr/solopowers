@@ -3,18 +3,23 @@
 # diff with extended context, written to a file the reviewer reads in one
 # call.
 #
-# Usage: review-package BASE HEAD WORKSPACE_SLUG
+# Usage: review-package BASE HEAD WORKSPACE_SLUG [WORKSTREAM_FILE]
 # Output: .solopowers/wsd/<slug>/review-<base7>..<head7>.diff
+# Exit codes:
+#   0  success
+#   2  invalid usage or unresolvable revision
+#   3  range guard failure: BASE not ancestor of HEAD, or empty commit range
 set -euo pipefail
 
-if [ $# -ne 3 ]; then
-  echo "usage: review-package BASE HEAD WORKSPACE_SLUG" >&2
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+  echo "usage: review-package BASE HEAD WORKSPACE_SLUG [WORKSTREAM_FILE]" >&2
   exit 2
 fi
 
 base=$1
 head=$2
 workspace=$3
+workstream=${4:-}
 
 git rev-parse --verify --quiet "$base" >/dev/null || {
   echo "bad BASE: $base" >&2
@@ -25,7 +30,24 @@ git rev-parse --verify --quiet "$head" >/dev/null || {
   exit 2
 }
 
-dir=$("${BASH_SOURCE[0]%/*}/wsd-workspace" "$workspace")
+# Range guards (exit 3): a wrong-branch HEAD yields a range that is empty or
+# not rooted at BASE; either would silently produce a bogus review package.
+git merge-base --is-ancestor "$base" "$head" || {
+  echo "HEAD is not a descendant of BASE: ${base}..${head}" >&2
+  exit 3
+}
+[ "$(git rev-list --count "${base}..${head}")" -gt 0 ] || {
+  echo "empty commit range: ${base}..${head}" >&2
+  exit 3
+}
+
+# Invoke via bash rather than direct exec: some extractors (Python zipfile)
+# strip Unix exec bits when unpacking marketplace packages (#2040).
+if [ -n "$workstream" ]; then
+  dir=$("${BASH:-bash}" "${BASH_SOURCE[0]%/*}/wsd-workspace" "$workspace" "$workstream")
+else
+  dir=$("${BASH:-bash}" "${BASH_SOURCE[0]%/*}/wsd-workspace" "$workspace")
+fi
 out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
 
 {
