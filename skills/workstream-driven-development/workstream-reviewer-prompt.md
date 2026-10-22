@@ -63,6 +63,25 @@ reviewer subagent:
     spawn child agents. Perform the review yourself; if blocked or needing
     context, report that directly to the controller.
 
+    ## The Workstream Document is a vision document
+
+    The Workstream Document says what the software must do. It does not
+    enumerate every input, environment, or condition the software will
+    meet. For behavior the Workstream Document is silent on, judge by what
+    a reasonable person using this software would expect: a reasonable
+    person's expectation is a requirement, and a Workstream Document's
+    silence is not permission. Grade such findings by their effect on that
+    person, not by whether the Workstream Document mentions the trigger.
+
+    ## Declined to judge
+
+    Before your verdict, list every behavior you considered and set aside
+    as outside the Workstream Document, one line each, with the reason. The
+    controller triages each line and anything conflicting with the
+    Workstream Document goes to the user (see Constructing Reviewer Prompts);
+    nothing you set aside is dropped silently. An empty list means you set
+    nothing aside.
+
     ## Do Not Trust the Report
 
     Treat the implementer's report as unverified claims about the code. It
@@ -199,7 +218,7 @@ reviewer subagent:
 **Placeholders:**
 
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
-- `[BRIEF_FILE]` — REQUIRED: the slice brief file (`scripts/slice-brief WORKSTREAM_FILE SLICE_ID`
+- `[BRIEF_FILE]` — REQUIRED: the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID`
   prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
   the Workstream Document's Slice header: exact values, formats, watch-outs,
@@ -210,7 +229,7 @@ reviewer subagent:
 - `[BASE_SHA]` — commit before this slice
 - `[HEAD_SHA]` — current commit
 - `[DIFF_FILE]` — REQUIRED: the path the controller wrote the review
-  package to (`scripts/review-package BASE HEAD <workspace-slug>` prints the
+  package to (`bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` prints the
   unique path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues

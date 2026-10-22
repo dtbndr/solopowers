@@ -28,6 +28,24 @@ Dispatch a reviewer subagent with this prompt:
     git diff [BASE_SHA]..[HEAD_SHA]
     ```
 
+    ## The Workstream Document is a vision document
+
+    The Workstream Document says what the software must do. It does not enumerate every
+    input, environment, or condition the software will meet. For behavior
+    the Workstream Document is silent on, judge by what a reasonable person using this
+    software would expect: a reasonable person's expectation is a
+    requirement, and a Workstream Document's silence is not permission. Grade such
+    findings by their effect on that person, not by whether the Workstream Document
+    mentions the trigger.
+
+    ## Declined to judge
+
+    Before your verdict, list every behavior you considered and set aside
+    as outside the plan or Workstream Document, one line each, with the reason. The
+    controller/executor triages each line and anything conflicting with the plan or
+    Workstream Document goes to the user (see Constructing Reviewer Prompts); nothing
+    you set aside is dropped silently. An empty list means you set nothing aside.
+
     ## Read-Only Review
 
     Your review is read-only on this checkout. Do not mutate the working tree, the index, HEAD, or branch state in any way. Use tools like `git show`, `git diff`, and `git log` to inspect history. If you need a working copy of a different revision, check it out into a separate temporary directory (e.g. `git worktree add /tmp/review-[SHA] [SHA]`) — never move HEAD on this checkout.
