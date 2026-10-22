@@ -12,6 +12,8 @@ You run scenarios without the skill (RED - watch agent fail), write skill addres
 
 **REQUIRED BACKGROUND:** You MUST understand solopowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
 
+**Complete worked example:** See CLAUDE_MD_TESTING.md in this directory for a full test campaign testing CLAUDE.md documentation variants.
+
 ## When to Use
 
 Test skills that:
@@ -145,7 +147,7 @@ Forces explicit choice.
 
 **Best tests combine 3+ pressures.**
 
-**Why this works:** See persuasion-principles.md (in authoring-skills directory) for research on how authority, scarcity, and commitment principles increase compliance pressure.
+**Why this works:** See persuasion-principles.md (in this directory) for research on how authority, scarcity, and commitment principles increase compliance pressure.
 
 ### Key Elements of Good Scenarios
 
