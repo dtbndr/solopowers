@@ -264,10 +264,10 @@ External review is optional and user-coordinated. Harness A owns brainstorming, 
 
 Use these supporting tools and prompt:
 
-- `scripts/external-review-workspace WORKSTREAM_FILE` creates a local self-ignoring `.solopowers/workstream-reviews/...` audit workspace. It is append-only by protocol, not durable archival storage.
-- `scripts/external-review-package initial WORKSTREAM_FILE` creates a commit/blob-anchored manifest and prints the canonical copy/paste B launch instruction.
+- `bash scripts/external-review-workspace WORKSTREAM_FILE` creates a local self-ignoring `.solopowers/workstream-reviews/...` audit workspace. It is append-only by protocol, not durable archival storage.
+- `bash scripts/external-review-package initial WORKSTREAM_FILE` creates a commit/blob-anchored manifest and prints the canonical copy/paste B launch instruction.
 - `external-workstream-document-reviewer-prompt.md` is B’s dedicated contract.
-- `scripts/external-review-report publish PACKAGE DRAFT` mechanically validates and publishes B’s report; `verify PACKAGE REPORT` must be run by A before adjudication.
+- `bash scripts/external-review-report publish PACKAGE DRAFT` mechanically validates and publishes B’s report; `verify PACKAGE REPORT` must be run by A before adjudication.
 
 State machine:
 

@@ -48,7 +48,7 @@ validate_confirmation(){
   [ -f "$prior" ] && [ -n "$expected" ] && [ "$(sha "$prior")" = "$expected" ] || { echo 'confirmation prior report digest mismatch' >&2; return 3; }
   prior=$(real "$prior")
   prior_pkg=$(field Package-Path "$prior"); [ -n "$prior_pkg" ] || { echo 'prior report lacks package identity' >&2; return 3; }
-  "$0" verify "$prior_pkg" "$prior" >/dev/null || { echo 'invalid prior report linkage' >&2; return 3; }
+  "${BASH:-bash}" "$0" verify "$prior_pkg" "$prior" >/dev/null || { echo 'invalid prior report linkage' >&2; return 3; }
   [ "$(field Mode "$prior")" = initial ] || { echo 'confirmation prior report is not initial' >&2; return 3; }
   [ "$(field Workstream-Path "$prior")" = "$(package_field Workstream-Path)" ] || { echo 'confirmation prior report Workstream mismatch' >&2; return 3; }
   [ "$(grep -c '^Accepted-Blocker-Dispositions:$' "$package")" = 1 ] && [ "$(grep -c '^Affected-Areas:$' "$package")" = 1 ] || { echo 'malformed confirmation sections' >&2; return 3; }
@@ -74,7 +74,7 @@ case "$action" in
  publish)
   [ -f "$report" ] || { echo 'draft missing' >&2; exit 2; }; validate_report "$report"
   root=$(package_field Repository-Root); path=$(package_field Workstream-Path)
-  ws=$(cd "$root" && "$workspace_tool" "$path") || exit $?
+  ws=$(cd "$root" && "${BASH:-bash}" "$workspace_tool" "$path") || exit $?
   stamp=${EXTERNAL_REVIEW_TEST_STAMP:-$(date -u +%Y%m%dT%H%M%S%3N 2>/dev/null || date -u +%Y%m%dT%H%M%S)}; suffix=${EXTERNAL_REVIEW_TEST_SUFFIX:-$(LC_ALL=C tr -dc 'a-f0-9' </dev/urandom | head -c 16 || true)}; [ -n "$suffix" ] || suffix=$$
   final="$ws/reports/$(package_field Mode)-${stamp}-${suffix}.review-report.md"; tmp="$ws/reports/.$$.${RANDOM}.tmp"
   cp "$report" "$tmp"; ln "$tmp" "$final" 2>/dev/null || { rm -f "$tmp"; echo 'report collision or publication failure' >&2; exit 5; }; rm -f "$tmp"

@@ -56,7 +56,7 @@ implementer subagent:
     slices, information that isn't in scope to infer, or a loop of failing tests you
     cannot break). For those, report BLOCKED or NEEDS_CONTEXT.
 
-    While iterating, run the focused test for what you're changing; first verify RED, then verify GREEN, and run broader verification before committing rather than after every edit.
+    While iterating, run the focused test for what you're changing; first verify RED, then verify GREEN. Remember the test rule: covering tests per fix round; full suite before a slice reports DONE and before final review.
 
     ## Code Organization
 
@@ -115,14 +115,16 @@ implementer subagent:
     ## After Review Findings
 
     If a reviewer finds issues and you fix them, re-run the tests that cover the amended
-    code and append the results to your report file. Reviewers should be able to rely on
-    your report as the test evidence.
+    code and append the results to your report file. The test rule applies: covering
+    tests per fix round; full suite before a slice reports DONE and before final review.
+    Reviewers should be able to rely on your report as the test evidence.
 
     ## Report Format
 
     Write your full report to [REPORT_FILE]:
     - What you implemented (or what you attempted, if blocked)
     - What you tested and exact test results
+    - Full suite result: command run, total passed/failed, and any pre-existing failures explicitly named
     - **TDD Evidence** (mandatory for any DONE or DONE_WITH_CONCERNS status):
       - RED: command run, relevant failing output before implementation, and why the failure was expected
       - GREEN: command run and relevant passing output after implementation
@@ -133,7 +135,7 @@ implementer subagent:
     Then report back with ONLY:
     - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - Commits created (short SHA + subject)
-    - One-line test summary
+    - One-line test summary (including full-suite result)
     - Your concerns, if any
     - The report file path
 
