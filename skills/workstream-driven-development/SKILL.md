@@ -37,7 +37,7 @@ digraph workstream_execution {
         "Implementer implements, tests,\ncommits & self-reviews" [shape=box];
         "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" [shape=box];
         "Reviewer reports\ncompliance ✅ and quality Approved?" [shape=diamond];
-        "Implementer fixes findings" [shape=box];
+        "Enter fix loop\n(references/fix-loop.md)" [shape=box];
         "Pause for user manual smoke test" [shape=box];
         "User smoke test passes?" [shape=diamond];
         "Implementer fixes smoke test issues" [shape=box];
@@ -45,13 +45,14 @@ digraph workstream_execution {
     }
 
     "Read Workstream Doc, extract all slices, create Todo" [shape=box];
+    "Pre-flight scan\n(references/preflight.md)" [shape=box];
     "Set up isolated workspace\n(using-git-worktrees once)" [shape=box];
     "More slices remain?" [shape=diamond];
     "Verify whole workstream\n(Final verification section)" [shape=box];
-    "Dispatch final codebase reviewer" [shape=box];
-    "Complete branch\n(finishing-a-development-branch once)" [shape=box style=filled fillcolor=lightgreen];
+    "Final review & finish\n(references/final-review.md)" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read Workstream Doc, extract all slices, create Todo" -> "Set up isolated workspace\n(using-git-worktrees once)";
+    "Read Workstream Doc, extract all slices, create Todo" -> "Pre-flight scan\n(references/preflight.md)";
+    "Pre-flight scan\n(references/preflight.md)" -> "Set up isolated workspace\n(using-git-worktrees once)";
     "Set up isolated workspace\n(using-git-worktrees once)" -> "Dispatch implementer subagent\n(./implementer-prompt.md)";
     "Dispatch implementer subagent\n(./implementer-prompt.md)" -> "Implementer asks clarifying questions?";
     "Implementer asks clarifying questions?" -> "Answer questions & supply context" [label="yes"];
@@ -59,8 +60,8 @@ digraph workstream_execution {
     "Implementer asks clarifying questions?" -> "Implementer implements, tests,\ncommits & self-reviews" [label="no"];
     "Implementer implements, tests,\ncommits & self-reviews" -> "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)";
     "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" -> "Reviewer reports\ncompliance ✅ and quality Approved?";
-    "Reviewer reports\ncompliance ✅ and quality Approved?" -> "Implementer fixes findings" [label="no"];
-    "Implementer fixes findings" -> "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" [label="re-review"];
+    "Reviewer reports\ncompliance ✅ and quality Approved?" -> "Enter fix loop\n(references/fix-loop.md)" [label="no"];
+    "Enter fix loop\n(references/fix-loop.md)" -> "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" [label="re-review"];
     "Reviewer reports\ncompliance ✅ and quality Approved?" -> "Pause for user manual smoke test" [label="yes"];
     "Pause for user manual smoke test" -> "User smoke test passes?";
     "User smoke test passes?" -> "Implementer fixes smoke test issues" [label="no"];
@@ -69,21 +70,33 @@ digraph workstream_execution {
     "Mark slice complete in Todo" -> "More slices remain?";
     "More slices remain?" -> "Dispatch implementer subagent\n(./implementer-prompt.md)" [label="yes"];
     "More slices remain?" -> "Verify whole workstream\n(Final verification section)" [label="no"];
-    "Verify whole workstream\n(Final verification section)" -> "Dispatch final codebase reviewer";
-    "Dispatch final codebase reviewer" -> "Complete branch\n(finishing-a-development-branch once)";
+    "Verify whole workstream\n(Final verification section)" -> "Final review & finish\n(references/final-review.md)";
 }
 ```
 
 *Diagram labels describe workflow roles; see Harness Dispatch section below for how to dispatch on your harness.*
 
-## Prompt Templates
+## Prompt Templates and Scripts
 
-The following prompt templates and helper scripts are stored in this skill's directory and MUST be used when dispatching subagents:
+The following templates and helper scripts are stored in this skill's directory:
 
 - `implementer-prompt.md` - Dispatch prompt for the implementer subagent.
-- `workstream-reviewer-prompt.md` - Dispatch prompt for the reviewer subagent.
-- `bash scripts/slice-brief` - Extracts a single slice into a file for worker handoff.
-- `bash scripts/review-package` - Creates the diff package used by reviewers.
+- `workstream-reviewer-prompt.md` - Dispatch prompt for the slice reviewer subagent.
+- `re-review-prompt.md` - Scoped re-review prompt used during fix loops.
+- `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` - Extracts a single slice into an isolated brief file.
+- `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` - Generates a unified diff package for reviewers.
+- `bash scripts/wsd-workspace WORKSTREAM_FILE` - Resolves the disambiguated workstream workspace directory.
+
+## Supporting References
+
+Detailed procedures that the controller reads fresh at specific workflow steps live in `references/`:
+
+- [references/preflight.md](references/preflight.md) - Pre-flight scan for cross-slice contradictions before dispatching Slice 1.
+- [references/fix-loop.md](references/fix-loop.md) - Bounded 4-round fix loop, cap escalation to the human, and test rules.
+- [references/final-review.md](references/final-review.md) - Final whole-workstream review, no second fix wave, and cleanup.
+- [references/resuming.md](references/resuming.md) - Durable progress ledger, workspace identity, header parsing, and session resume.
+- [references/handling-reports.md](references/handling-reports.md) - Handling non-DONE worker statuses (`BLOCKED`, `NEEDS_CONTEXT`, `DONE_WITH_CONCERNS`).
+- [references/cannot-verify.md](references/cannot-verify.md) - Resolving "⚠️ Cannot verify from diff" reviewer items.
 
 ## Required Sub-skills
 
@@ -93,11 +106,13 @@ Worker subagents MUST be configured to use:
 
 ## Roles and Model Selection
 
-- **Controller (You)**: Oversees execution, manages the slice-to-slice state, updates the Todo task list, curates file contexts, and coordinates reviews. (Most capable model).
+- **Controller (You)**: Oversees execution, manages slice-to-slice state, updates the Todo task list, curates file contexts, and coordinates reviews. (Most capable model).
 - **Implementer subagent:** Focuses entirely on implementing and testing a single slice. (Fast, cheap model for mechanical/isolated tasks; standard model for complex integrations).
-- **Slice Reviewer subagent:** Evaluates requirements compliance AND code quality in a single pass. Returns separate verdicts: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes). (Capable standard or premium model — this role covers both compliance and quality, so it carries more judgment load than either role did alone).
+- **Slice Reviewer subagent:** Evaluates requirements compliance AND code quality in a single pass. Returns separate verdicts: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes). (Capable standard or premium model).
 
 Always specify the model explicitly when dispatching a subagent. An omitted model silently inherits the controller's session model, which is often more expensive than needed.
+
+**Turn count beats token price.** Wall-clock and context cost scale with how many turns a subagent takes, and the cheapest models routinely take 2-3× the turns on multi-step work — costing more overall. Use a mid-tier model as the floor for reviewers and for workers working from prose descriptions. When the slice brief contains the complete code to write, the implementation is transcription plus testing: use the cheapest tier for that worker. Single-file mechanical fixes also take the cheapest tier.
 
 ## Harness Dispatch
 
@@ -119,129 +134,85 @@ Use the table below to dispatch implementer and reviewer subagents on your harne
 | claude-code | surface the question in response; controller resumes |
 | Antigravity | subagent reports back; controller resumes with answer |
 
-**Task complexity signals:**
-
-- Touches 1-2 files with a complete slice description → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment, broad codebase understanding, or final review synthesis → most capable model
-
-**Turn count beats token price.** Wall-clock and context cost scale with how many turns a subagent takes, and the cheapest models routinely take 2-3× the turns on multi-step work — costing more overall. Use a mid-tier model as the floor for reviewers and for workers working from prose descriptions. When the slice brief contains the complete code to write, the implementation is transcription plus testing: use the cheapest tier for that worker. Single-file mechanical fixes also take the cheapest tier.
-
 ## Handling Worker Status
 
-Worker subagents report one of four statuses. Handle each appropriately:
+Worker subagents report one of four statuses: `DONE`, `DONE_WITH_CONCERNS`, `NEEDS_CONTEXT`, or `BLOCKED`. For complete handling instructions for non-DONE statuses, read [references/handling-reports.md](references/handling-reports.md).
 
-**DONE:** Generate the review package (`bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE`, from this skill's directory — it prints the unique file path it wrote; BASE is the commit you recorded before dispatching the worker — never `HEAD~1`, which silently drops all but the last commit of a multi-commit slice), then dispatch the slice reviewer with the printed path. The reviewer returns both a compliance verdict and a quality verdict in a single pass.
+When `DONE`: Generate the review package (`bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE`) and dispatch the slice reviewer.
 
-**DONE_WITH_CONCERNS:** The worker completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
-
-**NEEDS_CONTEXT:** The worker needs information that wasn't provided. Provide the missing context and re-dispatch.
-
-**BLOCKED:** The worker cannot complete the slice. Assess the blocker:
-
-1. If it's a context problem, provide more context and re-dispatch with the same model
-2. If the slice requires more reasoning, re-dispatch with a more capable model
-3. If the slice is too large, break it into smaller pieces
-4. If the workstream document itself is wrong, escalate to the human
-
-**Never** ignore an escalation or force the same model to retry without changes. If the worker said it's stuck, something needs to change.
-
-## Execution Details
+## Execution Flow
 
 ### 1. Initial Set Up (Start of Workstream)
 
 - Use the `using-git-worktrees` skill to verify/create an isolated git worktree for the entire workstream.
 - Read the Workstream Document at `docs/workstreams/YYYY-MM-DD-<topic>.md` and extract all slices.
-- Derive the workspace slug from the Workstream Document filename: strip directory path, `.md` extension, and leading `YYYY-MM-DD-` date prefix (e.g., `2026-06-20-previous-uploads-panel.md` → `previous-uploads-panel`). Resolve the workspace with `bash scripts/wsd-workspace WORKSTREAM_FILE` (or `bash scripts/wsd-workspace <workspace-slug> WORKSTREAM_FILE`), which records the Workstream Document path in the ledger header and disambiguates if another workstream used the same slug.
-- Before dispatching the first slice, scan the workstream once for conflicts, oversized slices, or requirements that contradict architecture invariants. Raise those with the user before implementation instead of discovering them mid-slice.
+- Resolve the workspace with `bash scripts/wsd-workspace WORKSTREAM_FILE`, which records the Workstream Document path in the ledger header and disambiguates if another workstream used the same slug.
+- Run the pre-flight scan across all slices (see [references/preflight.md](references/preflight.md)) to catch cross-slice contradictions or contract conflicts before dispatching Slice 1.
 - Create a `todo` task list with one task per slice, plus a final task for "Final verification and close branch".
-- Check for a durable progress ledger at `$(bash scripts/wsd-workspace <workspace-slug> WORKSTREAM_FILE)/progress.md` before resuming or dispatching any slice. (The script automatically disambiguates if another workstream used the same slug.) If the ledger already marks a slice complete, do not re-dispatch it.
+- Check for a durable progress ledger before dispatching (see [references/resuming.md](references/resuming.md)). If the ledger already marks a slice complete, do not re-dispatch it.
 
 ### 2. Dispatching the Worker
 
-For each slice, dispatch the worker subagent. Prefer file handoffs over pasted text:
+For each slice, dispatch the worker subagent using file handoffs:
 
-- Generate a slice brief with `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` and pass the printed file path to the worker. `SLICE_ID` must match `[A-Z][0-9]*`, such as `A`, `A1`, or `A2`.
-- Explicitly inject `solopowers:test-driven-development` into the worker dispatch. Do not rely on ambient skill discovery or a vague mention of testing. Enforce the test execution rule: covering tests per fix round; full suite before a slice reports DONE and before final review.
-- Provide the Workstream Objective, in-scope details, and any carry-forward context the brief cannot know.
-- Name a report file for the worker so detailed implementation notes and test evidence live on disk, not in controller context.
-- Provide only the relevant existing code files or interfaces for this slice (do NOT provide files unrelated to the slice).
+- Generate a slice brief with `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` and pass the printed file path to the worker. `SLICE_ID` must match `[A-Z][0-9]*` (e.g., `A`, `A1`, `A2`).
+- Explicitly inject `solopowers:test-driven-development` into the worker dispatch.
+- **Test execution rule:** Run covering tests per fix round; run the full repository test suite before reporting slice DONE and before final workstream review.
+- Provide the Workstream Objective, in-scope details, and carry-forward context from the preceding completed slice.
+- Name a report file path for the worker so detailed notes and test evidence live on disk, not in controller context.
+- Provide only the relevant code files or interfaces for this slice.
 
-**Context budget:** Workers run on low-cost models. The curated prompt must fit comfortably in a small context window. If a slice's brief + carry-forward + relevant files exceed what a lightweight model can hold, escalate to the user — the slice is too large and needs splitting in the Workstream Document.
+**Context budget:** The curated prompt must fit comfortably in a small context window. If a slice's brief + carry-forward + files exceed what a lightweight model can hold, escalate to the user — the slice is too large and needs splitting in the Workstream Document.
 
 ### 3. Reviewing the Slice
 
-- Once the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent. The reviewer checks the diff and reported TDD/test evidence to verify every task inside the slice is met (nothing missed, nothing extra), the red → green cycle actually happened, the code is well-built (readable, tested, maintainable, follows project conventions), and the manual smoke test is supported.
-- The reviewer returns two verdicts in one report: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes).
-- If the reviewer reports a requirement they cannot verify from the diff alone (⚠️ Cannot verify from diff), resolve it yourself from the workstream context before marking the slice complete. If it is a real gap, send it back as a failed review.
-- If the reviewer flags issues, have the worker fix them and re-review. Do NOT manually fix reviewer-flagged issues yourself. If the original worker is unavailable, aggregate all findings into a single fix dispatch rather than spawning one fixer per issue.
-- If the reviewer flags a defect that the workstream explicitly mandates, treat it as a human decision: present the finding and the workstream text to the user instead of silently overriding either one.
+- Once the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
+- The reviewer checks the diff and reported TDD evidence, returning two verdicts in one report: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes).
+- If the reviewer reports "⚠️ Cannot verify from diff", resolve it yourself from context before marking the slice complete (see [references/cannot-verify.md](references/cannot-verify.md)).
+- If the reviewer flags issues: enter the bounded fix loop (see [references/fix-loop.md](references/fix-loop.md)). Re-read `references/fix-loop.md` before every fix round.
 - **Manual Smoke Test Pause**: Only after the reviewer reports both compliance ✅ and quality Approved, pause and ask the user to run the slice's manual smoke test from the Workstream Document. Do not continue to the next slice until the user confirms the smoke test passed.
-- If the user reports a smoke test issue, send it back to the worker and then re-review before asking for the manual smoke test again.
+- If the user reports a smoke test issue, dispatch a fix to the worker, re-review, and pause for the smoke test again.
 
 ### 4. Transitioning and Finalization
 
-- When all slices are marked complete, run the commands listed in the **Final verification** section of the Workstream Document.
-- Dispatch the final codebase reviewer with a review package covering the whole workstream branch.
-- Invoke the `finishing-a-development-branch` skill to guide the user through local merging, opening a PR, or branch cleanup.
+When all slices are marked complete and smoke-tested:
+- Follow the final review procedure in [references/final-review.md](references/final-review.md): run the **Final verification** commands, generate the whole-branch review package, dispatch the final codebase reviewer (`solopowers:dispatching-code-review`), clean up the workspace directory, and invoke `solopowers:finishing-a-development-branch`.
 
 ## File Handoffs
 
-Everything you paste into a dispatch prompt — and everything a subagent prints back — stays resident in your context for the rest of the session. Prefer artifacts on disk:
+Everything pasted into a prompt or returned by a subagent stays resident in your context for the rest of the session. Prefer artifacts on disk:
 
-- **Slice brief:** Use `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` to extract one slice into its own file. The script auto-derives the workspace slug from the workstream filename and matches the ID exactly.
-- **Worker report:** Give each slice a report file path. The worker writes the full report and test evidence there, then returns only status, commits, a one-line test summary, concerns, and the report path.
-- **Reviewer inputs:** The slice reviewer receives the slice brief path, worker report path, and diff package path.
-- **Review package:** Use `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` so the reviewer reads one artifact containing commit list, stat summary, and diff context.
+- **Slice brief:** `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` extracts one slice into its own file.
+- **Worker report:** Give each slice a report file path. The worker writes the full report and test evidence there, returning only status, commits, test summary, concerns, and the report path.
+- **Review package:** `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` writes the commit list, stat summary, and diff context into one file.
 
 ## Constructing Reviewer Prompts
 
-Per-slice reviews are slice-scoped gates. The broad review happens once, at the final whole-workstream review. When you fill the reviewer template:
+Per-slice reviews are slice-scoped gates; the broad review happens once at the final whole-workstream review. When filling the reviewer template:
 
-- Do not add open-ended directives like "check all uses" or "run race tests if useful" without a concrete, slice-specific reason
-- Do not ask a reviewer to re-run tests the worker already ran on the same code — the worker's report carries the test evidence
-- Do not pre-judge findings for the reviewer — never instruct a reviewer to ignore or not flag a specific issue. If you believe a finding would be a false positive, let the reviewer raise it and adjudicate it in the review loop. If the prompt you are writing contains "do not flag," "don't treat X as a defect," "at most Minor," or "the workstream chose" — stop: you are pre-judging, usually to spare yourself a review loop.
-- The global-constraints block you hand the reviewer is its attention lens. Copy the binding requirements verbatim from the Workstream Document's Slice header (watch-outs, requirements, architecture invariants). The reviewer's template already carries the process rules (YAGNI, test hygiene, review method) — the constraints block is for what THIS slice's spec demands.
-- Hand the reviewer its diff as a file: run this skill's `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and pass the reviewer the file path it prints. The output never enters your own context, and the reviewer sees the commit list, stat summary, and full diff with context in one Read call. Use the BASE you recorded before dispatching the worker — never `HEAD~1`, which silently truncates multi-commit slices.
-- A dispatch prompt describes one slice, not the session's history. Do not paste accumulated prior-slice summaries into later dispatches — a real session's dispatch hit 42k chars of which 99% was pasted history. A fresh subagent needs its slice, the interfaces it touches, and the global constraints. Nothing else.
-- Dispatch fix subagents for Critical and Important findings. Record Minor findings in the progress ledger as you go, and point the final whole-workstream review at that list so it can triage which must be fixed before merge. A roll-up nobody reads is a silent discard.
-- A finding labeled workstream-mandated — or any finding that conflicts with what the Workstream Document's text requires — is the human's decision, like any workstream contradiction: present the finding and the workstream text, ask which governs. Do not dismiss the finding because the workstream mandates it, and do not dispatch a fix that contradicts the workstream without asking.
-- The final whole-workstream review gets a package too: run `bash scripts/review-package $(git merge-base main HEAD) HEAD <workspace-slug> WORKSTREAM_FILE` and include the printed path in the final review dispatch, so the final reviewer reads one file instead of re-deriving the branch diff with git commands.
-- Every fix dispatch carries the worker contract: the fix subagent re-runs the tests covering its change and reports the results. The rule: covering tests per fix round; full suite before a slice reports DONE and before final review. Name the covering test files in the dispatch — a one-line fix does not need the whole suite. Before re-dispatching the reviewer, confirm the fix report contains the covering tests, the command run, and the output; dispatch the re-review once all three are present.
-- If the final whole-workstream review returns findings, dispatch ONE fix subagent with the complete findings list — not one fixer per finding. Per-finding fixers each rebuild context and re-run suites; a real session's final-review fix wave cost more than all its slices combined.
+- Do not add open-ended directives like "check all uses" or "run race tests if useful" without a slice-specific reason.
+- Do not ask a reviewer to re-run tests the worker already ran — the worker's report carries the test evidence.
+- Do not pre-judge findings — never instruct a reviewer to ignore or not flag a specific issue. If the prompt contains "do not flag," "don't treat X as a defect," or "the workstream chose" — stop: you are pre-judging.
+- Copy binding requirements verbatim from the Workstream Document's Slice header into the global-constraints block.
+- Pass the diff as a file using `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` with the recorded `BASE` commit (never `HEAD~1`).
+- Do not paste accumulated prior-slice history into later dispatches.
+- Dispatch fix subagents for Critical and Important findings. Record Minor findings in the progress ledger as deferred minors.
+- Findings labeled workstream-mandated are the user's decision: present the finding and the workstream text to the user.
 
-## Durable Progress
+## Durable Progress and Session Resume
 
-Conversation memory does not survive compaction. Track durable slice progress in `$(bash scripts/wsd-workspace <workspace-slug> WORKSTREAM_FILE)/progress.md`, not only in todos.
+Conversation memory does not survive compaction. Track durable progress in `$(bash scripts/wsd-workspace <workspace-slug> WORKSTREAM_FILE)/progress.md`.
 
-The ledger file lives inside the per-workstream workspace directory (`.solopowers/wsd/<workspace>/`). At create time, the ledger header records the Workstream Document path (`# Workstream: <path>`). When the Workstream Document is passed, the script automatically disambiguates colliding slugs to `<slug>-<date>[-N]`. If an adopted legacy headerless ledger already contains completed slices, confirm with the user before trusting them.
+For complete details on ledger header tracking, collision disambiguation (`<slug>-<date>[-N]`), legacy ledger adoption, and step-by-step resume instructions, read [references/resuming.md](references/resuming.md).
 
-- At skill start, check the ledger before dispatching any slice.
-- When a slice passes review and the user confirms the manual smoke test, append one line such as `Slice A1: complete (commits <base7>..<head7>, review clean, smoke test passed)`.
-- On resume, trust the ledger and git log over memory.
+- Slices with `Slice <ID>: complete (...)` are DONE — do not re-dispatch them.
+- On resume, read the ledger, inspect git log in the worktree, and resume at the first incomplete slice.
 
 ## Red Flags / Anti-patterns
 
-- **Creating a new worktree per slice**: Absolutely NOT. Keep everything in one worktree.
+- **Creating a new worktree per slice**: Absolutely NOT. Keep everything in one worktree for the entire workstream.
 - **Letting subagents read the Workstream Doc**: Subagents should NOT read the Workstream Doc. Provide the curated text and tasks for their specific slice to protect their context window.
 - **Treating TDD as optional**: Do not dispatch workers without `solopowers:test-driven-development`, and do not accept "tests added later" as equivalent to a real red → green cycle.
 - **Proceeding while a slice review fails**: Never start the next slice while there are open review findings in the current slice.
 - **Skipping the manual smoke test pause**: Never continue to the next slice once review passes without pausing for the user's manual smoke test.
 - **Failing to commit**: Ensure each slice is committed before starting reviews, and any fixes are also committed.
-
-## Session Resume
-
-If the session ends mid-workstream (context limit, user interruption, crash), the resume point is defined by:
-
-1. **The durable progress ledger**: Which slices are marked complete vs. pending in `$(bash scripts/wsd-workspace <workspace-slug> WORKSTREAM_FILE)/progress.md`.
-   - The script automatically resolves to the correct disambiguated workspace (`<slug>-<date>[-N]`) when given the Workstream Document file. Slices with a complete line are DONE — do not re-dispatch them; resume at the first slice without one.
-2. **The last committed slice**: The git log in the worktree confirms what was finished.
-3. **The Workstream Document checkboxes**: Task checkboxes (`- [x]`) reflect completed work inline.
-4. **The Todo task list**: Helpful, but not authoritative after compaction.
-
-**On resume:**
-
-- Read the durable progress ledger at `$(bash scripts/wsd-workspace <workspace-slug> WORKSTREAM_FILE)/progress.md` and resume from the first incomplete slice. If adopting a legacy headerless ledger that already marks slices complete, confirm with the user before skipping them.
-- Read the Workstream Document and check which task checkboxes are marked done.
-- Check git log in the worktree to confirm the last committed slice.
-- Carry-forward context from the last completed slice still applies.

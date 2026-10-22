@@ -35,6 +35,7 @@ Dispatch a reviewer subagent with this prompt:
     ### 3. Adversarial Planning Probes
     - **Unstated Assumptions:** What unstated assumptions does this plan implicitly depend on (e.g., specific environment state, third-party API behavior)?
     - **Slice Sequencing Errors:** Does a later slice silently depend on something an earlier slice doesn't actually deliver or establish in its carry-forward?
+    - **Cross-Slice Contradictions & Contract Conflicts:** Do any slices contradict each other or the global constraints? Check shared files and interfaces between slices—does one slice modify a contract or file in a way that breaks or conflicts with another slice?
     - **Missing Edge Cases/Failure Modes:** Are there critical error paths, validation failures, or edge cases that are completely ignored by all implementation slices?
 
     ## Process Rules
