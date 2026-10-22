@@ -38,6 +38,12 @@ Dispatch a reviewer subagent with this prompt:
     - **Cross-Slice Contradictions & Contract Conflicts:** Do any slices contradict each other or the global constraints? Check shared files and interfaces between slices—does one slice modify a contract or file in a way that breaks or conflicts with another slice?
     - **Missing Edge Cases/Failure Modes:** Are there critical error paths, validation failures, or edge cases that are completely ignored by all implementation slices?
 
+    ### 4. Builder Perspective (Implementer Usability)
+    - **What Would a Slice Implementer Have to Guess?** Read this as the subagent implementing each slice without talking to the author: what would you have to guess?
+    - **Ambiguous Definitions:** Which file paths, interfaces, data models, error states, or test commands are ambiguous or missing?
+    - **TDD Executability:** Does each slice provide enough concrete detail (exact failing test focus, implementation boundaries, verification commands) for a worker to write real failing tests and implement without guessing?
+    - **Scope and Sizing:** Is any slice oversized or touching too many disparate components for a low-cost subagent's context window?
+
     ## Process Rules
     - **DO NOT implement or edit any files.** This is a read-only review pass.
     - **If you encounter an ambiguous decision:** Do NOT make assumptions. Use the `contact_supervisor` tool with `reason: "need_decision"` to escalate to the user instead of assuming.
