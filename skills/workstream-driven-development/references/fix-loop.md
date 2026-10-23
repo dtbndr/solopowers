@@ -71,7 +71,7 @@ When the user decides on each finding, write one ledger line per open finding:
 Slice <ID>: Ruling (user): <finding> — <decision>
 ```
 
-- If the user's rulings let the slice stand as-is without code changes, the slice achieves **review clean** (see Success Gate below).
+- If the user's rulings let the slice stand as-is without code changes, the slice achieves **review clean** (see Success Gate below) with `<head7>` tied to the round-4 `<b7>` commit (from the preceding `fix round 4/4` line).
 - If the user's rulings direct a code change, start a fresh 4-round fix series (round 1/4) with `FIX_BASE` anchored to the round-4 `<b7>` commit (from the `fix round 4/4 (...; commits <a7>..<b7>)` line) with the user-directed changes as findings.
 
 ## Success Gate: Manual Smoke Test Pause
@@ -89,7 +89,7 @@ Immediately when the slice achieves **review clean** (whether on initial review 
 ```markdown
 Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test
 ```
-(where `<base7>` is the commit before this slice began, and `<head7>` is current `HEAD`).
+(where `<base7>` is the commit before this slice began, and `<head7>` is the reviewed head commit: current `HEAD` for initial review, or `<b7>` from the latest `fix round` line; verify `HEAD == <head7>` before pausing).
 
 Then pause and ask the user to perform the manual smoke test for that slice:
 - Direct the user to the exact manual smoke test steps in the Workstream Document.
