@@ -17,7 +17,7 @@ Slice IDs use the grammar `[A-Z][0-9]*`: an uppercase letter followed by zero or
 2. **Sequential Slice Execution**: Slices (for example, Slice A, A1, and A2) are completed one by one in document order.
 3. **Curated Input**: The controller (you) extracts the slice goal, tasks, watch-outs, verification, manual smoke test steps, and carry-forward from the Workstream Document, presenting a highly focused prompt to the worker subagent.
 4. **Combined Review**: For every slice, one reviewer checks both requirements compliance and code quality in a single pass, returning separate verdicts for each.
-5. **Pause After Review Pass**: Preserve the worker ↔ reviewer retry loop until review passes. Only after the reviewer reports both compliance ✅ and quality Approved do you pause for the user's manual smoke test for that slice.
+5. **Pause After Review Pass**: Preserve the worker ↔ reviewer retry loop until the slice achieves **review clean** (see [references/fix-loop.md](references/fix-loop.md)). Only after the slice is review clean do you write the awaiting-smoke-test ledger line and pause for the user's manual smoke test for that slice.
 
 ## When to Use
 
@@ -36,12 +36,11 @@ digraph workstream_execution {
         "Answer questions & supply context" [shape=box];
         "Implementer implements, tests,\ncommits & self-reviews" [shape=box];
         "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" [shape=box];
-        "Reviewer reports\ncompliance ✅ and quality Approved?" [shape=diamond];
+        "Review clean?" [shape=diamond];
         "Enter fix loop\n(references/fix-loop.md)" [shape=box];
         "Pause for user manual smoke test" [shape=box];
         "User smoke test passes?" [shape=diamond];
-        "Implementer fixes smoke test issues" [shape=box];
-        "Mark slice complete in Todo" [shape=box];
+        "Append complete line,\nmark slice complete" [shape=box];
     }
 
     "Read Workstream Doc, extract all slices, create Todo" [shape=box];
@@ -59,15 +58,14 @@ digraph workstream_execution {
     "Answer questions & supply context" -> "Dispatch implementer subagent\n(./implementer-prompt.md)";
     "Implementer asks clarifying questions?" -> "Implementer implements, tests,\ncommits & self-reviews" [label="no"];
     "Implementer implements, tests,\ncommits & self-reviews" -> "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)";
-    "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" -> "Reviewer reports\ncompliance ✅ and quality Approved?";
-    "Reviewer reports\ncompliance ✅ and quality Approved?" -> "Enter fix loop\n(references/fix-loop.md)" [label="no"];
-    "Enter fix loop\n(references/fix-loop.md)" -> "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" [label="re-review"];
-    "Reviewer reports\ncompliance ✅ and quality Approved?" -> "Pause for user manual smoke test" [label="yes"];
+    "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" -> "Review clean?";
+    "Review clean?" -> "Enter fix loop\n(references/fix-loop.md)" [label="no"];
+    "Enter fix loop\n(references/fix-loop.md)" -> "Review clean?" [label="round verdict"];
+    "Review clean?" -> "Pause for user manual smoke test" [label="yes"];
     "Pause for user manual smoke test" -> "User smoke test passes?";
-    "User smoke test passes?" -> "Implementer fixes smoke test issues" [label="no"];
-    "Implementer fixes smoke test issues" -> "Dispatch slice reviewer\n(./workstream-reviewer-prompt.md)" [label="re-review"];
-    "User smoke test passes?" -> "Mark slice complete in Todo" [label="yes"];
-    "Mark slice complete in Todo" -> "More slices remain?";
+    "User smoke test passes?" -> "Enter fix loop\n(references/fix-loop.md)" [label="no (smoke failure = findings)"];
+    "User smoke test passes?" -> "Append complete line,\nmark slice complete" [label="yes"];
+    "Append complete line,\nmark slice complete" -> "More slices remain?";
     "More slices remain?" -> "Dispatch implementer subagent\n(./implementer-prompt.md)" [label="yes"];
     "More slices remain?" -> "Verify whole workstream\n(Final verification section)" [label="no"];
     "Verify whole workstream\n(Final verification section)" -> "Final review & finish\n(references/final-review.md)";
@@ -168,10 +166,11 @@ For each slice, dispatch the worker subagent using file handoffs:
 
 - Once the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
 - The reviewer checks the diff and reported TDD evidence, returning two verdicts in one report: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes).
-- If the reviewer reports "⚠️ Cannot verify from diff", resolve it yourself from context before marking the slice complete (see [references/cannot-verify.md](references/cannot-verify.md)).
+- If the reviewer reports "⚠️ Cannot verify from diff", resolve it yourself from context before marking the slice review clean (see [references/cannot-verify.md](references/cannot-verify.md)).
 - If the reviewer flags issues: enter the bounded fix loop (see [references/fix-loop.md](references/fix-loop.md)). Re-read `references/fix-loop.md` before every fix round.
-- **Manual Smoke Test Pause**: Only after the reviewer reports both compliance ✅ and quality Approved, pause and ask the user to run the slice's manual smoke test from the Workstream Document. Do not continue to the next slice until the user confirms the smoke test passed.
-- If the user reports a smoke test issue, dispatch a fix to the worker, re-review, and pause for the smoke test again.
+- **Manual Smoke Test Pause**: Only after the slice achieves **review clean** (see [references/fix-loop.md](references/fix-loop.md)), append `Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test` to the progress ledger, then pause and ask the user to run the slice's manual smoke test from the Workstream Document. Do not continue to the next slice until the user confirms the smoke test passed.
+- After the user confirms the smoke test passed, append `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings], smoke test passed)` to the ledger and mark the slice complete in the Todo list.
+- If the user reports a smoke test issue, append `Slice <ID>: smoke test failed — <one-liner>` to the ledger and enter the fix loop with a fresh 4-round budget with `FIX_BASE` = `<head7>` and the user's report as findings (see [references/fix-loop.md](references/fix-loop.md)).
 
 ### 4. Transitioning and Finalization
 
@@ -205,8 +204,9 @@ Conversation memory does not survive compaction. Track durable progress in `$(ba
 
 For complete details on ledger header tracking, collision disambiguation (`<slug>-<date>[-N]`), legacy ledger adoption, and step-by-step resume instructions, read [references/resuming.md](references/resuming.md).
 
-- Slices with `Slice <ID>: complete (...)` are DONE — do not re-dispatch them.
-- On resume, read the ledger, inspect git log in the worktree, and resume at the first incomplete slice.
+- Write `Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test` immediately when review clean is achieved, before pausing for the smoke test.
+- Write `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings], smoke test passed)` immediately after the user confirms the smoke test passed. Slices with a `complete` line are DONE — do not re-dispatch them.
+- On resume, read the ledger, inspect git log in the worktree, and resume execution per the state table in [references/resuming.md](references/resuming.md).
 
 ## Red Flags / Anti-patterns
 

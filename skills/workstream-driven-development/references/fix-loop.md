@@ -52,6 +52,11 @@ Never fix findings yourself in the controller session — your context stays cle
 
 When round 4's re-review still leaves findings open, the cap is reached. Stop dispatching.
 
+Immediately append to the ledger:
+```markdown
+Slice <ID>: escalated at cap — <Y> open
+```
+
 **Escalate to the user:**
 Present the user with:
 - The remaining open findings and reviewer verdict
@@ -61,8 +66,47 @@ Present the user with:
 
 **DO NOT** let the controller silently park findings or override the Workstream Document. The user makes the call on how to proceed (adjusting the Workstream Document, accepting a trade-off, or providing direct instructions).
 
+When the user decides on each finding, write one ledger line per open finding:
+```markdown
+Slice <ID>: Ruling (user): <finding> — <decision>
+```
+
+- If the user's rulings let the slice stand as-is without code changes, the slice achieves **review clean** (see Success Gate below).
+- If the user's rulings direct a code change, start a fresh 4-round fix series (round 1/4) from current `HEAD` with the user-directed changes as findings.
+
 ## Success Gate: Manual Smoke Test Pause
 
-Once all findings are resolved and the reviewer reports both spec compliance ✅ and slice quality Approved, you MUST pause and ask the user to perform the manual smoke test for that slice:
+### Definition of "Review Clean"
+
+A slice achieves **review clean** when:
+1. Initial review verdicts are `✅ Slice compliant` + `Slice quality: Approved` with every `⚠️ Cannot verify` item resolved (see [references/cannot-verify.md](cannot-verify.md)), **OR**
+2. The latest fix round's scoped re-review reports all findings `ADDRESSED` and no new Critical/Important breakage (`0 open`), **OR**
+3. Every open finding at the round-4 cap has a user ruling (`Ruling (user)`) that lets the slice stand.
+
+### Awaiting Smoke Test
+
+Immediately when the slice achieves **review clean** (whether on initial review with 0 fix rounds, after a fix round, or via user rulings), write to `progress.md` *before* pausing for the user's manual smoke test:
+```markdown
+Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test
+```
+(where `<base7>` is the commit before this slice began, and `<head7>` is current `HEAD`).
+
+Then pause and ask the user to perform the manual smoke test for that slice:
 - Direct the user to the exact manual smoke test steps in the Workstream Document.
 - Wait for user confirmation before proceeding to the next slice.
+
+### Smoke Test Outcome
+
+- **If the user confirms the smoke test passed:**
+  Immediately append to `progress.md`:
+  ```markdown
+  Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings], smoke test passed)
+  ```
+  Mark the slice complete in the Todo list, and proceed to the next slice.
+
+- **If the user reports a manual smoke test failure:**
+  Append to `progress.md`:
+  ```markdown
+  Slice <ID>: smoke test failed — <one-liner>
+  ```
+  A smoke test failure starts a **fresh 4-round budget** (round 1/4). Set `FIX_BASE` = `<head7>` (the commit at the smoke pause). The user's failure report becomes the findings for the implementer subagent. Run scoped re-review (`bash scripts/review-package "$FIX_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"`), repeating the fix loop until the slice achieves review clean again, followed by another smoke test pause.

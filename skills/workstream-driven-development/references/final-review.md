@@ -12,7 +12,7 @@ The final whole-workstream review inspects the entire branch diff across all com
    ```
    where `MERGE_BASE` is the commit the workstream branch started from (e.g. `git merge-base main HEAD`).
 3. Dispatch the final review using `solopowers:dispatching-code-review` ([code-reviewer.md](../../dispatching-code-review/code-reviewer.md)) on the most capable available model. Include the printed review package path in the dispatch so the final reviewer reads one unified file instead of re-deriving the diff with git commands.
-4. Point the reviewer at the progress ledger's deferred-minor lines so it can triage which must be fixed before merge.
+4. Point the reviewer at the progress ledger's `Ruling (user)` lines and `minor (deferred)` lines so it can triage which decisions were made and which minors must be fixed before merge.
 
 ## Handling Final Review Findings ("No Second Fix Wave")
 

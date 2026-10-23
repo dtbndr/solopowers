@@ -50,11 +50,13 @@ Subagent (general-purpose):
     ## Scope
 
     Your scope is the findings list and the fix diff. Verdict every finding.
-    Inspect the fix diff for new problems the fix itself introduced. Do NOT
-    re-review code the fix did not touch: if you notice an issue entirely
-    outside the fix diff, report it under Out-of-Scope Observations — it
-    does not block this slice and does not extend the loop. A broad
-    whole-workstream review happens after all slices are complete.
+    Inspect the fix diff for new problems the fix itself introduced. A
+    fix-diff change that undoes a requirement in the slice brief is new
+    breakage (Critical/Important). Do NOT re-review code the fix did not touch:
+    if you notice an issue entirely outside the fix diff, report it under
+    Out-of-Scope Observations — it does not block this slice and does not
+    extend the loop. A broad whole-workstream review happens after all slices
+    are complete.
 
     ## Tests
 
@@ -110,3 +112,5 @@ Subagent (general-purpose):
 
 **Re-reviewer returns:** per-finding verdicts (ADDRESSED / NOT ADDRESSED),
 new breakage in the fix diff, out-of-scope observations, and a round verdict.
+(The controller derives whether the slice is **review clean** from this report;
+the re-reviewer never evaluates whole-slice compliance).
