@@ -26,6 +26,7 @@ skills/
   <skill-name>/
     SKILL.md                  # Main skill file (required)
     *.md                      # Supporting docs (optional)
+    references/               # Supporting docs split out of SKILL.md (optional)
     scripts/                  # Executable helpers (optional)
 tests/                        # Skill validation scripts
 .solopowers/wsd/              # Durable workstream state (local)

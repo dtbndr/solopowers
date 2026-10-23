@@ -64,7 +64,7 @@ solopowers dispatch skills include a platform routing table for Pi, kiro-cli, cl
 ```bash
 git remote add upstream https://github.com/obra/superpowers.git
 git fetch upstream
-# Cherry-pick specific changes from superpowers
+# Port per AGENTS.md "Skill Lifecycle" (fork/adapt/eliminate); cherry-pick only fork-as-is changes
 git cherry-pick <commit>
 ```
 
@@ -76,4 +76,4 @@ This is a personal derivation, not an official fork. Skills are adapted for:
 - Workstream-driven development patterns
 - Simplified agent dispatch
 
-Upstream changes from `obra/superpowers` can be cherry-picked or merged as needed.
+Upstream changes from `obra/superpowers` can be cherry-picked (fork-as-is) or ported per the Skill Lifecycle in `AGENTS.md`.
