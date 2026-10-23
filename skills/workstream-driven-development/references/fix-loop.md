@@ -5,14 +5,14 @@ Part of `solopowers:workstream-driven-development`.
 > [!IMPORTANT]
 > **Controller Instruction:** You MUST re-read this file (`references/fix-loop.md`) before every fix round. Conversation memory does not survive compaction.
 
-The slice review reported spec compliance ❌, slice quality Needs fixes, a Critical or Important finding, or a ⚠️ item you confirmed as a real gap.
+The fix loop is entered when an initial slice review reports spec compliance ❌, slice quality Needs fixes, a Critical or Important finding, or a confirmed ⚠️ gap; when a user reports a manual smoke-test failure; or when user rulings (`Ruling (user)`) after cap escalation direct code changes.
 
 Before the loop starts, two routes leave it immediately:
 
 - **Minor findings:** Record Minor findings in the progress ledger as you go (`Slice <ID>: minor (deferred): <one-liner>`), and point the final whole-workstream review at that list so it can triage which must be fixed before merge. A roll-up nobody reads is a silent discard. Minor findings never enter the loop.
 - **Workstream-mandated findings:** A finding labeled workstream-mandated — or any finding that conflicts with what the Workstream Document's text requires — is the user's decision, like any workstream contradiction: present the finding and the workstream text to the user and ask which governs. Do not dismiss the finding because the workstream mandates it, and do not dispatch a fix that contradicts the workstream without explicit human guidance.
 
-Everything else enters the loop. A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per slice:
+Everything else enters the loop. A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per fix series:
 
 ## Rounds and Dispatch
 
@@ -72,7 +72,7 @@ Slice <ID>: Ruling (user): <finding> — <decision>
 ```
 
 - If the user's rulings let the slice stand as-is without code changes, the slice achieves **review clean** (see Success Gate below).
-- If the user's rulings direct a code change, start a fresh 4-round fix series (round 1/4) from current `HEAD` with the user-directed changes as findings.
+- If the user's rulings direct a code change, start a fresh 4-round fix series (round 1/4) with `FIX_BASE` anchored to the round-4 `<b7>` commit (from the `fix round 4/4 (...; commits <a7>..<b7>)` line) with the user-directed changes as findings.
 
 ## Success Gate: Manual Smoke Test Pause
 
@@ -107,6 +107,6 @@ Then pause and ask the user to perform the manual smoke test for that slice:
 - **If the user reports a manual smoke test failure:**
   Append to `progress.md`:
   ```markdown
-  Slice <ID>: smoke test failed — <one-liner>
+  Slice <ID>: smoke test failed (at <head7>) — <one-liner>
   ```
-  A smoke test failure starts a **fresh 4-round budget** (round 1/4). Set `FIX_BASE` = `<head7>` (the commit at the smoke pause). The user's failure report becomes the findings for the implementer subagent. Run scoped re-review (`bash scripts/review-package "$FIX_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"`), repeating the fix loop until the slice achieves review clean again, followed by another smoke test pause.
+  A smoke test failure starts a **fresh 4-round budget** (round 1/4). Set `FIX_BASE` = `<head7>` (the commit at the smoke pause, recorded on the preceding `review clean` line). The user's failure report becomes the findings for the implementer subagent. Run scoped re-review (`bash scripts/review-package "$FIX_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"`), repeating the fix loop until the slice achieves review clean again, followed by another smoke test pause.

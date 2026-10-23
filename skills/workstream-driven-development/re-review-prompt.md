@@ -104,7 +104,8 @@ Subagent (general-purpose):
 - `[ROUND]` — current fix round number (e.g. `1`, `2`)
 - `[BRIEF_FILE]` — the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from)
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
-  previous review, copied verbatim, one per bullet
+  previous review (or user smoke-test failure report, or code changes
+  directed by user rulings), copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit
