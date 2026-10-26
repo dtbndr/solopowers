@@ -1,0 +1,51 @@
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+
+      - name: Check for 'human partner' references
+        run: |
+          if grep -rn "human partner" skills/; then
+            echo "Error: Found 'human partner' references in skills/" >&2
+            exit 1
+          fi
+
+      - name: Check for 'superpowers:' references
+        run: |
+          if grep -rn "superpowers:" skills/; then
+            echo "Error: Found 'superpowers:' references in skills/" >&2
+            exit 1
+          fi
+
+      - name: Check skill directory inventory
+        shell: bash
+        run: |
+          diff \
+            <(find skills -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort) \
+            <(awk -F'`' '/^## Superseded Skills/{exit} /^\| `/{print $2}' \
+              skills/using-solopowers/SKILL.md | sort)
+
+      - name: Run render-graphs test
+        run: bash tests/authoring-skills/test-render-graphs.sh
+
+      - name: Run skill size test
+        run: bash tests/skill-size/test-skill-size.sh
