@@ -3,7 +3,11 @@
 # diff with extended context, written to a file the reviewer reads in one
 # call.
 #
-# Usage: review-package BASE HEAD WORKSPACE_SLUG [WORKSTREAM_FILE]
+# The repository is the current directory's (see wsd-repo; it must have at
+# least one commit). -C DIR runs as if started in DIR, as in wsd-workspace.
+# Outside a git working tree the script exits 2.
+#
+# Usage: review-package [-C DIR] BASE HEAD WORKSPACE_SLUG [WORKSTREAM_FILE]
 # Output: .solopowers/wsd/<slug>/review-<base7>..<head7>.diff
 # Exit codes:
 #   0  success
@@ -11,8 +15,15 @@
 #   3  range guard failure: BASE not ancestor of HEAD, or empty commit range
 set -euo pipefail
 
+here=$(cd "$(dirname "$0")" && pwd)
+if [ "${1:-}" = "-C" ]; then
+  [ -d "${2:-}" ] || { echo "bad -C directory: ${2:-}" >&2; exit 2; }
+  cd "$2"
+  shift 2
+fi
+
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
-  echo "usage: review-package BASE HEAD WORKSPACE_SLUG [WORKSTREAM_FILE]" >&2
+  echo "usage: review-package [-C DIR] BASE HEAD WORKSPACE_SLUG [WORKSTREAM_FILE]" >&2
   exit 2
 fi
 
@@ -21,47 +32,49 @@ head=$2
 workspace=$3
 workstream=${4:-}
 
-git rev-parse --verify --quiet "$base" >/dev/null || {
+# Invoke via bash rather than direct exec: some extractors (Python zipfile)
+# strip Unix exec bits when unpacking marketplace packages (#2040).
+repo=$("${BASH:-bash}" "$here/wsd-repo" --with-commit)
+
+git -C "$repo" rev-parse --verify --quiet "$base" >/dev/null || {
   echo "bad BASE: $base" >&2
   exit 2
 }
-git rev-parse --verify --quiet "$head" >/dev/null || {
+git -C "$repo" rev-parse --verify --quiet "$head" >/dev/null || {
   echo "bad HEAD: $head" >&2
   exit 2
 }
 
 # Range guards (exit 3): a wrong-branch HEAD yields a range that is empty or
 # not rooted at BASE; either would silently produce a bogus review package.
-git merge-base --is-ancestor "$base" "$head" || {
+git -C "$repo" merge-base --is-ancestor "$base" "$head" || {
   echo "HEAD is not a descendant of BASE: ${base}..${head}" >&2
   exit 3
 }
-[ "$(git rev-list --count "${base}..${head}")" -gt 0 ] || {
+[ "$(git -C "$repo" rev-list --count "${base}..${head}")" -gt 0 ] || {
   echo "empty commit range: ${base}..${head}" >&2
   exit 3
 }
 
-# Invoke via bash rather than direct exec: some extractors (Python zipfile)
-# strip Unix exec bits when unpacking marketplace packages (#2040).
 if [ -n "$workstream" ]; then
-  dir=$("${BASH:-bash}" "${BASH_SOURCE[0]%/*}/wsd-workspace" "$workspace" "$workstream")
+  dir=$("${BASH:-bash}" "$here/wsd-workspace" "$workspace" "$workstream")
 else
-  dir=$("${BASH:-bash}" "${BASH_SOURCE[0]%/*}/wsd-workspace" "$workspace")
+  dir=$("${BASH:-bash}" "$here/wsd-workspace" "$workspace")
 fi
-out="$dir/review-$(git rev-parse --short "$base")..$(git rev-parse --short "$head").diff"
+out="$dir/review-$(git -C "$repo" rev-parse --short "$base")..$(git -C "$repo" rev-parse --short "$head").diff"
 
 {
   echo "# Review package: ${base}..${head}"
   echo
   echo "## Commits"
-  git log --oneline "${base}..${head}"
+  git -C "$repo" log --oneline "${base}..${head}"
   echo
   echo "## Files changed"
-  git diff --stat "${base}..${head}"
+  git -C "$repo" diff --stat "${base}..${head}"
   echo
   echo "## Diff"
-  git diff -U10 "${base}..${head}"
+  git -C "$repo" diff -U10 "${base}..${head}"
 } > "$out"
 
-commits=$(git rev-list --count "${base}..${head}")
+commits=$(git -C "$repo" rev-list --count "${base}..${head}")
 echo "wrote ${out}: ${commits} commit(s), $(wc -c < "$out" | tr -d ' ') bytes"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fails when a file under skills/ names a solopowers helper script
-# (slice-brief, review-package, wsd-workspace, external-review-*) by a
+# (slice-brief, review-package, wsd-workspace, wsd-repo, external-review-*) by a
 # skill-relative `scripts/<helper>` path without telling the agent to run
 # helpers by their absolute path from the working tree.
 #
@@ -22,7 +22,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-invocation='(bash )?(\.\./[a-z-]+/)?scripts/(slice-brief|review-package|wsd-workspace|external-review-(workspace|package|report))'
+invocation='(bash )?(\.\./[a-z-]+/)?scripts/(slice-brief|review-package|wsd-workspace|wsd-repo|external-review-(workspace|package|report))'
 phrase='by (its|their) absolute path'
 
 failed=0

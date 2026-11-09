@@ -179,7 +179,7 @@ expect_exit 0 "$review_package" HEAD~1 HEAD slice-ids
 # --- helpers survive a mode-stripping extractor dropping exec bits (#2040) ---
 stripped="$tmp/stripped-scripts"
 mkdir -p "$stripped"
-cp "$base/wsd-workspace" "$base/slice-brief" "$base/review-package" "$stripped/"
+cp "$base/wsd-workspace" "$base/slice-brief" "$base/review-package" "$base/wsd-repo" "$stripped/"
 chmod -x "$stripped"/*
 noexec_out=$(bash "$stripped/slice-brief" "$workstream" A1) || fail "slice-brief failed when wsd-workspace lacked exec bit"
 noexec_rev=$(bash "$stripped/review-package" HEAD~1 HEAD slice-ids) || fail "review-package failed when wsd-workspace lacked exec bit"

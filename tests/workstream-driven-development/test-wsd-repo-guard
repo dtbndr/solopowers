@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+# Tests for the repository guard (wsd-repo), the -C DIR option, and the
+# Windows-safe path output of wsd-workspace / review-package / slice-brief.
+# Includes the linked-worktree case: the Workstream Document lives in the main
+# checkout while the cwd is a linked worktree of the same repo.
+set -euo pipefail
+
+scripts=$(cd "${BASH_SOURCE[0]%/*}/../../skills/workstream-driven-development/scripts" && pwd)
+wsd_repo="$scripts/wsd-repo"
+wsd_workspace="$scripts/wsd-workspace"
+review_package="$scripts/review-package"
+slice_brief="$scripts/slice-brief"
+tmp=$(mktemp -d)
+tmp=$(cd "$tmp" && pwd -P)
+trap 'rm -rf "$tmp"' EXIT
+
+# Isolate from the caller's git environment.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
+export GIT_CEILING_DIRECTORIES="$tmp"
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.invalid
+export GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.invalid
+
+fail() {
+  echo "FAIL: $*" >&2
+  exit 1
+}
+status_of() { # status_of cmd... -> sets $status, $out, $err
+  local o e
+  o=$(mktemp "$tmp/o.XXXXXX") e=$(mktemp "$tmp/e.XXXXXX")
+  if "$@" >"$o" 2>"$e"; then status=0; else status=$?; fi
+  out=$(cat "$o")
+  err=$(cat "$e")
+}
+expect_exit() {
+  local expected=$1
+  shift
+  status_of "$@"
+  [ "$status" -eq "$expected" ] || fail "expected exit $expected, got $status: $* (stderr: $err)"
+}
+expect_eq() { [ "$1" = "$2" ] || fail "$3: expected '$2', got '$1'"; }
+expect_contains() { case "$1" in *"$2"*) ;; *) fail "$3: expected to contain '$2', got '$1'" ;; esac; }
+expect_not_contains() { case "$1" in *"$2"*) fail "$3: unexpected '$2' in '$1'" ;; esac; }
+
+mkdir "$tmp/norepo"
+
+# --- wsd-repo ---------------------------------------------------------------
+mkrepo() {
+  git init -q "$1"
+  git -C "$1" symbolic-ref HEAD refs/heads/main
+}
+mkrepo "$tmp/empty"
+mkrepo "$tmp/main"
+mkdir -p "$tmp/main/docs/workstreams" "$tmp/main/sub/deep"
+printf 'x\n' > "$tmp/main/a.txt"
+git -C "$tmp/main" add a.txt
+git -C "$tmp/main" commit -q -m first
+first=$(git -C "$tmp/main" rev-parse HEAD)
+printf 'y\n' > "$tmp/main/b.txt"
+git -C "$tmp/main" add b.txt
+git -C "$tmp/main" commit -q -m second
+second=$(git -C "$tmp/main" rev-parse HEAD)
+
+[ -x "$wsd_repo" ] || fail "wsd-repo missing or not executable"
+
+cd "$tmp/main/sub/deep"; status_of bash "$wsd_repo"
+expect_eq "$status" 0 "wsd-repo in subdir status"
+expect_eq "$out" "$tmp/main" "wsd-repo prints top-level from a subdirectory"
+
+cd "$tmp/main"; status_of bash "$wsd_repo" --with-commit
+expect_eq "$status" 0 "wsd-repo --with-commit status"
+
+cd "$tmp/norepo"; status_of bash "$wsd_repo"
+expect_eq "$status" 2 "wsd-repo outside repo"
+expect_contains "$err" "git working tree" "outside-repo message"
+expect_contains "$err" "git init" "outside-repo message mentions git init"
+expect_contains "$err" "git said:" "outside-repo message carries git's line"
+expect_not_contains "$err" "SDD" "no SDD wording"
+
+cd "$tmp/empty"; status_of bash "$wsd_repo"
+expect_eq "$status" 0 "wsd-repo without --with-commit accepts empty repo"
+cd "$tmp/empty"; status_of bash "$wsd_repo" --with-commit
+expect_eq "$status" 2 "wsd-repo --with-commit on repo without commits"
+cd "$tmp/main"; status_of bash "$wsd_repo" --bogus
+expect_eq "$status" 2 "wsd-repo rejects unknown args"
+
+# --- wsd-workspace outside a repo / -C --------------------------------------
+cd "$tmp/norepo"
+expect_exit 2 bash "$wsd_workspace" some-slug
+expect_exit 2 bash "$slice_brief" "$tmp/main/docs/workstreams/none.md" A
+expect_exit 2 bash "$review_package" HEAD~1 HEAD slug
+expect_exit 2 bash "$wsd_workspace" -C "$tmp/does-not-exist" slug
+expect_exit 2 bash "$review_package" -C "$tmp/does-not-exist" "$first" "$second" slug
+
+status_of bash "$wsd_workspace" -C "$tmp/main" viaC
+expect_eq "$status" 0 "wsd-workspace -C status"
+expect_eq "$out" "$tmp/main/.solopowers/wsd/viaC" "wsd-workspace -C output"
+[ -d "$tmp/norepo/.solopowers" ] && fail "-C run created workspace in the caller's cwd"
+
+# review-package -C, and the repo-with-no-commit guard
+status_of bash "$review_package" -C "$tmp/main" "$first" "$second" viaC
+expect_eq "$status" 0 "review-package -C status ($err)"
+[ -f "$tmp/main/.solopowers/wsd/viaC/review-${first:0:7}..${second:0:7}.diff" ] \
+  || [ -n "$(ls "$tmp/main/.solopowers/wsd/viaC"/review-*.diff 2>/dev/null)" ] \
+  || fail "review-package -C wrote no diff"
+expect_exit 3 bash "$review_package" -C "$tmp/main" "$second" "$first" viaC
+expect_exit 2 bash "$review_package" -C "$tmp/empty" HEAD HEAD viaC
+status_of bash "$review_package" -C "$tmp/empty" HEAD HEAD viaC
+expect_contains "$err" "git working tree" "empty-repo review-package message"
+
+# --- main checkout: relative path, subdirectory ------------------------------
+plan_main="$tmp/main/docs/workstreams/2026-01-01-wt.md"
+printf '# WT\n\n### Slice A: One\n\nbody-a\n' > "$plan_main"
+
+cd "$tmp/main"
+status_of bash "$wsd_workspace" docs/workstreams/2026-01-01-wt.md
+expect_eq "$status" 0 "main relative status"
+expect_eq "$out" "$tmp/main/.solopowers/wsd/wt" "main relative workspace"
+expect_eq "$err" "" "main relative stderr"
+expect_eq "$(head -n1 "$tmp/main/.solopowers/wsd/wt/progress.md")" \
+  "# Workstream: docs/workstreams/2026-01-01-wt.md" "main header is repo-relative"
+
+cd "$tmp/main/sub/deep"
+status_of bash "$wsd_workspace" ../../docs/workstreams/2026-01-01-wt.md
+expect_eq "$status" 0 "subdir status"
+expect_eq "$out" "$tmp/main/.solopowers/wsd/wt" "subdir resolves to the same workspace"
+expect_eq "$err" "" "subdir stderr (no collision/adopt warning)"
+
+# --- linked worktree, Workstream Document uncommitted in the MAIN checkout ---
+git -C "$tmp/main" worktree add -q "$tmp/wt" -b feature
+cd "$tmp/wt"
+before=$(ls -A "$tmp/main/.solopowers/wsd")
+
+status_of bash "$wsd_workspace" "$plan_main"
+expect_eq "$status" 0 "worktree status ($err)"
+expect_eq "$out" "$tmp/wt/.solopowers/wsd/wt" "worktree workspace lives in the worktree, not main"
+expect_eq "$err" "" "worktree first-run stderr"
+expect_eq "$(head -n1 "$tmp/wt/.solopowers/wsd/wt/progress.md")" \
+  "# Workstream: $plan_main" "worktree header records the absolute main-checkout path"
+expect_eq "$(ls -A "$tmp/main/.solopowers/wsd")" "$before" "worktree run left main's workspaces untouched"
+
+status_of bash "$wsd_workspace" "$plan_main"
+expect_eq "$out" "$tmp/wt/.solopowers/wsd/wt" "worktree second run is idempotent"
+expect_eq "$err" "" "worktree second-run stderr (no adopt/collision)"
+[ ! -d "$tmp/wt/.solopowers/wsd/wt-2" ] && [ ! -d "$tmp/wt/.solopowers/wsd/wt-2026-01-01" ] \
+  || fail "worktree second run created a disambiguated duplicate"
+
+# A different plan with the same slug still disambiguates inside the worktree.
+mkdir -p "$tmp/other"
+plan_other="$tmp/other/2026-02-01-wt.md"
+printf '# Other\n' > "$plan_other"
+status_of bash "$wsd_workspace" "$plan_other"
+expect_eq "$out" "$tmp/wt/.solopowers/wsd/wt-2026-02-01" "worktree collision disambiguated by date prefix"
+status_of bash "$wsd_workspace" "$plan_other"
+expect_eq "$out" "$tmp/wt/.solopowers/wsd/wt-2026-02-01" "disambiguated workspace is idempotent"
+
+# slice-brief and review-package from the worktree with the main-checkout plan
+status_of bash "$slice_brief" "$plan_main" A
+expect_eq "$status" 0 "worktree slice-brief status ($err)"
+expect_contains "$out" "wrote $tmp/wt/.solopowers/wsd/wt/slice-A-brief.md" "slice-brief wrote outside worktree workspace"
+expect_contains "$(cat "$tmp/wt/.solopowers/wsd/wt/slice-A-brief.md")" "body-a" "slice-brief content"
+expect_eq "$err" "" "worktree slice-brief stderr"
+
+printf 'z\n' > "$tmp/wt/c.txt"
+git -C "$tmp/wt" add c.txt
+git -C "$tmp/wt" commit -q -m wt-commit
+status_of bash "$review_package" "$second" HEAD wt "$plan_main"
+expect_eq "$status" 0 "worktree review-package status ($err)"
+expect_contains "$out" "$tmp/wt/.solopowers/wsd/wt/review-" "review-package wrote in the worktree workspace"
+expect_eq "$err" "" "worktree review-package stderr"
+
+# Same worktree, driven from outside with -C
+cd "$tmp/norepo"
+status_of bash "$wsd_workspace" -C "$tmp/wt" "$plan_main"
+expect_eq "$out" "$tmp/wt/.solopowers/wsd/wt" "-C into a worktree finds the same workspace"
+expect_eq "$err" "" "-C worktree stderr"
+
+# --- Windows-safe output: cygpath -m on the printed path only -----------------
+mkdir "$tmp/fakebin"
+cat > "$tmp/fakebin/cygpath" <<'EOF'
+#!/bin/sh
+[ "$1" = "-m" ] || exit 1
+printf 'C:/win%s\n' "$2"
+EOF
+chmod +x "$tmp/fakebin/cygpath"
+cd "$tmp/main"
+status_of env PATH="$tmp/fakebin:$PATH" bash "$wsd_workspace" docs/workstreams/2026-01-01-wt.md
+expect_eq "$out" "C:/win$tmp/main/.solopowers/wsd/wt" "cygpath -m used for printed path when available"
+expect_eq "$err" "" "cygpath run stderr (markers still match)"
+status_of bash "$wsd_workspace" docs/workstreams/2026-01-01-wt.md
+expect_eq "$out" "$tmp/main/.solopowers/wsd/wt" "plain pwd output without cygpath"
+
+echo "PASS: wsd-repo guard, -C DIR, worktree and Windows-path behaviour"
