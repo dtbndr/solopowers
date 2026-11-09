@@ -2,7 +2,7 @@
 # Integration tests for slice-brief slice-ID parsing and section boundaries.
 set -euo pipefail
 
-base=$(cd "${BASH_SOURCE[0]%/*}" && pwd)
+base=$(cd "${BASH_SOURCE[0]%/*}/../../skills/workstream-driven-development/scripts" && pwd)
 slice_brief="$base/slice-brief"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deterministic temporary-repository integration tests for external review tools.
 set -euo pipefail
-base=$(cd "${BASH_SOURCE[0]%/*}" && pwd); ws="$base/external-review-workspace"; pkg="$base/external-review-package"; rpt="$base/external-review-report"; tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+base=$(cd "${BASH_SOURCE[0]%/*}/../../skills/workstream-brainstorming/scripts" && pwd); ws="$base/external-review-workspace"; pkg="$base/external-review-package"; rpt="$base/external-review-report"; tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 fail(){ echo "FAIL: $*" >&2; exit 1; }; expect_fail(){ "$@" >/dev/null 2>&1 && fail "expected failure: $*" || true; }
 field(){ sed -n "s/^$1: //p" "$2"|head -n1; }
 cd "$tmp"; git init -q repo; cd repo; git config user.email test@example.invalid; git config user.name test; mkdir -p docs/workstreams; printf '# Test\n' > 'docs/workstreams/a odd.md'; git add .; git commit -qm initial

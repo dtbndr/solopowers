@@ -74,6 +74,7 @@ diff \
     skills/using-solopowers/SKILL.md | sort)
 bash tests/authoring-skills/test-render-graphs.sh
 bash tests/skill-size/test-skill-size.sh
+bash tests/skill-layout/test-no-dev-files-in-skills.sh
 ```
 
 The inventory comparison verifies the current skill table in `using-solopowers` against the actual skill directories; migration aliases in `## Superseded Skills` are intentionally excluded.
