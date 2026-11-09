@@ -215,7 +215,7 @@ reviewer subagent:
     **Reasoning:** [1-2 sentence technical assessment]
 ```
 
-**Placeholders:**
+**Placeholders** (run `scripts/` helpers by their absolute path, from the working tree):
 
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
 - `[BRIEF_FILE]` — REQUIRED: the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID`

@@ -144,7 +144,7 @@ Address any findings, commit the updated Workstream Document, and re-review unti
 
 External review is optional and user-coordinated. Harness A owns brainstorming, internal review, commits, package creation, report verification, finding adjudication, and WDD handoff. Harness B is an independent, user-launched reviewer session with no direct bridge; it reads only Git objects anchored at the package commit.
 
-Tools available in this skill's directory:
+Run these helpers by their absolute path, from the working tree you're executing in (never `cd` into the skill directory):
 - `bash scripts/external-review-workspace WORKSTREAM_FILE`
 - `bash scripts/external-review-package initial WORKSTREAM_FILE`
 - `external-workstream-document-reviewer-prompt.md`

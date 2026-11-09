@@ -8,6 +8,8 @@ Harness B is an independent, user-launched reviewer session with no bridge to Ha
 
 ## Supporting Tools and Artifacts
 
+Run each helper by its absolute path, from the working tree you're executing in (never `cd` into the skill directory).
+
 - `bash scripts/external-review-workspace WORKSTREAM_FILE` — Creates a local self-ignoring `.solopowers/workstream-reviews/...` audit workspace. It is append-only by protocol, not durable archival storage.
 - `bash scripts/external-review-package initial WORKSTREAM_FILE` — Creates a commit- and blob-anchored package manifest and prints the canonical launch instruction for Harness B.
 - `external-workstream-document-reviewer-prompt.md` — Harness B’s dedicated contract prompt.

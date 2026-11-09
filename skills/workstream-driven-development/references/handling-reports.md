@@ -7,7 +7,7 @@ Worker subagents report one of four statuses upon completing their turn:
 ## DONE
 
 The worker completed the slice, committed changes, and ran tests.
-1. Generate the review package:
+1. Generate the review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
    bash scripts/review-package "$BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
    ```

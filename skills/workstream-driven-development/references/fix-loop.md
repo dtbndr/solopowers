@@ -30,7 +30,7 @@ Every round, either way:
 ## Scoped Re-Review
 
 The re-review is scoped to the fix diff:
-1. Generate the scoped review package:
+1. Generate the scoped review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
    bash scripts/review-package "$FIX_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
    ```

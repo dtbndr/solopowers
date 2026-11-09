@@ -6,7 +6,7 @@ Part of `solopowers:workstream-driven-development`. Every slice in the Workstrea
 
 The final whole-workstream review inspects the entire branch diff across all completed slices:
 1. Run the commands listed in the **Final verification** section of the Workstream Document (e.g. full test suite, linter, typecheck, build).
-2. Generate the full review package:
+2. Generate the full review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
    bash scripts/review-package "$MERGE_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
    ```

@@ -10,7 +10,7 @@ The canonical Workstream Document is written to `docs/workstreams/YYYY-MM-DD-<to
 - **No Pseudo-code or Raw Implementation Code:** The Workstream Document deliberately contains no raw implementation code. Key file paths, API contracts, schema definitions, test targets, and verification commands are encouraged to eliminate ambiguity, but raw code generation belongs entirely to the slice implementer.
 - **Decision Completeness:** All design choices that could require rework if decided wrong MUST be settled in the document. Incidental choices (variable names, internal helper decomposition, log message wording) are explicitly left to implementation discretion.
 - **Slice Sizing:** Slices are executed by low-cost models with limited context windows. Each slice should touch 1–5 files, have clear TDD tasks (red → green → verification), explicit watch-outs, verification commands, and manual smoke test steps. If a slice requires extensive prose to be unambiguous, split it.
-- **Slice Heading Grammar:** Slice headings use `### Slice <SLICE_ID>: <Slice Title>`, where `<SLICE_ID>` matches `[A-Z][0-9]*` (e.g., `A`, `A1`, `A2`). The ID is matched exactly by helper scripts (`bash scripts/slice-brief`).
+- **Slice Heading Grammar:** Slice headings use `### Slice <SLICE_ID>: <Slice Title>`, where `<SLICE_ID>` matches `[A-Z][0-9]*` (e.g., `A`, `A1`, `A2`). The ID is matched exactly by helper scripts (`slice-brief`).
 
 ---
 

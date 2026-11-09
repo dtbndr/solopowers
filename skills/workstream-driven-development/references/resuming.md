@@ -6,7 +6,7 @@ Conversation memory does not survive compaction. When a session ends mid-workstr
 
 ## Ledger Location and Workspace Identity
 
-The ledger lives inside the per-workstream workspace directory at:
+The ledger lives inside the per-workstream workspace directory (run `scripts/wsd-workspace` by its absolute path, from the working tree you're executing in) at:
 ```bash
 $(bash scripts/wsd-workspace <workspace-slug> WORKSTREAM_FILE)/progress.md
 ```
