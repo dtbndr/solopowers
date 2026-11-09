@@ -81,8 +81,7 @@ The following templates and helper scripts are stored in this skill's directory:
 - `implementer-prompt.md` - Dispatch prompt for the implementer subagent.
 - `workstream-reviewer-prompt.md` - Dispatch prompt for the slice reviewer subagent.
 - `re-review-prompt.md` - Scoped re-review prompt used during fix loops.
-Run each helper by its absolute path, from the working tree you're executing in (never `cd` into the skill directory):
-
+- Run each helper below by its absolute path, from the working tree you're executing in (never `cd` into the skill directory).
 - `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` - Extracts a single slice into an isolated brief file.
 - `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` - Generates a unified diff package for reviewers.
 - `bash scripts/wsd-workspace WORKSTREAM_FILE` - Resolves the disambiguated workstream workspace directory.

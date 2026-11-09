@@ -100,10 +100,9 @@ Subagent (general-purpose):
 **Placeholders:**
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
   re-reviews of small fix diffs take a cheap-to-mid tier
-- (Run `scripts/` helpers by their absolute path, from the working tree you're executing in.)
 - `[SLICE_ID]` — the slice identifier (e.g. `A`, `A1`)
 - `[ROUND]` — current fix round number (e.g. `1`, `2`)
-- `[BRIEF_FILE]` — the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from)
+- `[BRIEF_FILE]` — the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from; run `scripts/` helpers by their absolute path, from the working tree)
 - `[FINDINGS]` — the Critical/Important findings and spec gaps from the
   previous review (or user smoke-test failure report, or code changes
   directed by user rulings), copied verbatim, one per bullet

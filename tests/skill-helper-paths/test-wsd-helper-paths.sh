@@ -8,10 +8,13 @@
 # (the installed plugin cache) to make it work, so the helpers then act on the
 # plugin's files instead of the working tree it is executing in.
 #
-# Rule (per file): any file containing a relative helper invocation must also
-# contain the phrase "absolute path" (whitespace-squeezed, so line wraps do not
-# split it). One statement per file covers every mention in that file, because
-# each skill/reference/prompt file may be read on its own.
+# Rule (per file, not per mention): any file containing a relative helper
+# invocation must also contain "by its absolute path" or "by their absolute
+# path" (whitespace-squeezed, so line wraps do not split it). One statement per
+# file covers every mention in that file, because each skill/reference/prompt
+# file may be read on its own. A bare "absolute path" elsewhere does not count.
+# Limitation: a second, unqualified mention in an already-qualified file is not
+# caught; a per-mention window would be flaky across the differing doc layouts.
 #
 # Usage: tests/skill-helper-paths/test-wsd-helper-paths.sh
 set -euo pipefail
@@ -20,14 +23,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 invocation='(bash )?(\.\./[a-z-]+/)?scripts/(slice-brief|review-package|wsd-workspace|external-review-(workspace|package|report))'
-phrase='absolute path'
+phrase='by (its|their) absolute path'
 
 failed=0
 checked=0
 while IFS= read -r file; do
   checked=$((checked + 1))
-  if ! tr -s '[:space:]' ' ' <"$file" | grep -qF "$phrase"; then
-    echo "FAIL: ${file#"$REPO_ROOT"/} names a helper by a relative scripts/ path without saying \"$phrase\"" >&2
+  if ! tr -s '[:space:]' ' ' <"$file" | grep -qE "$phrase"; then
+    echo "FAIL: ${file#"$REPO_ROOT"/} names a helper by a relative scripts/ path without saying \"by its/their absolute path\"" >&2
     failed=1
   fi
 done < <(grep -rlE --include='*.md' "$invocation" "$REPO_ROOT/skills" | sort)
