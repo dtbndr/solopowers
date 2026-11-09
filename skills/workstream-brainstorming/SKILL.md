@@ -50,7 +50,7 @@ Before writing the full Workstream Document, present a concise (~200-word) playb
 - Key design decisions: the user's settled ones, with your unconfirmed calls marked as your calls
 - The proposed sequential slice breakdown
 
-End the playback with its single approval question, which doubles as the opt-out: *"Shall I draft the Workstream Document from this, or adjust something first?"* If the user says "just write it", proceed directly to writing the Workstream Document. If they said it before seeing the approach, still send the playback, then proceed without waiting. "Just write it" skips only the playback approval; the internal review and the user's review of the Workstream Document still apply. For small tasks, the playback is short, but still wait for approval.
+End the playback with its single approval question, which doubles as the opt-out: *"Shall I draft the Workstream Document from this, or adjust something first?"* If the user says "just write it", proceed directly to writing the Workstream Document. If they said it before seeing the approach, still send the playback, but end it with a statement such as *"Drafting the Workstream Document from this now."* instead of the question, then proceed without waiting. "Just write it" skips only the playback approval; the internal review and the user's review of the Workstream Document still apply. For small tasks, the playback is short, but still wait for approval.
 
 ## Sizing the Work and Slices
 
@@ -105,8 +105,8 @@ digraph workstream_brainstorming {
     "Invoke workstream-driven-development" [shape=doublecircle style=filled fillcolor=lightgreen];
 
     "Explore project context\n(look before asking)" -> "Clarifying questions\n(one per turn)";
-    "Explore project context\n(look before asking)" -> "Design playback (~200 words)\n(with opt-out)" [label="nothing open"];
-    "Explore project context\n(look before asking)" -> "Propose 2-3 approaches\n(with recommendation)" [label="nothing to ask"];
+    "Explore project context\n(look before asking)" -> "Design playback (~200 words)\n(with opt-out)" [label="nothing open, one way"];
+    "Explore project context\n(look before asking)" -> "Propose 2-3 approaches\n(with recommendation)" [label="nothing to ask, several approaches"];
     "Clarifying questions\n(one per turn)" -> "Propose 2-3 approaches\n(with recommendation)";
     "Propose 2-3 approaches\n(with recommendation)" -> "Design playback (~200 words)\n(with opt-out)";
     "Design playback (~200 words)\n(with opt-out)" -> "User approves approach?";
