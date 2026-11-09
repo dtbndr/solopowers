@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Tests for the repository guard (wsd-repo), the -C DIR option, and the
-# Windows-safe path output of wsd-workspace / review-package / slice-brief.
+# Windows-safe path output of wsd-workspace (cygpath is only exercised there).
 # Includes the linked-worktree case: the Workstream Document lives in the main
 # checkout while the cwd is a linked worktree of the same repo.
 set -euo pipefail
@@ -100,8 +100,7 @@ expect_eq "$out" "$tmp/main/.solopowers/wsd/viaC" "wsd-workspace -C output"
 # review-package -C, and the repo-with-no-commit guard
 status_of bash "$review_package" -C "$tmp/main" "$first" "$second" viaC
 expect_eq "$status" 0 "review-package -C status ($err)"
-[ -f "$tmp/main/.solopowers/wsd/viaC/review-${first:0:7}..${second:0:7}.diff" ] \
-  || [ -n "$(ls "$tmp/main/.solopowers/wsd/viaC"/review-*.diff 2>/dev/null)" ] \
+[ -f "$tmp/main/.solopowers/wsd/viaC/review-$(git -C "$tmp/main" rev-parse --short "$first")..$(git -C "$tmp/main" rev-parse --short "$second").diff" ] \
   || fail "review-package -C wrote no diff"
 expect_exit 3 bash "$review_package" -C "$tmp/main" "$second" "$first" viaC
 expect_exit 2 bash "$review_package" -C "$tmp/empty" HEAD HEAD viaC
@@ -157,7 +156,7 @@ expect_eq "$out" "$tmp/wt/.solopowers/wsd/wt-2026-02-01" "disambiguated workspac
 # slice-brief and review-package from the worktree with the main-checkout plan
 status_of bash "$slice_brief" "$plan_main" A
 expect_eq "$status" 0 "worktree slice-brief status ($err)"
-expect_contains "$out" "wrote $tmp/wt/.solopowers/wsd/wt/slice-A-brief.md" "slice-brief wrote outside worktree workspace"
+expect_contains "$out" "wrote $tmp/wt/.solopowers/wsd/wt/slice-A-brief.md" "slice-brief wrote its brief inside the worktree workspace"
 expect_contains "$(cat "$tmp/wt/.solopowers/wsd/wt/slice-A-brief.md")" "body-a" "slice-brief content"
 expect_eq "$err" "" "worktree slice-brief stderr"
 
@@ -189,5 +188,31 @@ expect_eq "$out" "C:/win$tmp/main/.solopowers/wsd/wt" "cygpath -m used for print
 expect_eq "$err" "" "cygpath run stderr (markers still match)"
 status_of bash "$wsd_workspace" docs/workstreams/2026-01-01-wt.md
 expect_eq "$out" "$tmp/main/.solopowers/wsd/wt" "plain pwd output without cygpath"
+
+# --- relative invocation: exported CDPATH and run-from-scripts-dir ------------
+mkrepo "$tmp/rel"
+mkdir -p "$tmp/rel/scripts" "$tmp/cdp/scripts"
+cp "$scripts"/* "$tmp/rel/scripts/"
+printf '# R\n\n### Slice A: One\n\nbody-r\n' > "$tmp/rel/2026-03-01-rel.md"
+git -C "$tmp/rel" add scripts 2026-03-01-rel.md
+git -C "$tmp/rel" commit -q -m r1
+git -C "$tmp/rel" commit -q --allow-empty -m r2
+cd "$tmp/rel"
+# CDPATH has a 'scripts' dir: a bare `cd scripts` would print it and land there.
+export CDPATH="$tmp/cdp"
+status_of bash scripts/wsd-workspace 2026-03-01-rel.md
+expect_eq "$status" 0 "wsd-workspace via relative path with CDPATH ($err)"
+expect_eq "$out" "$tmp/rel/.solopowers/wsd/rel" "wsd-workspace relative+CDPATH output"
+status_of bash scripts/review-package HEAD~1 HEAD rel 2026-03-01-rel.md
+expect_eq "$status" 0 "review-package via relative path with CDPATH ($err)"
+status_of bash scripts/slice-brief 2026-03-01-rel.md A
+expect_eq "$status" 0 "slice-brief via relative path with CDPATH ($err)"
+unset CDPATH
+# No slash in $0: run from inside the scripts directory itself.
+cd "$tmp/rel/scripts"
+status_of bash slice-brief ../2026-03-01-rel.md A
+expect_eq "$status" 0 "slice-brief run from inside the scripts dir ($err)"
+status_of bash wsd-workspace ../2026-03-01-rel.md
+expect_eq "$out" "$tmp/rel/.solopowers/wsd/rel" "wsd-workspace from inside the scripts dir"
 
 echo "PASS: wsd-repo guard, -C DIR, worktree and Windows-path behaviour"

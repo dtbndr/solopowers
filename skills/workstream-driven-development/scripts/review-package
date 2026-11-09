@@ -15,7 +15,7 @@
 #   3  range guard failure: BASE not ancestor of HEAD, or empty commit range
 set -euo pipefail
 
-here=$(cd "$(dirname "$0")" && pwd)
+here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 if [ "${1:-}" = "-C" ]; then
   [ -d "${2:-}" ] || { echo "bad -C directory: ${2:-}" >&2; exit 2; }
   cd "$2"

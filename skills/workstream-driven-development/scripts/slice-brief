@@ -47,7 +47,8 @@ fi
 
 # Invoke via bash rather than direct exec: some extractors (Python zipfile)
 # strip Unix exec bits when unpacking marketplace packages (#2040).
-dir=$("${BASH:-bash}" "${BASH_SOURCE[0]%/*}/wsd-workspace" "$slug" "$workstream")
+here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+dir=$("${BASH:-bash}" "$here/wsd-workspace" "$slug" "$workstream")
 out="$dir/slice-${slice_id}-brief.md"
 
 rc=0
