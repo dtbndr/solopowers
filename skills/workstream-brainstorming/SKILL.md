@@ -27,9 +27,10 @@ In an existing project, or when the user has provided context (docs, issue descr
 - **One question per turn:** End each conversational message with exactly one focused question. Do not bury questions in long paragraphs or append open-ended lists of alternatives to a question.
 - **Open questions first:** If the user hasn't said why they want it, ask that first, even if you can guess: one open question in their own terms, with no example answers. Use open questions for intent, core problems, and success criteria; let their words guide the design. Never add a second question in the same turn.
 - **Options only when bounded:** Once the why is known and a choice can be named, sketch each option concretely enough to picture, with its trade-offs and your recommendation. Do this only for a genuine, bounded set of alternatives (e.g. database choices, protocol variants); never manufacture options for open questions. If the user has handed over the how, say you'll go with your pick.
-- **Recommend when deferred:** When the user says "you decide", "just guess", or defers a choice, do not bounce the question back. Propose a concrete recommendation with brief rationale and ask for confirmation.
-- **Understand how it gets made:** Read from how the user talks whether they want to discuss technical choices (give options with your pick) or hand them over (decide, and state each in one line). Choices the user hasn't confirmed go in the document as your calls, not as agreed decisions.
-- **Process is your call:** Where files go, whether to look further, how to show something, and dispatching the writer or reviewer are yours: state them, don't ask (the internal review itself is mandatory). Approval of the design and of the Workstream Document stays the user's.
+- **Recommend when deferred:** When the user says "you decide", "just guess", or defers a choice, do not bounce the question back. Make a concrete pick, state it with brief rationale as your call, and move forward; the user can still correct it.
+- **Understand how it gets made:** Read from how the user talks whether they want to discuss technical choices (give options with your pick) or hand them over (decide, and state each in one line). When there's existing work, build on what it already uses. Choices the user hasn't confirmed go in the document as your calls, not as agreed decisions.
+- **Process is your call:** Where supporting files go (the Workstream Document's location is fixed: `docs/workstreams/YYYY-MM-DD-<topic>.md`), whether to look further, how to show something, and dispatching the writer or reviewer are yours: state them, don't ask (the internal review itself is mandatory). Approval of the design and of the Workstream Document stays the user's.
+- **Show, don't tell:** Whenever seeing would help more than reading (a screen, a page, a layout, a schedule), sketch it in a few lines of text next to the description.
 - **Socratic probing:** Build each question on their last answer or on what you discovered in the codebase, helping them think through edge cases and failure modes.
 
 ## Exploring Approaches
@@ -44,12 +45,12 @@ Once you understand what the user wants, and before drafting the Workstream Docu
 
 **When nothing is open** (the user has told you why they want it, the request and project answer everything that would change what gets built, and there is one sensible way), your first message is this short design: the approach, one line on why alternatives do not fit, the design in a few lines, and the proposed sequential slice breakdown. It is the playback below, with the same opt-out and user approval.
 
-Before writing the full Workstream Document on non-trivial workstreams, present a concise (~200-word) playback summarizing:
-- The agreed objective and architecture
-- Key settled design decisions
+Before writing the full Workstream Document, present a concise (~200-word) playback summarizing:
+- The objective and architecture: agreed ones, or proposed ones when nothing was open
+- Key design decisions: the user's settled ones, with your unconfirmed calls marked as your calls
 - The proposed sequential slice breakdown
 
-Include a light opt-out so the user can fast-path: *"If this looks right, I'll proceed with drafting the Workstream Document. Or if you'd like me to adjust the approach, let me know."* If the user says "just write it" proceed directly to writing the Workstream Document. For small tasks, still give the short playback and wait for approval.
+End the playback with its single approval question, which doubles as the opt-out: *"Shall I draft the Workstream Document from this, or adjust something first?"* If the user says "just write it", proceed directly to writing the Workstream Document. If they said it before seeing the approach, still send the playback, then proceed without waiting. "Just write it" skips only the playback approval; the internal review and the user's review of the Workstream Document still apply. For small tasks, the playback is short, but still wait for approval.
 
 ## Sizing the Work and Slices
 
@@ -78,7 +79,7 @@ For the full markdown schema, section requirements, and examples, read [referenc
 You MUST create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits (look before asking).
-2. **Clarifying questions** — one question per turn, open questions first. (Skipped with step 3 when nothing is open.)
+2. **Clarifying questions** — one question per turn, open questions first. May be empty: when the why is known and nothing that changes the build is open, go straight to step 3. (Skipped with step 3 when nothing is open and there is one sensible way.)
 3. **Propose 2–3 approaches** — with trade-offs and your recommendation.
 4. **Design playback (~200 words)** — concise playback with opt-out before drafting.
 5. **Write Workstream Document** — dispatch a `document-writer` subagent to write `docs/workstreams/YYYY-MM-DD-<topic>.md` following [references/workstream-document-template.md](references/workstream-document-template.md) and commit.
@@ -105,6 +106,7 @@ digraph workstream_brainstorming {
 
     "Explore project context\n(look before asking)" -> "Clarifying questions\n(one per turn)";
     "Explore project context\n(look before asking)" -> "Design playback (~200 words)\n(with opt-out)" [label="nothing open"];
+    "Explore project context\n(look before asking)" -> "Propose 2-3 approaches\n(with recommendation)" [label="nothing to ask"];
     "Clarifying questions\n(one per turn)" -> "Propose 2-3 approaches\n(with recommendation)";
     "Propose 2-3 approaches\n(with recommendation)" -> "Design playback (~200 words)\n(with opt-out)";
     "Design playback (~200 words)\n(with opt-out)" -> "User approves approach?";
