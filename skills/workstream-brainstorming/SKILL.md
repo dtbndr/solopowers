@@ -19,15 +19,17 @@ Every project goes through this process. A single-function utility, a config cha
 
 ## First: Look Before You Ask
 
-In an existing project, or when the user has provided context (docs, issue descriptions, code pointers, recent commits), inspect repository state first before asking questions. Read until you understand how relevant parts work today and what this change would touch. **Never ask what the codebase or existing docs already answer.**
+In an existing project, or when the user has provided context (docs, issue descriptions, code pointers, recent commits), inspect repository state first before asking questions. Read until you understand how relevant parts work today and what this change would touch. **Never ask what the codebase or existing docs already answer.** Do recon instead of offering it: go look deeper (code, files, or the web) and say what you looked for and found. Never reopen what the user has already decided.
 
 ## Question Craft and Conversational Rhythm
 
+- **Ask only when it changes the build:** Ask a question only when the answer would change what gets built and neither the request nor the project answers it. Otherwise state your call and reason as a proposal the user can correct, and move forward.
 - **One question per turn:** End each conversational message with exactly one focused question. Do not bury questions in long paragraphs or append open-ended lists of alternatives to a question.
-- **Open questions first:** Use open questions when exploring user intent, core problems, and success criteria. Allow the user's own words to guide the design rather than constraining them prematurely.
-- **Multiple-choice only when bounded:** Offer multiple-choice menus only when there is a genuine, bounded set of technical or architectural alternatives (e.g. database choices, protocol variants). Do not manufacture artificial multiple-choice options for open questions.
+- **Open questions first:** If the user hasn't said why they want it, ask that first, even if you can guess: one open question in their own terms, with no example answers. Use open questions for intent, core problems, and success criteria; let their words guide the design. Never add a second question in the same turn.
+- **Options only when bounded:** Once the why is known and a choice can be named, sketch each option concretely enough to picture, with its trade-offs and your recommendation. Do this only for a genuine, bounded set of alternatives (e.g. database choices, protocol variants); never manufacture options for open questions. If the user has handed over the how, say you'll go with your pick.
 - **Recommend when deferred:** When the user says "you decide", "just guess", or defers a choice, do not bounce the question back. Propose a concrete recommendation with brief rationale and ask for confirmation.
-- **Understand how it gets made:** Clarify constraints around runtime, languages, external dependencies, and architectural boundaries early.
+- **Understand how it gets made:** Read from how the user talks whether they want to discuss technical choices (give options with your pick) or hand them over (decide, and state each in one line). Choices you make go in the document as your calls, never as something the user agreed to.
+- **Process is your call:** Where files go, whether to look further, how to show something, and dispatching the writer or reviewer are yours: state them, don't ask. Approval of the design and of the Workstream Document stays the user's.
 - **Socratic probing:** Build each question on their last answer or on what you discovered in the codebase, helping them think through edge cases and failure modes.
 
 ## Exploring Approaches
@@ -35,10 +37,12 @@ In an existing project, or when the user has provided context (docs, issue descr
 Once you understand what the user wants, and before drafting the Workstream Document:
 - Propose 2–3 distinct approaches grounded in the codebase.
 - State clear trade-offs for each option (complexity, maintenance burden, performance, risk).
-- Lead with your recommended option and explain why.
+- Sketch each option concretely enough to picture, and lead with your recommended option and why.
 - Ask the user which direction they prefer. When there is genuinely only one sensible way forward, state that clearly and explain why alternatives are ill-suited.
 
 ## Concise Design Playback (~200 Words) With Opt-Out
+
+**When nothing is open** (the request and project answer everything that would change what gets built, and there is one sensible way), your first message is this short design: the approach, one line on why alternatives do not fit, the design in a few lines, and the proposed sequential slice breakdown. It is the playback below, with the same opt-out and user approval.
 
 Before writing the full Workstream Document on non-trivial workstreams, present a concise (~200-word) playback summarizing:
 - The agreed objective and architecture
@@ -74,7 +78,7 @@ For the full markdown schema, section requirements, and examples, read [referenc
 You MUST create a task for each of these items and complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits (look before asking).
-2. **Clarifying questions** — one question per turn, open questions first.
+2. **Clarifying questions** — one question per turn, open questions first. (Skipped with step 3 when nothing is open.)
 3. **Propose 2–3 approaches** — with trade-offs and your recommendation.
 4. **Design playback (~200 words)** — concise playback with opt-out before drafting.
 5. **Write Workstream Document** — dispatch a `document-writer` subagent to write `docs/workstreams/YYYY-MM-DD-<topic>.md` following [references/workstream-document-template.md](references/workstream-document-template.md) and commit.
@@ -100,6 +104,7 @@ digraph workstream_brainstorming {
     "Invoke workstream-driven-development" [shape=doublecircle style=filled fillcolor=lightgreen];
 
     "Explore project context\n(look before asking)" -> "Clarifying questions\n(one per turn)";
+    "Explore project context\n(look before asking)" -> "Design playback (~200 words)\n(with opt-out)" [label="nothing open"];
     "Clarifying questions\n(one per turn)" -> "Propose 2-3 approaches\n(with recommendation)";
     "Propose 2-3 approaches\n(with recommendation)" -> "Design playback (~200 words)\n(with opt-out)";
     "Design playback (~200 words)\n(with opt-out)" -> "User approves approach?";
