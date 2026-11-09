@@ -310,4 +310,45 @@ dir_crlf=$("$wsd_workspace" "$ws_crlf" 2>/dev/null)
 expected_crlf=$(cd "$tmp/repo/.solopowers/wsd/crlf" && pwd -P)
 [ "$dir_crlf" = "$expected_crlf" ] || fail "CRLF header failed to match cleanly"
 
+# 7. Unclosed code fences must not swallow later slices or hide headings
+cd "$tmp/repo"
+fence_ws() { # name, body
+  printf '%s' "$2" > "$tmp/repo/docs/workstreams/2026-02-01-$1.md"
+  echo "$tmp/repo/docs/workstreams/2026-02-01-$1.md"
+}
+run_brief() { # sets status, err
+  err_file="$tmp/err.txt"
+  if "$slice_brief" "$@" >/dev/null 2>"$err_file"; then status=0; else status=$?; fi
+  err=$(cat "$err_file")
+}
+
+# (a) unclosed fence inside the requested slice hides the next slice heading
+ws_a=$(fence_ws fence-a $'# W\n\n### Slice A: One\n\nbody-a\n\n```sh\nopen forever\n\n### Slice B: Two\n\nbody-b\n')
+run_brief "$ws_a" A
+[ "$status" -eq 4 ] || fail "unclosed fence in requested slice: expected exit 4, got $status"
+[ ! -e "$tmp/repo/.solopowers/wsd/fence-a/slice-A-brief.md" ] || fail "partial brief left behind after exit 4"
+case "$err" in *"line 7"*) ;; *) fail "stderr must name opening line 7: $err" ;; esac
+
+# (b) stray unclosed fence hiding no slice heading: complete brief plus warning
+ws_b=$(fence_ws fence-b $'# W\n\n### Slice A: One\n\nbody-a\n\n```\n')
+run_brief "$ws_b" A
+[ "$status" -eq 0 ] || fail "stray unclosed fence: expected exit 0, got $status"
+case "$err" in *"warning"*"line 7"*) ;; *) fail "expected unclosed-fence warning naming line 7: $err" ;; esac
+grep -q '^body-a$' "$tmp/repo/.solopowers/wsd/fence-b/slice-A-brief.md" || fail "brief incomplete after stray fence"
+
+# (c) unclosed fence before the requested heading hides it
+ws_c=$(fence_ws fence-c $'# W\n\n```\nnever closed\n\n### Slice A: One\n\nbody-a\n')
+run_brief "$ws_c" A
+[ "$status" -eq 3 ] || fail "hidden requested heading: expected exit 3, got $status"
+case "$err" in *"never closes"*|*"unclosed"*) ;; *) fail "stderr must mention the unclosed fence: $err" ;; esac
+case "$err" in *"line 3"*) ;; *) fail "stderr must name opening line 3: $err" ;; esac
+
+# (d) longer-run and tilde fences that do close stay unchanged
+ws_d=$(fence_ws fence-d $'# W\n\n### Slice A: One\n\n````\n```\ninner\n```\n````\n\n~~~\n### Slice Z: fake\n~~~\n\nend-a\n\n### Slice B: Two\n\nbody-b\n')
+run_brief "$ws_d" A
+[ "$status" -eq 0 ] || fail "well-formed fences: expected exit 0, got $status"
+[ -z "$err" ] || fail "well-formed fences must not warn: $err"
+grep -q '^end-a$' "$tmp/repo/.solopowers/wsd/fence-d/slice-A-brief.md" || fail "tail of slice A missing"
+! grep -q 'body-b' "$tmp/repo/.solopowers/wsd/fence-d/slice-A-brief.md" || fail "slice B leaked into brief A"
+
 echo 'slice-brief tests passed'

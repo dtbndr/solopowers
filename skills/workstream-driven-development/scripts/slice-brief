@@ -6,6 +6,19 @@
 # Usage: slice-brief WORKSTREAM_FILE SLICE_ID [SLUG_OVERRIDE]
 # Default output: .solopowers/wsd/<slug>/slice-<ID>-brief.md
 # slug is auto-derived from the workstream filename (date prefix stripped)
+#
+# Exit codes: 0 brief written; 2 usage error; 3 slice not found;
+# 4 an unclosed code fence hides a later Slice heading while the requested
+# slice is captured, so its end cannot be found (the partial brief is removed).
+#
+# A fence that never closes hides every Slice heading after it. When it hides
+# one while the requested slice is being captured, the brief would run on
+# through every later slice: refuse (exit 4) rather than hand an implementer
+# several slices as its requirements. When it hides the requested heading
+# itself, say so before the not-found error (exit 3). A stray unclosed fence
+# that hides no Slice heading (a document may end with a lone ``` line) leaves
+# the brief complete, so brief it with a warning. The workstream path goes
+# through ENVIRON, not -v, which would mangle backslashes.
 set -euo pipefail
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
@@ -37,7 +50,8 @@ fi
 dir=$("${BASH:-bash}" "${BASH_SOURCE[0]%/*}/wsd-workspace" "$slug" "$workstream")
 out="$dir/slice-${slice_id}-brief.md"
 
-awk -v requested="$slice_id" '
+rc=0
+SLICE_BRIEF_WS="$workstream" awk -v requested="$slice_id" '
   function delimiter_run(line, start, marker,    run) {
     run = 0
     while (substr(line, start + run, 1) == marker) run++
@@ -64,12 +78,15 @@ awk -v requested="$slice_id" '
           infence = 1
           fence_marker = marker
           fence_length = run
+          fence_line = NR
+          hidden = 0
           if (inslice) print
           next
         }
       }
     }
     if (infence) {
+      if (/^###[[:space:]]+Slice[[:space:]]+[A-Z][0-9]*:/) hidden = 1
       if (inslice) print
       next
     }
@@ -81,8 +98,22 @@ awk -v requested="$slice_id" '
       inslice = (heading == requested)
     }
     if (inslice) print
+    found = found || inslice
   }
-' "$workstream" > "$out"
+  END {
+    where = "the code fence opened at line " fence_line " of " ENVIRON["SLICE_BRIEF_WS"] " never closes"
+    if (infence && hidden && (inslice || !found)) {
+      print "slice-brief: " where ", so no Slice heading after it can be seen; close that fence in the workstream and rerun" | "cat >&2"
+      if (inslice) exit 4
+    } else if (infence && inslice) {
+      print "slice-brief: warning: " where "; it hides no Slice heading, so this brief is complete" | "cat >&2"
+    }
+  }
+' "$workstream" > "$out" || rc=$?
+if [ "$rc" -ne 0 ]; then
+  rm -f "$out"
+  exit "$rc"
+fi
 
 if [ ! -s "$out" ]; then
   echo "slice ${slice_id} not found in ${workstream} (no heading matching '### Slice ${slice_id}:')" >&2
