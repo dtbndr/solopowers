@@ -11,8 +11,8 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 ```
 reviewer subagent:
   description: "Review Slice [SLICE_ID] (compliance + quality)"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — REQUIRED: strongest tier per SKILL.md Model Selection; an omitted
+         model silently inherits the session's model]
   prompt: |
     You are reviewing one slice's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a slice-scoped gate,

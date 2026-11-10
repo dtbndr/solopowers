@@ -33,7 +33,7 @@ The worker needs information that was not provided in the curated brief or carry
 The worker cannot complete the slice.
 Assess the blocker systematically:
 1. **Missing context:** Provide the context and re-dispatch with the same model.
-2. **Insufficient reasoning capacity:** Re-dispatch with a more capable model.
+2. **Insufficient reasoning capacity:** Re-dispatch on the strongest tier.
 3. **Oversized slice:** If the slice is too large or complex for a single turn, split it in `slices.md` with user consent.
 4. **Workstream defect:** If `brief.md` or `slices.md` itself contains an incorrect requirement or contradiction, escalate to the user.
 

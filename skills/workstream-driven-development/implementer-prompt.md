@@ -7,7 +7,7 @@ The implementer runs with isolated context — it does NOT inherit the controlle
 ```
 implementer subagent:
   description: "Implement Slice [SLICE_ID]: [Slice Title]"
-  model: [MODEL — REQUIRED: choose per SKILL.md model-selection guidance]
+  model: [MODEL — REQUIRED: standard tier per SKILL.md Model Selection]
   prompt: |
     You are implementing Slice [SLICE_ID]: [Slice Title]
 

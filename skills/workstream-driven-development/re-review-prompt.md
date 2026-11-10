@@ -7,8 +7,8 @@ Use this template when dispatching a re-review after a fix round. The re-reviewe
 ```
 Subagent (general-purpose):
   description: "Re-review Slice [SLICE_ID] fix round [ROUND]"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — REQUIRED: strongest tier per SKILL.md Model Selection; an omitted
+         model silently inherits the session's model]
   prompt: |
     You are re-reviewing one slice's fix round for a workstream implementation. A previous review produced findings; an implementer has attempted to fix them. Your job is to verdict each finding and inspect the fix diff — nothing else.
 
@@ -105,7 +105,7 @@ Subagent (general-purpose):
 
 **Placeholders:**
 - `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
-  re-reviews of small fix diffs take a cheap-to-mid tier
+  strongest tier, even for small fix diffs
 - `[SLICE_ID]` — the slice identifier (e.g. `A`, `A1`); `end-smoke` in the end-smoke fix loop, where "slice brief" means the findings file
 - `[ROUND]` — current fix round number (e.g. `1`, `2`)
 - `[BRIEF_FILE]` — the slice brief file (end-smoke fix loop: `end-smoke-findings.md` plus the `brief.md` acceptance boundary, see fix-loop.md; otherwise `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from; run `scripts/` helpers by their absolute path, from the working tree)

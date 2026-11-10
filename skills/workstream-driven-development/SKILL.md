@@ -119,13 +119,13 @@ Workers MUST use:
 
 ## Roles and Model Selection
 
-- **Controller (You)**: Oversees execution, manages slice-to-slice state, updates the Todo task list, curates file contexts, and coordinates reviews. (Most capable model).
-- **Implementer subagent:** Focuses entirely on implementing and testing a single slice. (Fast, cheap model for mechanical/isolated tasks; standard model for complex integrations).
-- **Slice Reviewer subagent:** Evaluates requirements compliance AND code quality in a single pass. Returns spec compliance (✅/❌/⚠️) and P0-P3 findings. (Capable standard or premium model).
+- **Controller (You)**: Oversees execution, manages slice-to-slice state, updates the Todo task list, curates file contexts, and coordinates reviews. (The session's own model.)
+- **Implementer and fixer subagents:** Implement and test a single slice, or fix review findings. (Standard tier.)
+- **Slice Reviewer, re-reviewer, and final reviewer subagents:** Evaluate requirements compliance AND code quality in a single pass. Return spec compliance (✅/❌/⚠️) and P0-P3 findings. (Strongest tier.)
 
-Always specify the model explicitly when dispatching a subagent. An omitted model silently inherits the controller's session model, which is often more expensive than needed.
+Tiers: **strongest** is the most capable model the harness offers; **standard** is the capable mid-tier model, cheaper than strongest. Always specify the tier explicitly when dispatching a subagent. An omitted model silently inherits the controller's session model. Tier-to-model mapping per harness: [references/harness-dispatch.md](references/harness-dispatch.md).
 
-**Turn count beats token price.** Wall-clock and context cost scale with how many turns a subagent takes, and the cheapest models routinely take 2-3× the turns on multi-step work — costing more overall. Use a mid-tier model as the floor for reviewers and for workers working from prose descriptions. When the slice brief contains the complete code to write, the implementation is transcription plus testing: use the cheapest tier for that worker. Single-file mechanical fixes also take the cheapest tier.
+**Turn count beats token price.** Cheap models take many more turns on multi-step work and cost more overall. Workers get the standard tier; reviewers get the strongest tier. Do not route reviews to cheaper tiers, even for small fix diffs.
 
 ## Harness Dispatch
 
@@ -161,7 +161,7 @@ For each slice, dispatch the worker subagent using file handoffs:
 - Name a report file path for the worker so detailed notes and test evidence live on disk, not in controller context.
 - Provide only the relevant code files or interfaces for this slice.
 
-**Context budget:** The curated prompt must fit comfortably in a small context window. If a slice's brief + carry-forward + files exceed what a lightweight model can hold, escalate to the user — the slice is too large and needs splitting in `slices.md`.
+**Context budget:** The curated prompt must fit comfortably in a small context window. If a slice's brief + carry-forward + files exceed what a standard-tier worker can hold, escalate to the user — the slice is too large and needs splitting in `slices.md`.
 
 ### 3. Reviewing the Slice
 

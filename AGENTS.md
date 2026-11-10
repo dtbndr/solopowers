@@ -18,6 +18,7 @@ These principles drive fork/adapt/eliminate decisions when upstream (superpowers
 - Operator choices (playback, external review, isolation mode) follow one convention: the agent recommends an option with a one-line reason and the operator decides.
 - Upstream rigor (TDD enforcement, review discipline) should be **mapped onto workstream slices**, not upstream artifact assumptions.
 - Skills must not leak superpowers-specific artifact references (`docs/superpowers/specs`, `docs/superpowers/plans`) when those concepts do not exist in solopowers.
+- Review runs on the strongest model tier, implementation on the standard tier; do not route reviews to cheaper tiers.
 - Upstream drift is a managed risk. Preserve compatibility where possible, but **do not compromise the workstream model** to stay in sync.
 
 ## Directory Structure

@@ -55,7 +55,7 @@ End the playback with its single approval question, which doubles as the opt-out
 ## Sizing the Work and Slices
 
 - **Decompose into sequential slices:** Break the work into sequential milestones (e.g., Slice A, Slice A1, Slice A2). Slice IDs use `[A-Z][0-9]*`; IDs do not establish ordering. Each slice represents a clean milestone that can be independently developed, compiled, and tested.
-- **Slice sizing principles:** Slices are executed by low-cost models with limited context windows. Each slice should touch 1–5 files and carry its own TDD cycle (failing test → minimal implementation → verification). If a slice requires extensive explanation to be unambiguous, it is too large — split it.
+- **Slice sizing principles:** Slices are executed by standard-tier workers with limited context. Each slice should touch 1–5 files and carry its own TDD cycle (failing test → minimal implementation → verification). If a slice requires extensive explanation to be unambiguous, it is too large — split it.
 - **No implementation code in the document:** Key file paths, interfaces, column names, schema definitions, test targets, and exact verification commands belong in the document, but raw code generation is offloaded entirely to the slice implementer.
 - **Decision completeness:** All design choices that would require rework if decided wrong MUST be settled in the document. Incidental choices (internal helpers, variable names, log message wording) are explicitly left to implementation discretion.
 

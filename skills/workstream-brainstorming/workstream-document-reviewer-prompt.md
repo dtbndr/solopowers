@@ -53,7 +53,7 @@ Dispatch a reviewer subagent with this prompt:
     - **What Would a Slice Implementer Have to Guess?** Read this as the subagent implementing each slice without talking to the author: what would you have to guess?
     - **Ambiguous Definitions:** Which file paths, interfaces, data models, error states, or test commands are ambiguous or missing?
     - **TDD Executability:** Does each slice provide enough concrete detail (exact failing test focus, implementation boundaries, verification commands) for a worker to write real failing tests and implement without guessing?
-    - **Scope and Sizing:** Is any slice oversized or touching too many disparate components for a low-cost subagent's context window?
+    - **Scope and Sizing:** Is any slice oversized or touching too many disparate components for a standard-tier worker's limited context window?
 
     ## Process Rules
     - **DO NOT implement or edit any files.** This is a read-only review pass.
