@@ -13,7 +13,7 @@ Per-slice reviews are slice-scoped gates; the broad review happens once at the f
 - Copy binding requirements verbatim from the slice header in `slices.md` into the global-constraints block.
 - Pass the diff as a file using `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` with the recorded `BASE` commit (never `HEAD~1`).
 - Do not paste accumulated prior-slice history into later dispatches.
-- Dispatch fix subagents for P0/P1 findings only. P2/P3 go to `<workspace>/p2p3.md` (see [fix-loop.md](fix-loop.md)).
+- Dispatch fix subagents for P0/P1 findings only. P2/P3 go to `<workspace>/p2p3.md` (see [fix-loop.md](fix-loop.md)); slice lines are `Slice <ID>: P2: …`, final-review lines `Final: P2: …`.
 - Fill `[SEVERITY_DEFINITIONS]` (also in the re-review template): if `.memory/*grounding*.md` exists and defines P0/P1 for the project, paste its P0/P1 definitions verbatim plus the default P2/P3 lines below; otherwise paste the default below. Do not add a project's "happy path" filter to the default.
 
   ```

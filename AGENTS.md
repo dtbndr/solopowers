@@ -81,6 +81,7 @@ bash tests/skill-helper-paths/test-wsd-helper-paths.sh
 bash tests/skill-layout/test-no-dev-files-in-skills.sh
 bash tests/workstream-driven-development/test-slice-brief
 bash tests/workstream-driven-development/test-wsd-repo-guard
+bash tests/workstream-brainstorming/test-external-review-tools
 ```
 
 The inventory comparison verifies the current skill table in `using-solopowers` against the actual skill directories; migration aliases in `## Superseded Skills` are intentionally excluded.

@@ -9,16 +9,16 @@ The fix loop is entered when an initial slice review reports spec compliance ❌
 
 Before the loop starts, two routes leave it immediately:
 
-- **P2/P3 findings:** Never enter the loop and are not fixed unless the operator asks. The controller appends them to the gitignored `<workspace>/p2p3.md` (next to `progress.md`), one line each: `Slice <ID>: P2: <one-liner>` or `Slice <ID>: P3: <one-liner>`. Final review copies them into `<folder>/log.md` under a `P2/P3:` entry and tells the operator the count. Out-of-scope observations from a re-review are logged the same way.
+- **P2/P3 findings:** Never enter the loop and are not fixed unless the operator asks. The controller appends them to the gitignored `<workspace>/p2p3.md` (next to `progress.md`), one line each: `Slice <ID>: P2: <one-liner>` or `Slice <ID>: P3: <one-liner>`. Final review copies them into `<folder>/log.md` under a `P2/P3:` entry and tells the operator the count. Out-of-scope observations from a re-review are logged the same way. Entries are appended once per review round; the controller de-duplicates by finding text before appending.
 - **Workstream-mandated findings:** A finding labeled workstream-mandated — or any finding that conflicts with what `brief.md` or `slices.md` requires — is the user's decision, like any workstream contradiction: present the finding and the workstream text to the user and ask which governs. Do not dismiss the finding because the workstream mandates it, and do not dispatch a fix that contradicts the workstream without explicit human guidance.
 
-Everything else enters the loop. A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per fix series:
+Everything else enters the loop. When the initial review returns NEEDS FIXES, BEFORE dispatching round 1, write the findings to `<workspace>/findings-<ID>.md` and append `Slice <ID>: fix round 0/4 (<Y> open — initial review; commits <base7>..<head7>)` to the ledger (a crash then resumes at round 1; see [resuming.md](resuming.md)). A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per fix series:
 
 ## Rounds and Dispatch
 
 **Rounds 1-3 — resume the original implementer.** Send it the open findings verbatim. Its context is intact: it knows the slice, the code, and its own choices. If your harness cannot send another message to a live subagent, dispatch a fresh implementer carrying the slice brief path, the report-file path, and the findings — the report file is the persistent memory either way.
 
-**Round 4 — dispatch a fresh implementer on the strongest tier** (per SKILL.md's Model Selection), with the slice brief path, the report-file path, the open findings, and this framing: "A prior implementer attempted this slice 3 times; you own it now. Read the report file for what was tried." Also dispatch fresh if the implementer is stuck or context-polluted. A loop that survives three resumes usually means the implementer cannot see its own problem — fresh eyes and a capability bump in one move.
+**Round 4 — dispatch a fresh implementer on the strongest tier** (the one exception to fixers running on the standard tier; per SKILL.md's Model Selection), with the slice brief path, the report-file path, the open findings, and this framing: "A prior implementer attempted this slice 3 times; you own it now. Read the report file for what was tried." Also dispatch fresh if the implementer is stuck or context-polluted. A loop that survives three resumes usually means the implementer cannot see its own problem — fresh eyes and a capability bump in one move.
 
 ## Every Round: Fix & Test Contract
 
@@ -84,7 +84,7 @@ Slice <ID>: Ruling (user): <finding> — <decision>
 ### Definition of "Review Clean"
 
 A slice achieves **review clean** when:
-1. The initial review is `✅ Slice compliant` + `Verdict: CLEAN` (no open P0/P1) with every `⚠️ Cannot verify` item resolved (see [references/cannot-verify.md](cannot-verify.md)), **OR**
+1. The initial review is `✅ Slice compliant` + `Verdict: CLEAN` (no open P0/P1) with every `⚠️ Cannot verify` item resolved (see [cannot-verify.md](cannot-verify.md)), **OR**
 2. The latest fix round's scoped re-review ends `Verdict: CLEAN`: every `[FINDINGS]` item `ADDRESSED` (spec gaps, end-smoke failures and user-ruled changes count as P0/P1 for the verdict), no new P0/P1 (`0 open`), **OR**
 3. Every open P0/P1 at the round-4 cap has a user ruling (`Ruling (user)`) that lets the slice stand.
 

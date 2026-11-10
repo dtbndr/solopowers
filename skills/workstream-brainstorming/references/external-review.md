@@ -18,7 +18,7 @@ Run each helper by its absolute path, from the working tree you're executing in 
 
 ## State Machine and Lifecycle
 
-1. **A-internal-ready:** The mandatory internal document review (`workstream-document-reviewer-prompt.md`) has passed (`Approved`), decision provenance is complete in `brief.md` Key decisions, and the workstream folder is committed. External review runs after this gate and before the operator reviews `brief.md`.
+1. **A-internal-ready:** The mandatory internal document review (`workstream-document-reviewer-prompt.md`) has passed (`Approved`), decision provenance is complete (`slices.md` Assumptions and design decisions), and the workstream folder is committed. External review runs after this gate and before the operator reviews `brief.md`.
 2. **external-skipped:** If the operator did not opt in (`external review=off` in `log.md`), skip this protocol and proceed directly to the operator's review of `brief.md`, then WDD.
 3. **initial-package:** Harness A runs `bash scripts/external-review-package initial WORKSTREAM_FOLDER`. The user copies the emitted launch instruction and pastes it into Harness B.
 4. **initial-report:** Harness B writes its draft and publishes via `bash scripts/external-review-report publish PACKAGE DRAFT`. Harness A runs `bash scripts/external-review-report verify PACKAGE REPORT`, then enters adjudication, even when the blocker count is zero.

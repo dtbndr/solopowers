@@ -69,7 +69,7 @@ We explicitly do NOT split design and implementation planning into separate arti
 
 1. **`brief.md`** (the operator's file, the only one they approve; one screen, about 40 lines max, no tables): title/date/status; Why; Happy path and acceptance boundary (testable bullets); Key decisions as one-line bullets (`decision — why`); Open questions; Final smoke checks (only P0/P1 checks agents cannot perform or are not authorized to perform, else `None`); Pointers to `slices.md` and `log.md`.
 2. **`slices.md`** (agents only, as verbose as needed): agent preamble (Objective, scope in/out, key files, architecture invariant, fuller assumptions and design decisions, implementation discretion, unresolved blockers, final-verification commands) followed by the sequential slices (`### Slice <ID>: <title>`, ID `[A-Z][0-9]*`) with Goal, TDD Tasks, Watch out, Verification, and Carry-forward.
-3. **`log.md`** (agents only): created with the header `# <Topic> Workstream Log` and one line `Opt-ins: playback=<on|off>, external review=<on|off>`; the execution skill appends its content (`Isolation:` line after the Opt-ins line, then pre-flight result, review verdicts, P2/P3 findings, carry-forward).
+3. **`log.md`** (agents only): created with the header `# <Topic> Workstream Log` and one line `Opt-ins: playback=<on|off>, external review=<on|off>`; the execution skill appends only `Isolation:` (after the Opt-ins line), `Pre-flight:`, `Smoke:` lines, the `Final review:` outcome and the `P2/P3:` entry.
 
 For the full markdown schema, section requirements, and examples, read [references/workstream-folder-template.md](references/workstream-folder-template.md).
 
@@ -137,7 +137,7 @@ digraph workstream_brainstorming {
 
 ## Platform-Specific Subagent Dispatch
 
-Model tier: document-reviewer and builder-check use the strongest tier; document-writer uses the standard tier (definitions: `solopowers:workstream-driven-development` Roles and Model Selection, `references/harness-dispatch.md`). Specify the tier explicitly; an omitted model inherits the controller's.
+Model tier: document-reviewer and builder-check use the strongest tier; document-writer uses the standard tier (definitions: `solopowers:workstream-driven-development` Roles and Model Selection; tier table: `solopowers:workstream-driven-development` `references/harness-dispatch.md`). Specify the tier explicitly; an omitted model inherits the controller's.
 
 Use the table below to dispatch document-writer and document-reviewer subagents on your harness:
 
@@ -178,4 +178,4 @@ Once the folder has passed internal review and then external review (if opted in
 
 > "Workstream folder written and committed to `docs/workstreams/YYYY-MM-DD-<topic>/`. Please review `brief.md` (the only file that needs your approval) and let me know if you want any changes before we transition to `workstream-driven-development`."
 
-Wait for approval of `brief.md`. Once approved, invoke `solopowers:workstream-driven-development`, handing over the workstream folder path; execution uses `<folder>/slices.md`, reads `<folder>/brief.md` for the acceptance boundary and final smoke checks, and writes `<folder>/log.md`.
+Wait for approval of `brief.md`. Once approved, set its `**Status**` to `Approved` and commit that path, then invoke `solopowers:workstream-driven-development`, handing over the workstream folder path; execution uses `<folder>/slices.md`, reads `<folder>/brief.md` for the acceptance boundary and final smoke checks, and writes `<folder>/log.md`.

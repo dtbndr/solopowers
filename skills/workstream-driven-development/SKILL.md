@@ -120,7 +120,7 @@ Workers MUST use:
 ## Roles and Model Selection
 
 - **Controller (You)**: Oversees execution, manages slice-to-slice state, updates the Todo task list, curates file contexts, and coordinates reviews. (The session's own model.)
-- **Implementer and fixer subagents:** Implement and test a single slice, or fix review findings. (Standard tier.)
+- **Implementer and fixer subagents:** Implement and test a single slice, or fix review findings. (Standard tier; fix round 4 escalates to strongest.)
 - **Slice Reviewer, re-reviewer, and final reviewer subagents:** Evaluate requirements compliance AND code quality in a single pass. Return spec compliance (✅/❌/⚠️) and P0-P3 findings. (Strongest tier.)
 
 Tiers: **strongest** is the most capable model the harness offers; **standard** is the capable mid-tier model, cheaper than strongest. Always specify the tier explicitly when dispatching a subagent. An omitted model silently inherits the controller's session model. Tier-to-model mapping per harness: [references/harness-dispatch.md](references/harness-dispatch.md).

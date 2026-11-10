@@ -39,7 +39,7 @@ Only `brief.md` needs operator approval. `slices.md` and `log.md` need none.
 # <Topic> Workstream Brief
 
 **Date**: YYYY-MM-DD
-**Status**: Planned / In Progress / Complete
+**Status**: Planned / Approved / Done
 
 ## Why
 2-4 lines: the problem and what the operator gets.
@@ -138,7 +138,7 @@ Run all of the following before handoff. Each must pass clean:
 
 ## Canonical Template: `log.md`
 
-Brainstorming creates `log.md` with the header `# <Topic> Workstream Log` and one `Opt-ins:` line recording the operator's choices (see [opt-ins.md](opt-ins.md)); nothing else (it is committed with the folder). The execution skill (`solopowers:workstream-driven-development`) owns its content and only appends after it: `Isolation: <branch|worktree> — branch <name>`, then the pre-flight result, review verdicts, P2/P3 findings, and carry-forward.
+Brainstorming creates `log.md` with the header `# <Topic> Workstream Log` and one `Opt-ins:` line recording the operator's choices (see [opt-ins.md](opt-ins.md)); nothing else (it is committed with the folder). The execution skill (`solopowers:workstream-driven-development`) owns its content and only appends after it: `Isolation: <branch|worktree> — branch <name>`, then `Pre-flight:`, `Smoke:` lines, the `Final review:` outcome and the `P2/P3:` entry (nothing else).
 
 ```markdown
 # <Topic> Workstream Log
