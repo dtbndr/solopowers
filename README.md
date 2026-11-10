@@ -4,9 +4,9 @@ A curated skill pack for solo development workflows, derived from [obra/superpow
 
 ## Origin
 
-solopowers began as local adaptations of superpowers for a workflow where **a single workstream document** replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one git worktree per workstream, with **manual smoke-test pauses** between slices after automated review gates pass. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
+solopowers began as local adaptations of superpowers for a workflow where **a single workstream folder** (`brief.md`, `slices.md`, `log.md`) replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one isolation unit per workstream (a git branch or worktree, the operator's choice), with **manual smoke-test pauses** between slices after automated review gates pass. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
 
-Workstream Documents are stored at `docs/workstreams/YYYY-MM-DD-<topic>.md`. `workstream-brainstorming` creates the document; `workstream-driven-development` executes it sequentially in one worktree.
+Workstream folders are stored at `docs/workstreams/YYYY-MM-DD-<topic>/`. `workstream-brainstorming` creates the folder; `workstream-driven-development` executes it sequentially in one branch or worktree.
 
 ## Skills
 
@@ -15,8 +15,8 @@ Workstream Documents are stored at `docs/workstreams/YYYY-MM-DD-<topic>.md`. `wo
 | Skill | Origin | Description |
 |---|---|---|
 | `workstream-brainstorming` | Original | Explore feature ideas and design before implementation |
-| `workstream-driven-development` | Original | Execute workstream documents slice-by-slice with subagent dispatch |
-| `using-git-worktrees` | [superpowers](https://github.com/obra/superpowers) | Isolated git worktrees for feature work |
+| `workstream-driven-development` | Original | Execute workstream folders slice-by-slice with subagent dispatch |
+| `using-git-worktrees` | [superpowers](https://github.com/obra/superpowers) | Isolated git worktrees for feature work (used when the operator chooses a worktree) |
 | `finishing-a-development-branch` | [superpowers](https://github.com/obra/superpowers) | Structured merge/PR/cleanup branch completion |
 | `dispatching-parallel-agents` | [superpowers](https://github.com/obra/superpowers) | Run multiple independent subagents concurrently |
 

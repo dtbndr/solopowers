@@ -28,22 +28,22 @@ Dispatch a reviewer subagent with this prompt:
     git diff [BASE_SHA]..[HEAD_SHA]
     ```
 
-    ## The Workstream Document is a vision document
+    ## The workstream is a vision document
 
-    The Workstream Document says what the software must do. It does not enumerate every
+    The workstream (`brief.md` acceptance boundary plus `slices.md`) says what the software must do. It does not enumerate every
     input, environment, or condition the software will meet. For behavior
-    the Workstream Document is silent on, judge by what a reasonable person using this
+    the workstream is silent on, judge by what a reasonable person using this
     software would expect: a reasonable person's expectation is a
-    requirement, and a Workstream Document's silence is not permission. Grade such
-    findings by their effect on that person, not by whether the Workstream Document
+    requirement, and a workstream's silence is not permission. Grade such
+    findings by their effect on that person, not by whether the workstream
     mentions the trigger.
 
     ## Declined to judge
 
     Before your verdict, list every behavior you considered and set aside
-    as outside the plan or Workstream Document, one line each, with the reason. The
+    as outside the plan or workstream, one line each, with the reason. The
     controller/executor triages each line and anything conflicting with the plan or
-    Workstream Document goes to the user (see Constructing Reviewer Prompts); nothing
+    workstream goes to the user (see Constructing Reviewer Prompts); nothing
     you set aside is dropped silently. An empty list means you set nothing aside.
 
     ## Read-Only Review

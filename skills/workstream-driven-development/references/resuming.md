@@ -2,7 +2,7 @@
 
 Part of `solopowers:workstream-driven-development`.
 
-Conversation memory does not survive compaction. When a session ends mid-workstream (context compaction, session restart, crash, or user interruption), the durable progress ledger is the source of truth.
+Conversation memory does not survive compaction. When a session ends mid-workstream (context compaction, session restart, crash, or user interruption), the durable progress ledger (`progress.md`) is the source of truth for slice state. The committed `<folder>/log.md` is the human/agent record (isolation mode, review verdicts, carry-forward); it never overrides the ledger on slice state.
 
 ## Ledger Location and Workspace Identity
 
@@ -14,6 +14,7 @@ Or simply:
 ```bash
 $(bash scripts/wsd-workspace WORKSTREAM_FILE)/progress.md
 ```
+`WORKSTREAM_FILE` is always `<folder>/slices.md`; the helper derives the slug and date from the parent folder name.
 
 ### Ledger Header and Slug Disambiguation
 - **Header format:** At create time, `wsd-workspace` writes `# Workstream: <path>` as the first line of `progress.md`.
@@ -52,8 +53,8 @@ When resuming an interrupted session, locate the slice's **last state line** (sk
 
 ## Step-by-Step Resume Procedure
 
-1. Run `bash scripts/wsd-workspace WORKSTREAM_FILE` to identify the resolved workspace directory.
-2. Read `<workspace>/progress.md`.
+1. Run `bash scripts/wsd-workspace <folder>/slices.md` to identify the resolved workspace directory.
+2. Read `<workspace>/progress.md` for slice state, and read the isolation mode from `log.md` in the CURRENT working tree (first body line: `Isolation: <branch|worktree> — branch <name>`). Do not ask the operator to choose isolation again; if the mode in `log.md` does not match the current checkout, stop and ask.
 3. If the ledger is legacy headerless and marks slices complete, confirm with the user: "Adopted existing ledger for <workstream>. Slices [X, Y] are marked complete in the ledger. Proceed with Slice [Z]?"
 4. Inspect the last state line for the first incomplete slice according to the Resume Dispatch Table above.
 5. Take the corresponding action from the table, carrying forward context from the preceding completed slice.

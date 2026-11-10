@@ -26,6 +26,10 @@ reviewer subagent:
     Workstream-level constraints that bind this slice:
     [GLOBAL_CONSTRAINTS]
 
+    Acceptance boundary from `brief.md` (grade the slice against this as
+    well as the slice brief):
+    [ACCEPTANCE_BOUNDARY]
+
     ## What the Implementer Claims They Built
 
     Read the implementer's report: [REPORT_FILE]
@@ -63,22 +67,22 @@ reviewer subagent:
     spawn child agents. Perform the review yourself; if blocked or needing
     context, report that directly to the controller.
 
-    ## The Workstream Document is a vision document
+    ## The workstream is a vision document
 
-    The Workstream Document says what the software must do. It does not
+    The workstream (`brief.md` acceptance boundary plus the slice brief) says what the software must do. It does not
     enumerate every input, environment, or condition the software will
-    meet. For behavior the Workstream Document is silent on, judge by what
+    meet. For behavior the workstream is silent on, judge by what
     a reasonable person using this software would expect: a reasonable
-    person's expectation is a requirement, and a Workstream Document's
+    person's expectation is a requirement, and a workstream's
     silence is not permission. Grade such findings by their effect on that
-    person, not by whether the Workstream Document mentions the trigger.
+    person, not by whether the workstream mentions the trigger.
 
     ## Declined to judge
 
     Before your verdict, list every behavior you considered and set aside
-    as outside the Workstream Document, one line each, with the reason. The
+    as outside the workstream, one line each, with the reason. The
     controller triages each line and anything conflicting with the
-    Workstream Document goes to the user (see Constructing Reviewer Prompts);
+    workstream goes to the user (see Constructing Reviewer Prompts);
     nothing you set aside is dropped silently. An empty list means you set
     nothing aside.
 
@@ -155,7 +159,7 @@ reviewer subagent:
     - Are units decomposed so they can be understood and tested
       independently?
     - Is the implementation following the key files list and architecture
-      invariants from the Workstream Document?
+      invariants from `slices.md`?
     - Did this change create new files that are already large, or
       significantly grow existing files? (Don't flag pre-existing file
       sizes — focus on what this slice's change contributed.)
@@ -178,7 +182,7 @@ reviewer subagent:
     would block a merge over — verbatim duplication of a logic block,
     swallowed errors, tests that assert nothing. "Coverage could be broader"
     and polish suggestions are Minor.
-    If the Workstream Document explicitly mandates something this rubric calls
+    If the workstream explicitly mandates something this rubric calls
     a defect (a test that asserts nothing, verbatim duplication of a logic
     block), that IS a finding — report it as Important, labeled
     workstream-mandated. The workstream's authorship does not grade its own
@@ -221,9 +225,11 @@ reviewer subagent:
 - `[BRIEF_FILE]` — REQUIRED: the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID`
   prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
-  the Workstream Document's Slice header: exact values, formats, watch-outs,
+  the slice header in `slices.md`: exact values, formats, watch-outs,
   and stated relationships between components (not process rules — those
   are already in this template)
+- `[ACCEPTANCE_BOUNDARY]` — the "Happy path and acceptance boundary" text copied
+  verbatim from `<folder>/brief.md`
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
 - `[BASE_SHA]` — commit before this slice

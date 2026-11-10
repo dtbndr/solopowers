@@ -50,7 +50,7 @@ Before writing the full Workstream Document, present a concise (~200-word) playb
 - Key design decisions: the user's settled ones, with your unconfirmed calls marked as your calls
 - The proposed sequential slice breakdown
 
-End the playback with its single approval question, which doubles as the opt-out: *"Shall I draft the Workstream Document from this, or adjust something first?"* If the user says "just write it", proceed directly to writing the Workstream Document. If they said it before seeing the approach, still send the playback, but end it with a statement such as *"Drafting the Workstream Document from this now."* instead of the question, then proceed without waiting. "Just write it" skips only the playback approval; the internal review and the user's review of the Workstream Document still apply. For small tasks, the playback is short, but still wait for approval.
+End the playback with its single approval question, which doubles as the opt-out: *"Shall I draft the Workstream Document from this, or adjust something first?"* If the user says "just write it", proceed directly to writing the Workstream Document. If they said it before seeing the approach, still send the playback, but end it with a statement such as *"Drafting the Workstream Document from this now."* instead of the question, then proceed without waiting. "Just write it" skips only the playback approval; the internal review and the user's review of `brief.md` still apply. For small tasks, the playback is short, but still wait for approval.
 
 ## Sizing the Work and Slices
 
@@ -161,4 +161,4 @@ Once the folder has passed internal review (and optional external review), prese
 
 > "Workstream folder written and committed to `docs/workstreams/YYYY-MM-DD-<topic>/`. Please review `brief.md` (the only file that needs your approval) and let me know if you want any changes before we transition to `workstream-driven-development`."
 
-Wait for approval of `brief.md`. Once approved, invoke `solopowers:workstream-driven-development`, handing over the workstream folder path; execution uses `<folder>/slices.md` and writes `<folder>/log.md`.
+Wait for approval of `brief.md`. Once approved, invoke `solopowers:workstream-driven-development`, handing over the workstream folder path; execution uses `<folder>/slices.md`, reads `<folder>/brief.md` for the acceptance boundary and final smoke checks, and writes `<folder>/log.md`.

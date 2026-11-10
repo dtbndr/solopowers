@@ -9,7 +9,7 @@ Worker subagents report one of four statuses upon completing their turn:
 The worker completed the slice, committed changes, and ran tests.
 1. Generate the review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
-   bash scripts/review-package "$BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
+   bash scripts/review-package "$BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"  # always <folder>/slices.md
    ```
    (`BASE` is the commit recorded before dispatching the worker — never `HEAD~1`, which silently drops earlier commits of a multi-commit slice).
 2. Dispatch the slice reviewer using `workstream-reviewer-prompt.md`.
@@ -34,8 +34,8 @@ The worker cannot complete the slice.
 Assess the blocker systematically:
 1. **Missing context:** Provide the context and re-dispatch with the same model.
 2. **Insufficient reasoning capacity:** Re-dispatch with a more capable model.
-3. **Oversized slice:** If the slice is too large or complex for a single turn, split it in the Workstream Document with user consent.
-4. **Workstream Document defect:** If the document itself contains an incorrect requirement or contradiction, escalate to the user.
+3. **Oversized slice:** If the slice is too large or complex for a single turn, split it in `slices.md` with user consent.
+4. **Workstream defect:** If `brief.md` or `slices.md` itself contains an incorrect requirement or contradiction, escalate to the user.
 
 > [!CAUTION]
 > Never ignore an escalation or force the same model to retry without changes. If the worker reports that it is stuck, something needs to change.

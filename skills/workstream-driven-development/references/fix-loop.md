@@ -10,7 +10,7 @@ The fix loop is entered when an initial slice review reports spec compliance ❌
 Before the loop starts, two routes leave it immediately:
 
 - **Minor findings:** Record Minor findings in the progress ledger as you go (`Slice <ID>: minor (deferred): <one-liner>`), and point the final whole-workstream review at that list so it can triage which must be fixed before merge. A roll-up nobody reads is a silent discard. Minor findings never enter the loop.
-- **Workstream-mandated findings:** A finding labeled workstream-mandated — or any finding that conflicts with what the Workstream Document's text requires — is the user's decision, like any workstream contradiction: present the finding and the workstream text to the user and ask which governs. Do not dismiss the finding because the workstream mandates it, and do not dispatch a fix that contradicts the workstream without explicit human guidance.
+- **Workstream-mandated findings:** A finding labeled workstream-mandated — or any finding that conflicts with what `brief.md` or `slices.md` requires — is the user's decision, like any workstream contradiction: present the finding and the workstream text to the user and ask which governs. Do not dismiss the finding because the workstream mandates it, and do not dispatch a fix that contradicts the workstream without explicit human guidance.
 
 Everything else enters the loop. A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per fix series:
 
@@ -62,9 +62,9 @@ Present the user with:
 - The remaining open findings and reviewer verdict
 - The diff range (`$FIX_BASE..$HEAD`)
 - What was tried across the fix rounds
-- The specific conflict between the implementation and the Workstream Document (if any)
+- The specific conflict between the implementation and `brief.md` or `slices.md` (if any)
 
-**DO NOT** let the controller silently park findings or override the Workstream Document. The user makes the call on how to proceed (adjusting the Workstream Document, accepting a trade-off, or providing direct instructions).
+**DO NOT** let the controller silently park findings or override `brief.md` or `slices.md`. The user makes the call on how to proceed (adjusting `brief.md` or `slices.md`, accepting a trade-off, or providing direct instructions).
 
 When the user decides on each finding, write one ledger line per open finding:
 ```markdown
@@ -92,7 +92,7 @@ Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test
 (where `<base7>` is the commit before this slice began, and `<head7>` is the reviewed head commit: current `HEAD` for initial review, or `<b7>` from the latest `fix round` line; verify `HEAD == <head7>` before pausing).
 
 Then pause and ask the user to perform the manual smoke test for that slice:
-- Direct the user to the exact manual smoke test steps in the Workstream Document.
+- Direct the user to the exact manual smoke test steps in `slices.md`.
 - Wait for user confirmation before proceeding to the next slice.
 
 ### Smoke Test Outcome
