@@ -18,8 +18,8 @@ Run each helper by its absolute path, from the working tree you're executing in 
 
 ## State Machine and Lifecycle
 
-1. **A-internal-ready:** The mandatory internal document review (`workstream-document-reviewer-prompt.md`) has passed (`Approved`), decision provenance is complete in the Context section, and the workstream folder is committed.
-2. **external-skipped:** If the operator did not opt in (`external review=off` in `log.md`), skip this protocol and proceed directly to user review and WDD.
+1. **A-internal-ready:** The mandatory internal document review (`workstream-document-reviewer-prompt.md`) has passed (`Approved`), decision provenance is complete in `brief.md` Key decisions, and the workstream folder is committed. External review runs after this gate and before the operator reviews `brief.md`.
+2. **external-skipped:** If the operator did not opt in (`external review=off` in `log.md`), skip this protocol and proceed directly to the operator's review of `brief.md`, then WDD.
 3. **initial-package:** Harness A runs `bash scripts/external-review-package initial WORKSTREAM_FOLDER`. The user copies the emitted launch instruction and pastes it into Harness B.
 4. **initial-report:** Harness B writes its draft and publishes via `bash scripts/external-review-report publish PACKAGE DRAFT`. Harness A runs `bash scripts/external-review-report verify PACKAGE REPORT`, then enters adjudication, even when the blocker count is zero.
 5. **A-adjudication:** Harness A accepts or rejects findings with the user:
@@ -46,6 +46,6 @@ Run each helper by its absolute path, from the working tree you're executing in 
 
 ## Package Format (folder review)
 
-The package records `Workstream-Path` (the folder), `Brief-Blob-OID`, `Slices-Blob-OID`, and `Workstream-SHA256` (SHA-256 of the `brief.md` blob bytes followed by the `slices.md` blob bytes). Reports must echo these fields. A confirmation package requires the combined digest to differ from the initial package's.
+The package records `Workstream-Path` (the folder), `Brief-Blob-OID`, `Slices-Blob-OID`, and `Workstream-SHA256` (SHA-256 of the text `<brief-blob-oid>\n<slices-blob-oid>\n`, which is unambiguous because blob OIDs are fixed-length and content-addressed). Reports must echo these fields. A confirmation package requires the combined digest to differ from the initial package's.
 
 Incompatible with the earlier single-file format: tools take the folder path (not a file), and the single `Blob-OID` field is replaced by the two blob fields. Packages and reports written in the old format fail validation; regenerate them.

@@ -8,7 +8,7 @@ The canonical planning artifact is a **workstream folder** written to `docs/work
 | ---- | -------- | ------- |
 | `brief.md` | The operator | The only file the operator approves. One screen, about 40 lines max. |
 | `slices.md` | Agents only | Agent preamble plus the slices. As verbose as needed. |
-| `log.md` | Agents only | Execution log, owned by the execution skill. Starts with a one-line header. |
+| `log.md` | Agents only | Execution log, owned by the execution skill. Starts with a header and an `Opt-ins:` line. |
 
 Only `brief.md` needs operator approval. `slices.md` and `log.md` need none.
 

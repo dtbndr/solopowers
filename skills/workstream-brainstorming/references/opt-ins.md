@@ -9,7 +9,7 @@ Part of `solopowers:workstream-brainstorming`. Two ceremonies are off unless the
 
 ## The question
 
-Ask once, at the start: with the first clarifying question, or right after context exploration if nothing is open. One combined question that gives your recommendation and a one-line reason for each, based on the workstream's size and risk:
+Ask once, right after context exploration and before any clarifying question, as its own turn (the opt-in question is the only question in that turn). One combined question that gives your recommendation and a one-line reason for each, based on the workstream's size and risk:
 
 > "Two optional steps, both off unless you want them. Design playback (I show the design for approval before drafting): I recommend <skip|opt in> because <reason>. External review of the drafted folder in a second session: I recommend <skip|opt in> because <reason>. Which do you want?"
 

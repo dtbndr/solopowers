@@ -17,7 +17,7 @@ head=$(git rev-parse HEAD 2>/dev/null) || { echo 'HEAD is unresolved' >&2; exit 
 for f in "$bpath" "$spath"; do git diff --quiet -- "$f" || { echo 'workstream has unstaged changes' >&2; exit 4; }; git diff --cached --quiet -- "$f" || { echo 'workstream has staged changes' >&2; exit 4; }; done
 bblob=$(git rev-parse "HEAD:$bpath" 2>/dev/null) && sblob=$(git rev-parse "HEAD:$spath" 2>/dev/null) || { echo 'workstream missing at HEAD' >&2; exit 3; }
 tmpb=$(mktemp); tmps=$(mktemp); trap 'rm -f "$tmpb" "$tmps" "${tmp:-}"' EXIT; git cat-file blob "$bblob" > "$tmpb"; git cat-file blob "$sblob" > "$tmps"
-cmp -s "$tmpb" "$bpath" && cmp -s "$tmps" "$spath" || { echo 'workstream bytes differ from committed blobs' >&2; exit 4; }; digest=$(cat "$tmpb" "$tmps" | shasum -a 256 | awk '{print $1}')
+cmp -s "$tmpb" "$bpath" && cmp -s "$tmps" "$spath" || { echo 'workstream bytes differ from committed blobs' >&2; exit 4; }; digest=$(printf '%s\n%s\n' "$bblob" "$sblob" | shasum -a 256 | awk '{print $1}')
 ws=$("${BASH:-bash}" "$workspace_tool" "$path")
 prior= dispositions=; areas=(); disposition_lines=
 if [ "$mode" = confirmation ]; then

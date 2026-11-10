@@ -11,7 +11,7 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
     You are a workstream folder writer. Your task is to compile the approved design decisions, context, scope, and slice breakdowns from our brainstorming into the official workstream folder.
 
     **Output Folder Path:** Write the three files directly into the designated folder `docs/workstreams/YYYY-MM-DD-[topic]/`: `brief.md`, `slices.md`, `log.md`.
-    **Opt-ins:** [playback=<on|off>, external review=<on|off>]
+    **Opt-ins:** playback=<on|off>, external review=<on|off> (if not given, write playback=off, external review=off)
     **Context and Brainstorming Summary:** [BRAINSTORMING_SUMMARY_AND_SLICES]
 
     ## Invariant Constraints
@@ -135,6 +135,6 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
     ```markdown
     # [Topic] Workstream Log
 
-    Opt-ins: playback=[on|off], external review=[on|off]
+    Opt-ins: playback=<on|off>, external review=<on|off>
     ```
 ```

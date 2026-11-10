@@ -22,7 +22,7 @@ validate_package(){
   git -C "$root" cat-file -e "$commit^{commit}" 2>/dev/null || { echo 'package commit is invalid' >&2; return 3; }
   actual=$(git -C "$root" rev-parse "$commit:$path/brief.md" 2>/dev/null) && [ "$actual" = "$bblob" ] || { echo 'package brief.md blob does not match commit tree' >&2; return 3; }
   actual=$(git -C "$root" rev-parse "$commit:$path/slices.md" 2>/dev/null) && [ "$actual" = "$sblob" ] || { echo 'package slices.md blob does not match commit tree' >&2; return 3; }
-  actual=$({ git -C "$root" cat-file blob "$bblob"; git -C "$root" cat-file blob "$sblob"; } | shasum -a 256 | awk '{print $1}')
+  actual=$(printf '%s\n%s\n' "$bblob" "$sblob" | shasum -a 256 | awk '{print $1}')
   [ "$actual" = "$digest" ] || { echo 'package blob digest mismatch' >&2; return 3; }
 }
 find_count(){ grep -Ec "^Finding: $1\|" "$2" || true; }
