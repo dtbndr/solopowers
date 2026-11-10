@@ -13,7 +13,8 @@ These principles drive fork/adapt/eliminate decisions when upstream (superpowers
 - The canonical planning artifact is one **workstream folder** with a human-readable `brief.md` (the only file the operator approves) and agent-facing `slices.md` and `log.md`. Do not reintroduce separate spec/plan artifacts.
 - Execution is **sequential and slice-based**. Upstream changes that assume independent parallel tasks may need adaptation.
 - **One isolation unit per workstream** (a git branch or a git worktree, chosen by the operator), never per task or slice. Workspace-isolation patterns must preserve this.
-- **Human smoke testing happens once, at the end of the workstream**, limited to P0/P1 checks agents cannot perform or are not authorized to perform. Skip it when that set is empty. Upstream changes that remove human-in-the-loop points require adaptation.
+- **Human smoke testing happens once, at the end of the workstream**, limited to P0/P1 checks agents cannot perform or are not authorized to perform. Skip it when that set is empty.
+- Upstream changes that remove human-in-the-loop points require adaptation.
 - Operator choices (playback, external review, isolation mode) follow one convention: the agent recommends an option with a one-line reason and the operator decides.
 - Upstream rigor (TDD enforcement, review discipline) should be **mapped onto workstream slices**, not upstream artifact assumptions.
 - Skills must not leak superpowers-specific artifact references (`docs/superpowers/specs`, `docs/superpowers/plans`) when those concepts do not exist in solopowers.
