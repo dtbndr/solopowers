@@ -23,12 +23,12 @@ $(bash scripts/wsd-workspace WORKSTREAM_FILE)/progress.md
 
 ## Ledger State Lines
 
-Per-slice entries in `progress.md` distinguish **state lines** (which define where execution stands) from **annotation lines** (`Ruling (user)`, `⚠️ resolved`):
+Per-slice entries in `progress.md` distinguish **state lines** (which define where execution stands) from **annotation lines** (`Ruling (user)`, `⚠️ resolved`, legacy `minor (deferred)`):
 
 | Line | Written when |
 |---|---|
 | `Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test` | Initial review is ✅ + `Verdict: CLEAN` with every ⚠️ resolved, **or** a fix round has 0 open, **or** user rulings let the slice stand. Written immediately *before* pausing for the smoke test. |
-| `Slice <ID>: fix round <R>/4 (<X> addressed, <Y> open — …; commits <a7>..<b7>)` | Written after each fix round re-review. "Open" always means open P0/P1; P2/P3 live in `log.md`, never in the ledger. |
+| `Slice <ID>: fix round <R>/4 (<X> addressed, <Y> open — …; commits <a7>..<b7>)` | Written after each fix round re-review. "Open" always means open P0/P1; P2/P3 live in `p2p3.md`, never in the ledger. |
 | `Slice <ID>: escalated at cap — <Y> open` | Written when round 4 still has open findings and the controller escalates to the user. |
 | `Slice <ID>: Ruling (user): <finding> — <decision>` | Annotation: written one per open finding once the user decides. |
 | `Slice <ID>: ⚠️ resolved — <item> — <evidence>` | Annotation: written when the controller resolves a `⚠️ Cannot verify` item. |
@@ -37,7 +37,7 @@ Per-slice entries in `progress.md` distinguish **state lines** (which define whe
 
 ## Resume Dispatch Table
 
-When resuming an interrupted session, locate the slice's **last state line** (skip `Ruling (user)` and `⚠️ resolved` lines when determining the last state line, unless inspecting rulings after `escalated at cap`):
+When resuming an interrupted session, locate the slice's **last state line** (skip `Ruling (user)`, `⚠️ resolved` and legacy `minor (deferred)` lines when determining the last state line, unless inspecting rulings after `escalated at cap`):
 
 | Last state line | Action on resume |
 |---|---|
@@ -48,7 +48,7 @@ When resuming an interrupted session, locate the slice's **last state line** (sk
 | `fix round 4/4` with `>0 open`, or `escalated at cap — <Y> open` with no rulings | Re-present the escalation to the user; **never dispatch round 5**. |
 | `escalated at cap — <Y> open` followed by `Ruling (user)` lines | Compare the count of `Ruling (user)` lines against `<Y>`. If fewer than `<Y>` rulings are recorded, re-present the remaining unruled findings to the user before proceeding. Once all `<Y>` rulings are present: if rulings let the slice stand as-is without code changes, check current `HEAD` against `<b7>` (the round-4 reviewed head commit from the preceding `fix round 4/4` line); if `HEAD == <b7>`, write `review clean (commits <base7>..<b7>) — awaiting smoke test` and ask the user for the smoke test; if `HEAD != <b7>`, stop and ask the user how to handle the unreviewed commits past `<b7>`. If rulings direct code changes, start a fresh 4-round fix series (round 1/4) with `FIX_BASE` anchored to the round-4 `<b7>` commit (from the preceding `fix round 4/4` line, not current `HEAD`, in case a crash occurred after new commits landed before the round line was written) with the user-directed changes as findings. |
 | `smoke test failed (at <head7>) — <one-liner>` | Start the fix loop at round 1/4 (fresh 4-round budget) with `FIX_BASE` = `<head7>` recorded on the preceding `review clean` line, with the user's report as findings. |
-| No state line for this slice | Set `BASE` = previous slice's `complete` `<head7>` (for the first slice, the last setup commit: `git log -n1 --format=%H -G'^Pre-flight:' -- <folder>/log.md`, so Slice A's review excludes setup commits; only if `log.md` has no `Pre-flight:` line AND the ledger already shows a slice past dispatch (legacy log), use the `Isolation:` commit via `-G'^Isolation:'`; otherwise redo pre-flight first, see step 1a). If no commits exist past `BASE` (unstarted, or crashed before first commit), dispatch or resume the implementer from `BASE`. If commits exist past `BASE`: inspect the implementer report file; if implementation reported `DONE` or `DONE_WITH_CONCERNS` (matching `SKILL.md`), run the initial slice review (`bash scripts/review-package BASE HEAD ...`); otherwise resume/re-dispatch the implementer subagent. |
+| No state line for this slice | Set `BASE` = previous slice's `complete` `<head7>` (for the first slice, the last setup commit: `git log -n1 --format=%H -G'^Pre-flight:' -- <folder>/log.md`, so Slice A's review excludes setup commits; if `log.md` has no `Pre-flight:` line, redo pre-flight first, see step 1a). If no commits exist past `BASE` (unstarted, or crashed before first commit), dispatch or resume the implementer from `BASE`. If commits exist past `BASE`: inspect the implementer report file; if implementation reported `DONE` or `DONE_WITH_CONCERNS` (matching `SKILL.md`), run the initial slice review (`bash scripts/review-package BASE HEAD ...`); otherwise resume/re-dispatch the implementer subagent. |
 
 ## Step-by-Step Resume Procedure
 
@@ -59,7 +59,7 @@ When resuming an interrupted session, locate the slice's **last state line** (sk
    - Read the mode from `<folder>/log.md` IN THE UNIT. **Stop and ask the operator** (never dispatch an implementer on the default branch, never run `wsd-workspace` outside the unit) if: the unit's `log.md` has no `Isolation:` line anywhere; no unit can be found but a ledger or log shows work was done; or you are on the default branch while a `ws/<slug>` branch exists and cannot be switched to.
    - Only if NO `ws/<slug>` branch or worktree exists AND no `Isolation:` line exists anywhere is this a first run, not a resume: go through the normal isolation choice ([references/isolation.md](isolation.md)).
 1. From inside the unit, run `bash scripts/wsd-workspace <folder>/slices.md` to identify the resolved workspace directory.
-1a. **Pre-flight check.** If `log.md` in the unit has an `Isolation:` line but no `Pre-flight:` line, setup was interrupted: before dispatching anything, redo the pre-flight scan inside the unit ([references/preflight.md](preflight.md)), apply agreed edits, and append and commit the `Pre-flight:` line. Otherwise skip pre-flight.
+1a. **Pre-flight check.** If `log.md` in the unit has an `Isolation:` line but no `Pre-flight:` line, setup was interrupted (no fallback to the `Isolation:` commit; `BASE` is the last `Pre-flight:` commit): before dispatching anything, redo the pre-flight scan inside the unit ([references/preflight.md](preflight.md)), apply agreed edits, and append and commit the `Pre-flight:` line. Otherwise skip pre-flight.
 2. Read `<workspace>/progress.md` for slice state, and confirm the isolation mode from `log.md` in the unit (the first `Isolation: <branch|worktree> — branch <name>` line anywhere in it). Do not ask the operator to choose isolation again; if the mode in `log.md` does not match the current checkout, stop and ask.
 3. If the ledger is legacy headerless and marks slices complete, confirm with the user: "Adopted existing ledger for <workstream>. Slices [X, Y] are marked complete in the ledger. Proceed with Slice [Z]?"
 4. Inspect the last state line for the first incomplete slice according to the Resume Dispatch Table above.

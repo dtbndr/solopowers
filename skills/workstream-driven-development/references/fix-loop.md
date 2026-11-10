@@ -9,7 +9,7 @@ The fix loop is entered when an initial slice review reports spec compliance ❌
 
 Before the loop starts, two routes leave it immediately:
 
-- **P2/P3 findings:** Never enter the loop and are not fixed unless the operator asks. Append them to `<folder>/log.md` (one line each, `Slice <ID>: P2: <one-liner>` or `Slice <ID>: P3: <one-liner>`) under a `P2/P3:` entry for the slice. Do not stage `log.md` into a slice or fix commit and do not commit it mid-slice (HEAD must stay at the reviewed head); commit it, explicit path, with the next `log.md` commit, at the latest the final outcome record. The final review gets these lines as carry-forward input and the operator is shown the count. Out-of-scope observations from a re-review are logged the same way.
+- **P2/P3 findings:** Never enter the loop and are not fixed unless the operator asks. The controller appends them to the gitignored `<workspace>/p2p3.md` (next to `progress.md`), one line each: `Slice <ID>: P2: <one-liner>` or `Slice <ID>: P3: <one-liner>`. Final review copies them into `<folder>/log.md` under a `P2/P3:` entry and tells the operator the count. Out-of-scope observations from a re-review are logged the same way.
 - **Workstream-mandated findings:** A finding labeled workstream-mandated — or any finding that conflicts with what `brief.md` or `slices.md` requires — is the user's decision, like any workstream contradiction: present the finding and the workstream text to the user and ask which governs. Do not dismiss the finding because the workstream mandates it, and do not dispatch a fix that contradicts the workstream without explicit human guidance.
 
 Everything else enters the loop. A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per fix series:
@@ -37,7 +37,7 @@ The re-review is scoped to the fix diff:
    where `FIX_BASE` is the head the previous review saw.
 2. Dispatch `re-review-prompt.md` with the findings list, the slice brief, the report file, and the printed diff path.
 3. The re-reviewer verdicts each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix diff only.
-4. New P0/P1 breakage in the fix diff joins the open findings list. New P2/P3 and out-of-scope observations go to `log.md` as above — they never extend the loop.
+4. New P0/P1 breakage in the fix diff joins the open findings list. New P2/P3 and out-of-scope observations go to `p2p3.md` as above — they never extend the loop.
 
 ## Ledger Tracking
 
@@ -81,7 +81,7 @@ Slice <ID>: Ruling (user): <finding> — <decision>
 
 A slice achieves **review clean** when:
 1. The initial review is `✅ Slice compliant` + `Verdict: CLEAN` (no open P0/P1) with every `⚠️ Cannot verify` item resolved (see [references/cannot-verify.md](cannot-verify.md)), **OR**
-2. The latest fix round's scoped re-review ends `Verdict: CLEAN`: every P0/P1 `ADDRESSED`, no new P0/P1 (`0 open`), **OR**
+2. The latest fix round's scoped re-review ends `Verdict: CLEAN`: every `[FINDINGS]` item `ADDRESSED` (spec gaps, smoke-failure reports and user-ruled changes count as P0/P1 for the verdict), no new P0/P1 (`0 open`), **OR**
 3. Every open P0/P1 at the round-4 cap has a user ruling (`Ruling (user)`) that lets the slice stand.
 
 ### Awaiting Smoke Test

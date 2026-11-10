@@ -98,7 +98,7 @@ Subagent (general-purpose):
 
     ### Verdict
 
-    `Verdict: CLEAN` (every P0/P1 finding ADDRESSED, no new P0/P1) |
+    `Verdict: CLEAN` (every [FINDINGS] item ADDRESSED, no new P0/P1) |
     `Verdict: NEEDS FIXES (<n> P0/P1)` — list the open ones. Open P2/P3 do
     not block.
 ```
@@ -110,7 +110,7 @@ Subagent (general-purpose):
 - `[ROUND]` — current fix round number (e.g. `1`, `2`)
 - `[BRIEF_FILE]` — the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from; run `scripts/` helpers by their absolute path, from the working tree)
 - `[SEVERITY_DEFINITIONS]` — same text given to the original reviewer
-- `[FINDINGS]` — the open P0/P1 findings and spec gaps from the
+- `[FINDINGS]` — the open P0/P1 findings, spec gaps (no P label) from the
   previous review (or user smoke-test failure report, or code changes
   directed by user rulings), copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)

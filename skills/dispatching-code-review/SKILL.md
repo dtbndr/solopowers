@@ -44,12 +44,12 @@ Dispatch a reviewer subagent, filling the template at [code-reviewer.md](code-re
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
-- `{SEVERITY_DEFINITIONS}` - P0-P3 definitions (the project's `.memory/*grounding*.md` P0/P1 definitions if present, else the default in workstream-driven-development `references/reviewer-prompts.md`)
+- `{SEVERITY_DEFINITIONS}` - P0-P3 definitions (the project's `.memory/*grounding*.md` P0/P1 definitions if present, else the default in `code-reviewer.md`)
 
 **3. Act on feedback:**
 
 - Fix P0 and P1 issues before proceeding
-- Note P2/P3 issues for later (in a workstream: log them to `log.md`)
+- Note P2/P3 issues for later (in a workstream: log them to the workspace `p2p3.md`)
 - Push back if reviewer is wrong (with reasoning)
 
 ## Example

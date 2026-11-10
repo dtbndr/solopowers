@@ -140,7 +140,7 @@ Dispatch a reviewer subagent with this prompt:
 - `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements; if a workstream folder exists, `brief.md`'s acceptance boundary plus `slices.md`)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
-- `[SEVERITY_DEFINITIONS]` — P0-P3 definitions: the project's `.memory/*grounding*.md` P0/P1 definitions if present, else the default in `workstream-driven-development/references/reviewer-prompts.md`
+- `[SEVERITY_DEFINITIONS]` — P0-P3 definitions: the project's `.memory/*grounding*.md` P0/P1 definitions if present, else the default: P0 breaks stated behavior/acceptance, loses data, is a security hole, or fails build/tests; P1 is a correctness bug or missing required behavior on the intended path; P2 is real but non-blocking; P3 is nit/style
 
 **Reviewer returns:** Strengths, Issues (P0-P3 with evidence), Recommendations, `Verdict:` line
 
