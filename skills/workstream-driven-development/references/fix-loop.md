@@ -5,11 +5,11 @@ Part of `solopowers:workstream-driven-development`.
 > [!IMPORTANT]
 > **Controller Instruction:** You MUST re-read this file (`references/fix-loop.md`) before every fix round. Conversation memory does not survive compaction.
 
-The fix loop is entered when an initial slice review reports spec compliance ❌, slice quality Needs fixes, a Critical or Important finding, or a confirmed ⚠️ gap; when a user reports a manual smoke-test failure; or when user rulings (`Ruling (user)`) after cap escalation direct code changes.
+The fix loop is entered when an initial slice review reports spec compliance ❌, `Verdict: NEEDS FIXES` (an open P0/P1), or a confirmed ⚠️ gap; when a user reports a manual smoke-test failure; or when user rulings (`Ruling (user)`) after cap escalation direct code changes.
 
 Before the loop starts, two routes leave it immediately:
 
-- **Minor findings:** Record Minor findings in the progress ledger as you go (`Slice <ID>: minor (deferred): <one-liner>`), and point the final whole-workstream review at that list so it can triage which must be fixed before merge. A roll-up nobody reads is a silent discard. Minor findings never enter the loop.
+- **P2/P3 findings:** Never enter the loop and are not fixed unless the operator asks. Append them to `<folder>/log.md` (one line each, `Slice <ID>: P2: <one-liner>` or `Slice <ID>: P3: <one-liner>`) under a `P2/P3:` entry for the slice. Do not stage `log.md` into a slice or fix commit and do not commit it mid-slice (HEAD must stay at the reviewed head); commit it, explicit path, with the next `log.md` commit, at the latest the final outcome record. The final review gets these lines as carry-forward input and the operator is shown the count. Out-of-scope observations from a re-review are logged the same way.
 - **Workstream-mandated findings:** A finding labeled workstream-mandated — or any finding that conflicts with what `brief.md` or `slices.md` requires — is the user's decision, like any workstream contradiction: present the finding and the workstream text to the user and ask which governs. Do not dismiss the finding because the workstream mandates it, and do not dispatch a fix that contradicts the workstream without explicit human guidance.
 
 Everything else enters the loop. A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per fix series:
@@ -37,7 +37,7 @@ The re-review is scoped to the fix diff:
    where `FIX_BASE` is the head the previous review saw.
 2. Dispatch `re-review-prompt.md` with the findings list, the slice brief, the report file, and the printed diff path.
 3. The re-reviewer verdicts each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix diff only.
-4. New Critical/Important breakage in the fix diff joins the open findings list. Out-of-scope observations go to the ledger as deferred minors — they never extend the loop.
+4. New P0/P1 breakage in the fix diff joins the open findings list. New P2/P3 and out-of-scope observations go to `log.md` as above — they never extend the loop.
 
 ## Ledger Tracking
 
@@ -45,12 +45,13 @@ After each round, append to `$(bash scripts/wsd-workspace <workspace-slug> WORKS
 ```markdown
 Slice <ID>: fix round <R>/4 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)
 ```
+`<Y>` counts open P0/P1 findings only.
 
 Never fix findings yourself in the controller session — your context stays clean for coordination, and controller fixes skip review.
 
 ## The Breaker (Cap Escalation)
 
-When round 4's re-review still leaves findings open, the cap is reached. Stop dispatching.
+When round 4's re-review still leaves a P0/P1 open, the cap is reached. (P2/P3 never trigger escalation.) Stop dispatching.
 
 Immediately append to the ledger:
 ```markdown
@@ -79,9 +80,9 @@ Slice <ID>: Ruling (user): <finding> — <decision>
 ### Definition of "Review Clean"
 
 A slice achieves **review clean** when:
-1. Initial review verdicts are `✅ Slice compliant` + `Slice quality: Approved` with every `⚠️ Cannot verify` item resolved (see [references/cannot-verify.md](cannot-verify.md)), **OR**
-2. The latest fix round's scoped re-review reports all findings `ADDRESSED` and no new Critical/Important breakage (`0 open`), **OR**
-3. Every open finding at the round-4 cap has a user ruling (`Ruling (user)`) that lets the slice stand.
+1. The initial review is `✅ Slice compliant` + `Verdict: CLEAN` (no open P0/P1) with every `⚠️ Cannot verify` item resolved (see [references/cannot-verify.md](cannot-verify.md)), **OR**
+2. The latest fix round's scoped re-review ends `Verdict: CLEAN`: every P0/P1 `ADDRESSED`, no new P0/P1 (`0 open`), **OR**
+3. Every open P0/P1 at the round-4 cap has a user ruling (`Ruling (user)`) that lets the slice stand.
 
 ### Awaiting Smoke Test
 

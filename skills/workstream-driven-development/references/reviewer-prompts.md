@@ -13,5 +13,13 @@ Per-slice reviews are slice-scoped gates; the broad review happens once at the f
 - Copy binding requirements verbatim from the slice header in `slices.md` into the global-constraints block.
 - Pass the diff as a file using `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` with the recorded `BASE` commit (never `HEAD~1`).
 - Do not paste accumulated prior-slice history into later dispatches.
-- Dispatch fix subagents for Critical and Important findings. Record Minor findings in the progress ledger as deferred minors.
+- Dispatch fix subagents for P0/P1 findings only. P2/P3 go to `log.md` (see [fix-loop.md](fix-loop.md)).
+- Fill `[SEVERITY_DEFINITIONS]` (also in the re-review template): if `.memory/*grounding*.md` exists and defines P0/P1 for the project, paste its P0/P1 definitions verbatim; otherwise paste the default below. Do not add a project's "happy path" filter to the default.
+
+  ```
+  P0: breaks the slice's stated behavior or acceptance, data loss, security hole, or build/tests fail.
+  P1: a correctness bug or missing required behavior a user of the slice would hit on its intended path.
+  P2: real but non-blocking (edge case, maintainability, missing non-critical test).
+  P3: nit, style, preference.
+  ```
 - Findings labeled workstream-mandated are the user's decision: present the finding and the workstream text to the user.

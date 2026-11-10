@@ -11,12 +11,12 @@ The final whole-workstream review inspects the entire branch diff across all com
    bash scripts/review-package "$MERGE_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
    ```
    where `WORKSTREAM_FILE` is always `<folder>/slices.md` and `WORKSPACE_SLUG` is the folder name without its leading `YYYY-MM-DD-`; `MERGE_BASE` is the commit the workstream branch started from (e.g. `git merge-base main HEAD`).
-3. Dispatch the final review using `solopowers:dispatching-code-review` ([code-reviewer.md](../../dispatching-code-review/code-reviewer.md)) on the most capable available model. Supply `[PLAN_OR_REQUIREMENTS]` as `brief.md`'s happy path and acceptance boundary plus `<folder>/slices.md`. Include the printed review package path in the dispatch so the final reviewer reads one unified file instead of re-deriving the diff with git commands.
-4. Point the reviewer at the progress ledger's `Ruling (user)` lines and `minor (deferred)` lines so it can triage which decisions were made and which minors must be fixed before merge.
+3. Dispatch the final review using `solopowers:dispatching-code-review` ([code-reviewer.md](../../dispatching-code-review/code-reviewer.md)) on the most capable available model. Supply `[PLAN_OR_REQUIREMENTS]` as `brief.md`'s happy path and acceptance boundary plus `<folder>/slices.md`. Fill `[SEVERITY_DEFINITIONS]` as in [reviewer-prompts.md](reviewer-prompts.md). Include the printed review package path in the dispatch so the final reviewer reads one unified file instead of re-deriving the diff with git commands.
+4. Point the reviewer at the progress ledger's `Ruling (user)` lines and at the `P2/P3:` entries in `<folder>/log.md` as carry-forward input, so it can see which decisions were made and which P2/P3 findings were logged. Tell the operator the P2/P3 count; they are not fixed unless the operator asks.
 
 ## Handling Final Review Findings ("No Second Fix Wave")
 
-If the final whole-workstream review returns findings:
+If the final whole-workstream review returns P0/P1 findings (P2/P3 are logged to `log.md`, not fixed):
 - Dispatch **ONE fix subagent** with the complete findings list — do NOT spawn one fixer per finding. Per-finding fixers each rebuild context and re-run suites, drastically increasing context and wall-clock costs.
 - The fix subagent addresses the findings, runs covering tests, commits, and runs the full repository test suite.
 - Run exactly one scoped re-review of the fix wave:

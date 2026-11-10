@@ -11,4 +11,4 @@ These items do not automatically fail the review, but you must resolve each one 
   Slice <ID>: ⚠️ resolved — <item> — <evidence>
   ```
   Recording this ensures your verification survives context compaction and session resume.
-- If you confirm the item is an actual gap or missing requirement, treat it as a failed spec review — it enters the fix loop (see [references/fix-loop.md](fix-loop.md)).
+- If you confirm the item is an actual gap or missing requirement, treat it as a failed spec review — it is a P1 finding and enters the fix loop (see [references/fix-loop.md](fix-loop.md)).

@@ -5,7 +5,7 @@ description: "Use when implementing an approved workstream folder (brief.md + sl
 
 # Workstream-Driven Development
 
-Execute a workstream folder (`brief.md`, `slices.md`, `log.md`) by dispatching a fresh subagent per slice, with a combined review after each: one reviewer returns both a compliance verdict and a quality verdict.
+Execute a workstream folder (`brief.md`, `slices.md`, `log.md`) by dispatching a fresh subagent per slice, with a combined review after each: one reviewer returns spec compliance plus P0-P3 graded findings.
 
 **Why subagents:** You delegate slice-level execution to specialized agents with isolated contexts. By precisely crafting their instructions, task details, and relevant file contexts, you ensure they stay focused and succeed. They should never inherit your full session history—only the curated slice requirements and file definitions.
 
@@ -16,7 +16,7 @@ Slice IDs use the grammar `[A-Z][0-9]*`: an uppercase letter followed by zero or
 1. **Single Isolation Unit**: The whole workstream runs in ONE isolation unit (a git branch or a git worktree) chosen by the operator once at the start. `finishing-a-development-branch` is called ONCE after the final slice is verified, in both modes. Never one per slice.
 2. **Sequential Slice Execution**: Slices (for example, Slice A, A1, and A2) are completed one by one in document order.
 3. **Curated Input**: The controller (you) extracts the slice goal, tasks, watch-outs, verification, manual smoke test steps, and carry-forward from `slices.md` (checked against `brief.md`), presenting a highly focused prompt to the worker subagent.
-4. **Combined Review**: For every slice, one reviewer checks both requirements compliance and code quality in a single pass, returning separate verdicts for each.
+4. **Combined Review**: For every slice, one reviewer checks requirements compliance and code quality in one pass and grades every finding P0-P3 with evidence. A slice is review clean when no P0/P1 is open.
 5. **Pause After Review Pass**: Preserve the worker ↔ reviewer retry loop until the slice achieves **review clean** (see [references/fix-loop.md](references/fix-loop.md)). Only after the slice is review clean do you write the awaiting-smoke-test ledger line and pause for the user's manual smoke test for that slice.
 
 ## When to Use
@@ -55,9 +55,9 @@ digraph workstream_execution {
     "Verify whole workstream\n(slices.md Final verification)" [shape=box];
     "Final review & finish\n(references/final-review.md)" [shape=box style=filled fillcolor=lightgreen];
 
-    "Resume? (references/resuming.md step 0)" -> "Resume per references/resuming.md\n(skip isolation choice, Isolation line, wsd-workspace setup)" [label="yes"];
+    "Resume? (references/resuming.md step 0)" -> "Resume per references/resuming.md\n(skip isolation, log.md append, wsd-workspace setup)" [label="yes"];
     "Resume? (references/resuming.md step 0)" -> "Read brief.md + slices.md, extract all slices, create Todo" [label="no (first run)"];
-    "Resume per references/resuming.md\n(skip isolation choice, Isolation line, wsd-workspace setup)" -> "Dispatch implementer subagent\n(./implementer-prompt.md)" [label="(state per resume table)"];
+    "Resume per references/resuming.md\n(skip isolation, log.md append, wsd-workspace setup)" -> "Dispatch implementer subagent\n(./implementer-prompt.md)" [label="(state per resume table)"];
     "Read brief.md + slices.md, extract all slices, create Todo" -> "Pre-flight scan\n(references/preflight.md)";
     "Pre-flight scan\n(references/preflight.md)" -> "Operator chooses isolation\n(ask once)";
     "Operator chooses isolation\n(ask once)" -> "Worktree\n(using-git-worktrees once)" [label="worktree"];
@@ -104,11 +104,11 @@ The following templates and helper scripts are stored in this skill's directory:
 Detailed procedures that the controller reads fresh at specific workflow steps live in `references/`:
 
 - [references/preflight.md](references/preflight.md) - Pre-flight scan of `brief.md` and `slices.md` before Slice 1.
-- [references/fix-loop.md](references/fix-loop.md) - Bounded 4-round fix loop, cap escalation to the human, and test rules.
+- [references/fix-loop.md](references/fix-loop.md) - Bounded 4-round fix loop, P2/P3 logging, escalation if a P0/P1 persists at the cap, and test rules.
 - [references/final-review.md](references/final-review.md) - Final whole-workstream review, no second fix wave, and cleanup.
 - [references/isolation.md](references/isolation.md) - Branch-or-worktree choice, branch-mode rules, `log.md` setup.
 - [references/harness-dispatch.md](references/harness-dispatch.md) - Per-harness subagent dispatch and escalation tables.
-- [references/reviewer-prompts.md](references/reviewer-prompts.md) - Rules for filling the reviewer prompt template.
+- [references/reviewer-prompts.md](references/reviewer-prompts.md) - Rules for filling the reviewer prompt template, incl. `[SEVERITY_DEFINITIONS]`.
 - [references/resuming.md](references/resuming.md) - Durable progress ledger, workspace identity, header parsing, isolation mode from `log.md`, and session resume.
 - [references/handling-reports.md](references/handling-reports.md) - Handling non-DONE worker statuses (`BLOCKED`, `NEEDS_CONTEXT`, `DONE_WITH_CONCERNS`).
 - [references/cannot-verify.md](references/cannot-verify.md) - Resolving "⚠️ Cannot verify from diff" reviewer items.
@@ -123,7 +123,7 @@ Workers MUST use:
 
 - **Controller (You)**: Oversees execution, manages slice-to-slice state, updates the Todo task list, curates file contexts, and coordinates reviews. (Most capable model).
 - **Implementer subagent:** Focuses entirely on implementing and testing a single slice. (Fast, cheap model for mechanical/isolated tasks; standard model for complex integrations).
-- **Slice Reviewer subagent:** Evaluates requirements compliance AND code quality in a single pass. Returns separate verdicts: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes). (Capable standard or premium model).
+- **Slice Reviewer subagent:** Evaluates requirements compliance AND code quality in a single pass. Returns spec compliance (✅/❌/⚠️) and P0-P3 findings. (Capable standard or premium model).
 
 Always specify the model explicitly when dispatching a subagent. An omitted model silently inherits the controller's session model, which is often more expensive than needed.
 
@@ -143,7 +143,7 @@ When `DONE`: Generate the review package (`bash scripts/review-package BASE HEAD
 
 ### 1. Resume Check, then Initial Set Up
 
-- **Resume check (FIRST, before pre-flight, the isolation choice, `log.md` append, or any `wsd-workspace` call).** Follow step 0 of [references/resuming.md](references/resuming.md) (`git worktree list`, `ws/<slug>` branch, `Isolation:` line in `log.md`) to see whether a unit exists. If so, this is a RESUME: follow `references/resuming.md` and SKIP only this section's isolation choice, `log.md` append and `wsd-workspace` bullets. If no unit exists, it is a first run: continue below.
+- **Resume check (FIRST, before pre-flight, the isolation choice, `log.md` append, or any `wsd-workspace` call).** Follow step 0 of [references/resuming.md](references/resuming.md) (`git worktree list`, `ws/<slug>` branch, `Isolation:` line in `log.md`) to see whether a unit exists. If so, this is a RESUME: follow `references/resuming.md` and SKIP only this section's isolation choice, `log.md` append and `wsd-workspace` bullets (redo pre-flight only if `log.md` has no `Pre-flight:` line). If no unit exists, it is a first run: continue below.
 
 - Read `<folder>/brief.md` (acceptance boundary, final smoke checks) and `<folder>/slices.md` (preamble: key files, invariant, assumptions, final-verification commands; then the slices). Extract all slices, then create a `todo` task list: one task per slice, plus "Final verification and close branch".
 - Run the pre-flight scan over `brief.md` and `slices.md` (see [references/preflight.md](references/preflight.md)) and surface findings before the isolation choice; agreed edits happen inside the unit, and the result goes to `log.md` after isolation setup.
@@ -168,9 +168,9 @@ For each slice, dispatch the worker subagent using file handoffs:
 ### 3. Reviewing the Slice
 
 - Once the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
-- The reviewer checks the diff and reported TDD evidence, returning two verdicts in one report: spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes).
+- The reviewer checks the diff and reported TDD evidence, returning spec compliance (✅/❌/⚠️), P0-P3 findings with evidence, and `Verdict: CLEAN` or `NEEDS FIXES`.
 - If the reviewer reports "⚠️ Cannot verify from diff", resolve it yourself from context before marking the slice review clean (see [references/cannot-verify.md](references/cannot-verify.md)).
-- If the reviewer flags issues: enter the bounded fix loop (see [references/fix-loop.md](references/fix-loop.md)). Re-read `references/fix-loop.md` before every fix round.
+- If the verdict is NEEDS FIXES (open P0/P1): enter the bounded fix loop (see [references/fix-loop.md](references/fix-loop.md)). Re-read `references/fix-loop.md` before every fix round.
 - **Manual Smoke Test Pause**: Only after the slice achieves **review clean** (see [references/fix-loop.md](references/fix-loop.md)), append `Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test` to the progress ledger, then pause and ask the user to run the slice's manual smoke test from `slices.md`. Do not continue to the next slice until the user confirms the smoke test passed.
 - After the user confirms the smoke test passed, append `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings], smoke test passed)` to the ledger and mark the slice complete in the Todo list.
 - If the user reports a smoke test issue, append `Slice <ID>: smoke test failed (at <head7>) — <one-liner>` to the ledger and enter the fix loop with a fresh 4-round budget with `FIX_BASE` = `<head7>` (from the preceding `review clean` line) and the user's report as findings (see [references/fix-loop.md](references/fix-loop.md)).
@@ -198,8 +198,7 @@ Conversation memory does not survive compaction. Track durable progress in `$(ba
 
 For complete details on ledger header tracking, collision disambiguation (`<slug>-<date>[-N]`), legacy ledger adoption, and step-by-step resume instructions, read [references/resuming.md](references/resuming.md).
 
-- Write `Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test` immediately when review clean is achieved, before pausing for the smoke test.
-- Write `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings], smoke test passed)` immediately after the user confirms the smoke test passed. Slices with a `complete` line are DONE — do not re-dispatch them.
+- Write the `review clean` and `complete` lines (Execution Flow step 3) immediately when each happens. Slices with a `complete` line are DONE — do not re-dispatch them.
 - On resume, read the ledger, inspect git log in the isolation unit, and resume execution per the state table in [references/resuming.md](references/resuming.md).
 
 ## Red Flags / Anti-patterns
@@ -208,6 +207,6 @@ For complete details on ledger header tracking, collision disambiguation (`<slug
 - **Re-asking the isolation choice or committing onto the default branch**: Ask once; on resume read `log.md`. Never commit workstream work to the default branch.
 - **Letting subagents read the workstream folder**: Subagents do NOT read `brief.md` or `slices.md`. Provide the curated text and tasks for their specific slice to protect their context window.
 - **Treating TDD as optional**: Do not dispatch workers without `solopowers:test-driven-development`, and do not accept "tests added later" as equivalent to a real red → green cycle.
-- **Proceeding while a slice review fails**: Never start the next slice while there are open review findings in the current slice.
+- **Proceeding while a slice review fails**: Never start the next slice while a P0/P1 is open in the current slice.
 - **Skipping the manual smoke test pause**: Never continue to the next slice once review passes without pausing for the user's manual smoke test.
 - **Failing to commit**: Ensure each slice is committed before starting reviews, and any fixes are also committed.

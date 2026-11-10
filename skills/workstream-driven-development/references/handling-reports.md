@@ -13,7 +13,7 @@ The worker completed the slice, committed changes, and ran tests.
    ```
    (`BASE` is the commit recorded before dispatching the worker — never `HEAD~1`, which silently drops earlier commits of a multi-commit slice).
 2. Dispatch the slice reviewer using `workstream-reviewer-prompt.md`.
-3. The reviewer returns separate verdicts for spec compliance (✅/❌/⚠️) and slice quality (Approved/Needs fixes).
+3. The reviewer returns spec compliance (✅/❌/⚠️), P0-P3 findings, and a `Verdict:` line (CLEAN / NEEDS FIXES).
 
 ## DONE_WITH_CONCERNS
 

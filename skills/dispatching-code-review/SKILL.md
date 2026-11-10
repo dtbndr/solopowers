@@ -44,12 +44,12 @@ Dispatch a reviewer subagent, filling the template at [code-reviewer.md](code-re
 - `{PLAN_OR_REQUIREMENTS}` - What it should do
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
+- `{SEVERITY_DEFINITIONS}` - P0-P3 definitions (the project's `.memory/*grounding*.md` P0/P1 definitions if present, else the default in workstream-driven-development `references/reviewer-prompts.md`)
 
 **3. Act on feedback:**
 
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
-- Note Minor issues for later
+- Fix P0 and P1 issues before proceeding
+- Note P2/P3 issues for later (in a workstream: log them to `log.md`)
 - Push back if reviewer is wrong (with reasoning)
 
 ## Example
@@ -71,9 +71,9 @@ HEAD_SHA=$(git rev-parse HEAD)
 [Subagent returns]:
   Strengths: Clean architecture, real tests
   Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
+    P1: Missing progress indicators (verify.ts:42, scenario: 10k-file run shows no output)
+    P3: Magic number (100) for reporting interval
+  Verdict: NEEDS FIXES (1 P0/P1)
 
 You: [Fix progress indicators]
 [Continue to Task 3]
@@ -102,8 +102,8 @@ You: [Fix progress indicators]
 **Never:**
 
 - Skip review because "it's simple"
-- Ignore Critical issues
-- Proceed with unfixed Important issues
+- Ignore P0 issues
+- Proceed with unfixed P1 issues
 - Argue with valid technical feedback
 
 **If reviewer wrong:**

@@ -2,8 +2,8 @@
 
 Use this template when dispatching a reviewer subagent. See `references/harness-dispatch.md`
 for how to dispatch on your harness. The reviewer
-reads the slice's diff once and returns two verdicts: spec compliance and
-code quality.
+reads the slice's diff once and returns spec compliance plus severity-graded
+findings (P0-P3) and a verdict.
 
 **Purpose:** Verify one slice's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable)
@@ -174,21 +174,19 @@ reviewer subagent:
     file:line, or a check you ran — no preamble, no process narration,
     no closing summary.
 
-    ## Calibration
+    ## Severity
 
-    Categorize issues by actual severity. Not everything is Critical.
-    Important means this slice cannot be trusted until it is fixed: incorrect
-    or fragile behavior, a missed requirement, or maintainability damage you
-    would block a merge over — verbatim duplication of a logic block,
-    swallowed errors, tests that assert nothing. "Coverage could be broader"
-    and polish suggestions are Minor.
-    If the workstream explicitly mandates something this rubric calls
-    a defect (a test that asserts nothing, verbatim duplication of a logic
-    block), that IS a finding — report it as Important, labeled
-    workstream-mandated. The workstream's authorship does not grade its own
-    work; the human decides.
-    Acknowledge what was done well before listing issues — accurate praise
-    helps the implementer trust the rest of the feedback.
+    Grade EVERY finding P0, P1, P2 or P3:
+
+    [SEVERITY_DEFINITIONS]
+
+    Evidence is mandatory for P0/P1: a file:line, failing command or test
+    output, or a concrete scenario that triggers it. A P0/P1 without
+    evidence is downgraded to P2. A stated implementer rationale never
+    downgrades a finding. If the workstream mandates something these
+    definitions call a defect, report it at its grade labeled
+    workstream-mandated; the human decides. Open with what was done well,
+    briefly.
 
     ## Output Format
 
@@ -203,20 +201,14 @@ reviewer subagent:
     ### Strengths
     [What's well done? Be specific.]
 
-    ### Issues
+    ### Findings
 
-    #### Critical (Must Fix)
-    #### Important (Should Fix)
-    #### Minor (Nice to Have)
+    One bullet each: `P<0-3> — <file:line> — <what is wrong, why it matters>
+    — Evidence: <required for P0/P1>`. "None" if none.
 
-    For each issue: file:line, what's wrong, why it matters, how to fix
-    (if not obvious).
+    Final line, exactly one of:
 
-    ### Assessment
-
-    **Slice quality:** [Approved | Needs fixes]
-
-    **Reasoning:** [1-2 sentence technical assessment]
+    `Verdict: CLEAN` (no P0/P1) | `Verdict: NEEDS FIXES (<n> P0/P1)`
 ```
 
 **Placeholders** (run `scripts/` helpers by their absolute path, from the working tree):
@@ -230,6 +222,7 @@ reviewer subagent:
   are already in this template)
 - `[ACCEPTANCE_BOUNDARY]` — the "Happy path and acceptance boundary" text copied
   verbatim from `<folder>/brief.md`
+- `[SEVERITY_DEFINITIONS]` — REQUIRED: see [references/reviewer-prompts.md](references/reviewer-prompts.md)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
 - `[BASE_SHA]` — commit before this slice
@@ -238,8 +231,8 @@ reviewer subagent:
   package to (`bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` prints the
   unique path it wrote; the package never enters the controller's context)
 
-**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Slice quality verdict
+**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Findings
+(P0-P3 with evidence), `Verdict:` line
 
 A fix dispatch can address spec gaps and quality findings together;
 re-review after fixes covers both verdicts.

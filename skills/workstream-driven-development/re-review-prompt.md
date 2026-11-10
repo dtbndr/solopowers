@@ -52,7 +52,7 @@ Subagent (general-purpose):
     Your scope is the findings list and the fix diff. Verdict every finding.
     Inspect the fix diff for new problems the fix itself introduced. A
     fix-diff change that undoes a requirement in the slice brief is new
-    breakage (Critical/Important). Do NOT re-review code the fix did not touch:
+    breakage (grade it P0-P3). Do NOT re-review code the fix did not touch:
     if you notice an issue entirely outside the fix diff, report it under
     Out-of-Scope Observations — it does not block this slice and does not
     extend the loop. A broad whole-workstream review happens after all slices
@@ -83,8 +83,13 @@ Subagent (general-purpose):
 
     ### New Breakage in the Fix Diff
 
-    Anything the fix itself broke or introduced, with severity
-    (Critical/Important/Minor) and file:line. "None" if clean.
+    Anything the fix itself broke or introduced, graded P0-P3 with evidence
+    (file:line, failing output, or a concrete scenario; P0/P1 without
+    evidence is downgraded to P2). "None" if clean.
+
+    Severity definitions:
+
+    [SEVERITY_DEFINITIONS]
 
     ### Out-of-Scope Observations
 
@@ -93,8 +98,9 @@ Subagent (general-purpose):
 
     ### Verdict
 
-    **Fix round:** [All findings addressed, no new Critical/Important
-    breakage | Findings remain open] — list the open ones.
+    `Verdict: CLEAN` (every P0/P1 finding ADDRESSED, no new P0/P1) |
+    `Verdict: NEEDS FIXES (<n> P0/P1)` — list the open ones. Open P2/P3 do
+    not block.
 ```
 
 **Placeholders:**
@@ -103,7 +109,8 @@ Subagent (general-purpose):
 - `[SLICE_ID]` — the slice identifier (e.g. `A`, `A1`)
 - `[ROUND]` — current fix round number (e.g. `1`, `2`)
 - `[BRIEF_FILE]` — the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from; run `scripts/` helpers by their absolute path, from the working tree)
-- `[FINDINGS]` — the Critical/Important findings and spec gaps from the
+- `[SEVERITY_DEFINITIONS]` — same text given to the original reviewer
+- `[FINDINGS]` — the open P0/P1 findings and spec gaps from the
   previous review (or user smoke-test failure report, or code changes
   directed by user rulings), copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
