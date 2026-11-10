@@ -28,8 +28,8 @@ If the final whole-workstream review returns P0/P1 findings (P2/P3 are logged to
 ## Finish and Cleanup
 
 1. Confirm that the final review is clean and all final verification commands pass.
-2. Record the final outcome in `<folder>/log.md`, together with the `P2/P3:` entry copied from `<workspace>/p2p3.md` (if any), and commit that change (explicit path). Then append `End: final review clean` to `progress.md` (the finished state; the ledger is local, not committed).
-3. Delete the workstream workspace directory:
+2. Record the finish in `<folder>/log.md`, including the fixed-format marker line `Final review: clean (at <h7>)` (`<h7>` = the reviewed head, 7 chars) and the `Smoke:` lines, together with the `P2/P3:` entry copied from `<workspace>/p2p3.md` (if any), and commit that change (explicit path). The committed marker is the durable finished state; the local ledger is not.
+3. Only after that commit, delete the workstream workspace directory:
    ```bash
    rm -rf ".solopowers/wsd/<resolved-workspace>/"
    ```
