@@ -1,11 +1,11 @@
 ---
 name: workstream-brainstorming
-description: "Use when exploring feature ideas, multi-file changes, or behavior changes that need a project-specific design and approved Workstream Document before implementation."
+description: "Use when exploring feature ideas, multi-file changes, or behavior changes that need a project-specific design and an approved workstream brief before implementation."
 ---
 
 # Workstream Brainstorming
 
-Help turn ideas into fully formed designs and sequential execution slices through natural collaborative dialogue, culminating in a single canonical **Workstream Document**.
+Help turn ideas into fully formed designs and sequential execution slices through natural collaborative dialogue, culminating in a canonical **workstream folder** whose one-screen `brief.md` is the only file the operator approves.
 
 People often haven't finished working out everything they want. Good questions help them think it through. When you understand the underlying purpose, you can make the hundreds of small decisions they never mention the way they would have made them.
 
@@ -29,13 +29,13 @@ In an existing project, or when the user has provided context (docs, issue descr
 - **Options only when bounded:** Once the why is known and a choice can be named, sketch each option concretely enough to picture, with its trade-offs and your recommendation. Do this only for a genuine, bounded set of alternatives (e.g. database choices, protocol variants); never manufacture options for open questions. If the user has handed over the how, say you'll go with your pick.
 - **Recommend when deferred:** When the user says "you decide", "just guess", or defers a choice, do not bounce the question back. Make a concrete pick, state it with brief rationale as your call, and move forward; the user can still correct it.
 - **Understand how it gets made:** Read from how the user talks whether they want to discuss technical choices (give options with your pick) or hand them over (decide, and state each in one line). When there's existing work, build on what it already uses. Choices the user hasn't confirmed go in the document as your calls, not as agreed decisions.
-- **Process is your call:** Where supporting files go (the Workstream Document's location is fixed: `docs/workstreams/YYYY-MM-DD-<topic>.md`), whether to look further, how to show something, and dispatching the writer or reviewer are yours: state them, don't ask (the internal review itself is mandatory). Approval of the design and of the Workstream Document stays the user's.
+- **Process is your call:** Where supporting files go (the workstream folder's location is fixed: `docs/workstreams/YYYY-MM-DD-<topic>/`), whether to look further, how to show something, and dispatching the writer or reviewer are yours: state them, don't ask (the internal review itself is mandatory). Approval of the design and of `brief.md` stays the user's.
 - **Show, don't tell:** Whenever seeing would help more than reading (a screen, a page, a layout, a schedule), sketch it in a few lines of text next to the description.
 - **Socratic probing:** Build each question on their last answer or on what you discovered in the codebase, helping them think through edge cases and failure modes.
 
 ## Exploring Approaches
 
-Once you understand what the user wants, and before drafting the Workstream Document:
+Once you understand what the user wants, and before drafting the workstream folder:
 - Propose 2–3 distinct approaches grounded in the codebase.
 - State clear trade-offs for each option (complexity, maintenance burden, performance, risk).
 - Lead with your recommended option and why.
@@ -59,20 +59,15 @@ End the playback with its single approval question, which doubles as the opt-out
 - **No implementation code in the document:** Key file paths, interfaces, column names, schema definitions, test targets, and exact verification commands belong in the document, but raw code generation is offloaded entirely to the slice implementer.
 - **Decision completeness:** All design choices that would require rework if decided wrong MUST be settled in the document. Incidental choices (internal helpers, variable names, log message wording) are explicitly left to implementation discretion.
 
-## The Canonical Workstream Document
+## The Canonical Workstream Folder
 
-We explicitly do NOT split design and implementation planning into separate documents. Instead, we capture both in a single **Workstream Document** written under `docs/workstreams/YYYY-MM-DD-<topic>.md`.
+We explicitly do NOT split design and implementation planning into separate artifacts. Instead, we capture both in a single **workstream folder** written under `docs/workstreams/YYYY-MM-DD-<topic>/` with three files:
 
-The document defines:
-1. **Metadata:** Title, Date, Status (Planned), Merged (target branch), Objective.
-2. **Context:** Problem, Approved simplification, Target behaviour, Deliberate simplification, Architecture invariant, Design decisions and assumptions table, Implementation discretion, Unresolved design blockers.
-3. **Workstream scope:** In scope, Out of scope.
-4. **Key files:** Table of files, packages, and current roles.
-5. **Scoped workstream slices:** Sequential slices (`[A-Z][0-9]*`) with Goals, TDD Tasks, Watch out, Verification, Manual smoke test, and Carry-forward.
-6. **Final verification:** Project-wide checks (test suite, typecheck, lint, format).
-7. **Success criteria:** Testable outcomes.
+1. **`brief.md`** (the operator's file, the only one they approve; one screen, about 40 lines max, no tables): title/date/status; Why; Happy path and acceptance boundary (testable bullets); Key decisions as one-line bullets (`decision — why`); Open questions; Final smoke checks (only P0/P1 checks agents cannot perform or are not authorized to perform, else `none`); Pointers to `slices.md` and `log.md`.
+2. **`slices.md`** (agents only, as verbose as needed): agent preamble (Objective, scope in/out, key files, architecture invariant, fuller assumptions and design decisions, implementation discretion, unresolved blockers, final-verification commands) followed by the sequential slices (`### Slice <ID>: <title>`, ID `[A-Z][0-9]*`) with Goal, TDD Tasks, Watch out, Verification, Manual smoke test, and Carry-forward.
+3. **`log.md`** (agents only): created with a one-line header; the execution skill writes its content (isolation mode and branch on line 1, review verdicts, P2/P3 findings, carry-forward).
 
-For the full markdown schema, section requirements, and examples, read [references/workstream-document-template.md](references/workstream-document-template.md).
+For the full markdown schema, section requirements, and examples, read [references/workstream-folder-template.md](references/workstream-folder-template.md).
 
 ## Process Checklist
 
@@ -82,9 +77,9 @@ You MUST create a task for each of these items and complete them in order:
 2. **Clarifying questions** — one question per turn, open questions first. May be empty: when the why is known and nothing that changes the build is open, go straight to step 3. (Skipped with step 3 when nothing is open and there is one sensible way.)
 3. **Propose 2–3 approaches** — with trade-offs and your recommendation.
 4. **Design playback (~200 words)** — concise playback with opt-out before drafting.
-5. **Write Workstream Document** — dispatch a `document-writer` subagent to write `docs/workstreams/YYYY-MM-DD-<topic>.md` following [references/workstream-document-template.md](references/workstream-document-template.md) and commit.
-6. **Mandatory Internal Document Review** — dispatch a `document-reviewer` subagent using `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This in-process gate is strict and never optional: evaluate adversarial probes and the **builder perspective** ("what would a slice implementer have to guess?"). Revise accepted issues and re-review until `Approved`. Commit the resulting Workstream Document.
-7. **User reviews Workstream Document** — ask user to review the workstream file. The user may optionally run the supplemental External Harness Review (see below and [references/external-review.md](references/external-review.md)).
+5. **Write workstream folder** — dispatch a `document-writer` subagent to write `brief.md`, `slices.md`, and `log.md` under `docs/workstreams/YYYY-MM-DD-<topic>/` following [references/workstream-folder-template.md](references/workstream-folder-template.md) and commit.
+6. **Mandatory Internal Document Review** — dispatch a `document-reviewer` subagent using `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This in-process gate is strict and never optional: evaluate adversarial probes and the **builder perspective** ("what would a slice implementer have to guess?"). Revise accepted issues and re-review until `Approved`. Commit the resulting workstream folder.
+7. **Operator reviews `brief.md`** — ask the operator to review and approve ONLY `brief.md`; `slices.md` and `log.md` need no approval. The user may optionally run the supplemental External Harness Review (see below and [references/external-review.md](references/external-review.md)).
 8. **Transition to implementation** — invoke `solopowers:workstream-driven-development`.
 
 ## Process Flow
@@ -96,12 +91,12 @@ digraph workstream_brainstorming {
     "Propose 2-3 approaches\n(with recommendation)" [shape=box];
     "Design playback (~200 words)\n(with opt-out)" [shape=box];
     "User approves approach?" [shape=diamond];
-    "Dispatch document-writer\n(references/workstream-document-template.md)" [shape=box];
+    "Dispatch document-writer\n(references/workstream-folder-template.md)" [shape=box];
     "Dispatch document-reviewer\n(workstream-document-reviewer-prompt.md)" [shape=box];
     "Reviewer reports Approved?" [shape=diamond];
-    "Revise document & commit" [shape=box];
-    "User reviews workstream" [shape=box];
-    "User approves workstream?" [shape=diamond];
+    "Revise folder & commit" [shape=box];
+    "Operator reviews brief.md" [shape=box];
+    "Operator approves brief.md?" [shape=diamond];
     "Invoke workstream-driven-development" [shape=doublecircle style=filled fillcolor=lightgreen];
 
     "Explore project context\n(look before asking)" -> "Clarifying questions\n(one per turn)";
@@ -111,15 +106,15 @@ digraph workstream_brainstorming {
     "Propose 2-3 approaches\n(with recommendation)" -> "Design playback (~200 words)\n(with opt-out)";
     "Design playback (~200 words)\n(with opt-out)" -> "User approves approach?";
     "User approves approach?" -> "Clarifying questions\n(one per turn)" [label="no, revise"];
-    "User approves approach?" -> "Dispatch document-writer\n(references/workstream-document-template.md)" [label="yes"];
-    "Dispatch document-writer\n(references/workstream-document-template.md)" -> "Dispatch document-reviewer\n(workstream-document-reviewer-prompt.md)";
+    "User approves approach?" -> "Dispatch document-writer\n(references/workstream-folder-template.md)" [label="yes"];
+    "Dispatch document-writer\n(references/workstream-folder-template.md)" -> "Dispatch document-reviewer\n(workstream-document-reviewer-prompt.md)";
     "Dispatch document-reviewer\n(workstream-document-reviewer-prompt.md)" -> "Reviewer reports Approved?";
-    "Reviewer reports Approved?" -> "Revise document & commit" [label="no, issues found"];
-    "Revise document & commit" -> "Dispatch document-reviewer\n(workstream-document-reviewer-prompt.md)" [label="re-review"];
-    "Reviewer reports Approved?" -> "User reviews workstream" [label="yes"];
-    "User reviews workstream" -> "User approves workstream?";
-    "User approves workstream?" -> "Revise document & commit" [label="changes requested"];
-    "User approves workstream?" -> "Invoke workstream-driven-development" [label="approved"];
+    "Reviewer reports Approved?" -> "Revise folder & commit" [label="no, issues found"];
+    "Revise folder & commit" -> "Dispatch document-reviewer\n(workstream-document-reviewer-prompt.md)" [label="re-review"];
+    "Reviewer reports Approved?" -> "Operator reviews brief.md" [label="yes"];
+    "Operator reviews brief.md" -> "Operator approves brief.md?";
+    "Operator approves brief.md?" -> "Revise folder & commit" [label="changes requested"];
+    "Operator approves brief.md?" -> "Invoke workstream-driven-development" [label="approved"];
 }
 ```
 
@@ -145,7 +140,7 @@ In addition to standard compliance checks, the review evaluates the document fro
 - *Which file paths, interfaces, data models, error states, or test commands are ambiguous or missing?*
 - *Where would an ambiguous requirement lead to rework or architectural drift?*
 
-Address any findings, commit the updated Workstream Document, and re-review until the reviewer reports `Approved`. (For ad-hoc standalone probing, `builder-check-prompt.md` is also available).
+Address any findings, commit the updated workstream folder, and re-review until the reviewer reports `Approved`. (For ad-hoc standalone probing, `builder-check-prompt.md` is also available).
 
 ## Optional External Harness Review
 
@@ -162,8 +157,8 @@ For full protocol details, state machine transitions, and confirmation package h
 
 ## Handoff to Implementation
 
-Once the document has passed internal review (and optional external review), present it to the user:
+Once the folder has passed internal review (and optional external review), present `brief.md` to the operator:
 
-> "Workstream Document written and committed to `docs/workstreams/YYYY-MM-DD-<topic>.md`. Please review it and let me know if you want to make any changes before we transition to `workstream-driven-development`."
+> "Workstream folder written and committed to `docs/workstreams/YYYY-MM-DD-<topic>/`. Please review `brief.md` (the only file that needs your approval) and let me know if you want any changes before we transition to `workstream-driven-development`."
 
-Wait for user approval. Once approved, invoke `solopowers:workstream-driven-development` to begin slice execution.
+Wait for approval of `brief.md`. Once approved, invoke `solopowers:workstream-driven-development`, handing over the workstream folder path; execution uses `<folder>/slices.md` and writes `<folder>/log.md`.
