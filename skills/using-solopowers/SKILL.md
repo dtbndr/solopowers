@@ -35,7 +35,7 @@ These thoughts mean STOP—you're rationalizing:
 
 **Feature work, multi-file changes** → `workstream-brainstorming` → `workstream-driven-development`
 
-The workstream model has four non-negotiable invariants: one canonical Workstream Document (no separate spec/plan artifacts), strictly sequential slice execution (one at a time, never parallel), one worktree per full workstream (not per slice), and a mandatory manual smoke-test pause after every review-approved slice before advancing.
+The workstream model has four non-negotiable invariants: one canonical workstream folder (`brief.md` approved by the operator, `slices.md` and `log.md` for agents; no separate spec/plan artifacts), strictly sequential slice execution (one at a time, never parallel), one isolation unit per workstream (a branch or a worktree, the operator's choice; never per slice), and a single human smoke test at the end of the workstream, limited to P0/P1 checks agents cannot perform (skipped when there are none).
 
 **Bug fixes, single-file changes** → work directly with `test-driven-development`.
 
