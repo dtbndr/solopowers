@@ -49,6 +49,10 @@ Slice <ID>: fix round <R>/4 (<X> addressed, <Y> open — <finding one-liners>; c
 
 Never fix findings yourself in the controller session — your context stays clean for coordination, and controller fixes skip review.
 
+## End-Smoke Variant
+
+For an end-smoke failure ([end-smoke.md](end-smoke.md)) there is no slice. Findings = `<workspace>/end-smoke-findings.md`; spec context = `brief.md`; the implementer and the re-review's `[BRIEF_FILE]` are that findings file plus the relevant `brief.md` acceptance boundary (not `slice-brief`). Ledger lines are `End smoke: fix round <R>/4 (...)`, `End smoke: escalated at cap — <Y> open`, `End smoke: Ruling (user): ...`. Everything else is unchanged, including the cap.
+
 ## The Breaker (Cap Escalation)
 
 When round 4's re-review still leaves a P0/P1 open, the cap is reached. (P2/P3 never trigger escalation.) Stop dispatching.
