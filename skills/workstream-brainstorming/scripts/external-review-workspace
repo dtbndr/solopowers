@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Resolve a repository-local, Git-ignored audit workspace for one Workstream.
+# Resolve a repository-local, Git-ignored audit workspace for one workstream folder.
 set -euo pipefail
-[ "$#" -eq 1 ] && [ -n "$1" ] || { echo 'usage: external-review-workspace WORKSTREAM_FILE' >&2; exit 2; }
-file=$1
+[ "$#" -eq 1 ] && [ -n "$1" ] || { echo 'usage: external-review-workspace WORKSTREAM_FOLDER' >&2; exit 2; }
+file=${1%/}
 root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo 'not a Git worktree' >&2; exit 3; }
-case "$file" in /*|*'..'*|*$'\n'*|*$'\r'*) echo 'WORKSTREAM_FILE must be a safe repository-relative path' >&2; exit 2;; esac
-path=$(git ls-files --full-name -- "$file" | head -n1)
-[ -n "$path" ] || { echo 'WORKSTREAM_FILE must be tracked' >&2; exit 2; }
+case "$file" in /*|*'..'*|*$'\n'*|*$'\r'*) echo 'WORKSTREAM_FOLDER must be a safe repository-relative path' >&2; exit 2;; esac
+path=$(git ls-files --full-name -- "$file/brief.md" | head -n1); path=${path%/brief.md}
+[ -n "$path" ] || { echo 'WORKSTREAM_FOLDER must be a tracked folder containing brief.md' >&2; exit 2; }
 stem=$(printf '%s' "$path" | sed 's#[^A-Za-z0-9._-]#-#g; s#-\{2,\}#-#g; s#^-\|-$##g')
 [ -n "$stem" ] || { echo 'unsafe workstream stem' >&2; exit 4; }
 digest=$(printf '%s' "$path" | shasum -a 256 | awk '{print $1}')

@@ -12,7 +12,7 @@ Dispatch a reviewer subagent (strongest tier; specify it explicitly, an omitted 
 
     You are an Oracle reviewer acting as an adversarial prober. Your job is to rigorously review the workstream folder and find any gaps, unstated assumptions, or architectural flaws.
 
-    **Workstream folder to review:** [WORKSTREAM_FOLDER_PATH] (read `brief.md` and `slices.md`; `log.md` is written later by the execution skill and starts as a header-only file)
+    **Workstream folder to review:** [WORKSTREAM_FOLDER_PATH] (read `brief.md` and `slices.md`; `log.md` is written later by the execution skill and starts as a header plus one `Opt-ins:` line)
 
     ## Mandatory Reading Before Reviewing
     You MUST read and align your understanding with the following project guidelines before evaluating the folder:

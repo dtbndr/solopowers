@@ -15,7 +15,7 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
-Every project goes through this process. A single-function utility, a config change, a small refactoring — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short for truly simple projects, but you MUST present it and get user approval.
+Every project goes through this process. A single-function utility, a config change, a small refactoring — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short for truly simple projects, but you MUST present it (via `brief.md`, or the playback if opted in) and get user approval.
 
 ## First: Look Before You Ask
 
@@ -41,23 +41,27 @@ Once you understand what the user wants, and before drafting the workstream fold
 - Lead with your recommended option and why.
 - If the user wants to discuss technical choices, ask which direction they prefer; otherwise say you'll go with your pick. When there is genuinely only one sensible way forward, state that clearly and explain why alternatives are ill-suited.
 
-## Concise Design Playback (~200 Words) With Opt-Out
+## Opt-Ins: Playback and External Review (Both Off by Default)
 
-**When nothing is open** (the user has told you why they want it, the request and project answer everything that would change what gets built, and there is one sensible way), your first message is this short design: the approach, one line on why alternatives do not fit, the design in a few lines, and the proposed sequential slice breakdown. It is the playback below, with the same opt-out and user approval.
+At the start (with the first clarifying question, or right after context exploration if nothing is open), ask ONE combined opt-in question: does the operator want (a) a design playback and approval before drafting, and (b) external review of the drafted folder. State your recommendation (skip or opt in) and a one-line reason for each, based on the workstream's size and risk. The operator decides; if they don't care, both are off. Wording, recommendation heuristics, and the `log.md` record: [references/opt-ins.md](references/opt-ins.md).
 
-Before writing the full Workstream Document, present a concise (~200-word) playback summarizing:
+## Design Playback (Opt-In, ~200 Words)
+
+**Playback off:** go from the clarified scope (and chosen approach) straight to drafting the folder. Your only approval gate is `brief.md`.
+
+**Playback on:** before drafting, present a concise (~200-word) playback:
 - The objective and architecture: agreed ones, or proposed ones when nothing was open
 - Key design decisions: the user's settled ones, with your unconfirmed calls marked as your calls
 - The proposed sequential slice breakdown
 
-End the playback with its single approval question, which doubles as the opt-out: *"Shall I draft the Workstream Document from this, or adjust something first?"* If the user says "just write it", proceed directly to writing the Workstream Document. If they said it before seeing the approach, still send the playback, but end it with a statement such as *"Drafting the Workstream Document from this now."* instead of the question, then proceed without waiting. "Just write it" skips only the playback approval; the internal review and the user's review of `brief.md` still apply. For small tasks, the playback is short, but still wait for approval.
+End it with its single approval question, which doubles as the opt-out: *"Shall I draft the workstream folder from this, or adjust something first?"* If the user says "just write it", proceed directly to drafting. If they said it before seeing the approach, still send the playback, but end it with *"Drafting the workstream folder from this now."* instead of the question, then proceed without waiting. "Just write it" skips only the playback approval; the internal review and the user's review of `brief.md` still apply. For small tasks the playback is short, but still wait for approval.
 
 ## Sizing the Work and Slices
 
 - **Decompose into sequential slices:** Break the work into sequential milestones (e.g., Slice A, Slice A1, Slice A2). Slice IDs use `[A-Z][0-9]*`; IDs do not establish ordering. Each slice represents a clean milestone that can be independently developed, compiled, and tested.
 - **Slice sizing principles:** Slices are executed by standard-tier workers with limited context. Each slice should touch 1–5 files and carry its own TDD cycle (failing test → minimal implementation → verification). If a slice requires extensive explanation to be unambiguous, it is too large — split it.
-- **No implementation code in the document:** Key file paths, interfaces, column names, schema definitions, test targets, and exact verification commands belong in the document, but raw code generation is offloaded entirely to the slice implementer.
-- **Decision completeness:** All design choices that would require rework if decided wrong MUST be settled in the document. Incidental choices (internal helpers, variable names, log message wording) are explicitly left to implementation discretion.
+- **No implementation code in the document:** Key file paths, interfaces, column names, schema definitions, test targets, and exact verification commands belong in the slices, but raw code generation is offloaded entirely to the slice implementer.
+- **Decision completeness:** All design choices that would require rework if decided wrong MUST be settled in the folder. Incidental choices (internal helpers, variable names, log message wording) are explicitly left to implementation discretion.
 
 ## The Canonical Workstream Folder
 
@@ -65,7 +69,7 @@ We explicitly do NOT split design and implementation planning into separate arti
 
 1. **`brief.md`** (the operator's file, the only one they approve; one screen, about 40 lines max, no tables): title/date/status; Why; Happy path and acceptance boundary (testable bullets); Key decisions as one-line bullets (`decision — why`); Open questions; Final smoke checks (only P0/P1 checks agents cannot perform or are not authorized to perform, else `None`); Pointers to `slices.md` and `log.md`.
 2. **`slices.md`** (agents only, as verbose as needed): agent preamble (Objective, scope in/out, key files, architecture invariant, fuller assumptions and design decisions, implementation discretion, unresolved blockers, final-verification commands) followed by the sequential slices (`### Slice <ID>: <title>`, ID `[A-Z][0-9]*`) with Goal, TDD Tasks, Watch out, Verification, and Carry-forward.
-3. **`log.md`** (agents only): created with the header `# <Topic> Workstream Log` only; the execution skill appends its content (`Isolation:` line first, then pre-flight result, review verdicts, P2/P3 findings, carry-forward).
+3. **`log.md`** (agents only): created with the header `# <Topic> Workstream Log` and one line `Opt-ins: playback=<on|off>, external review=<on|off>`; the execution skill appends its content (`Isolation:` line first, then pre-flight result, review verdicts, P2/P3 findings, carry-forward).
 
 For the full markdown schema, section requirements, and examples, read [references/workstream-folder-template.md](references/workstream-folder-template.md).
 
@@ -73,13 +77,13 @@ For the full markdown schema, section requirements, and examples, read [referenc
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits (look before asking).
+1. **Explore project context** — check files, docs, recent commits (look before asking). Ask the combined opt-in question (playback, external review) with the first clarifying question or right after exploration.
 2. **Clarifying questions** — one question per turn, open questions first. May be empty: when the why is known and nothing that changes the build is open, go straight to step 3. (Skipped with step 3 when nothing is open and there is one sensible way.)
 3. **Propose 2–3 approaches** — with trade-offs and your recommendation.
-4. **Design playback (~200 words)** — concise playback with opt-out before drafting.
+4. **Design playback (~200 words)** — only if opted in; concise playback with opt-out before drafting. Otherwise go straight to step 5.
 5. **Write workstream folder** — dispatch a `document-writer` subagent to write `brief.md`, `slices.md`, and `log.md` under `docs/workstreams/YYYY-MM-DD-<topic>/` following [references/workstream-folder-template.md](references/workstream-folder-template.md) and commit.
 6. **Mandatory Internal Document Review** — dispatch a `document-reviewer` subagent using `skills/workstream-brainstorming/workstream-document-reviewer-prompt.md`. This in-process gate is strict and never optional: evaluate adversarial probes and the **builder perspective** ("what would a slice implementer have to guess?"). Revise accepted issues and re-review until `Approved`. Commit the resulting workstream folder.
-7. **Operator reviews `brief.md`** — ask the operator to review and approve ONLY `brief.md`; `slices.md` and `log.md` need no approval. The user may optionally run the supplemental External Harness Review (see below and [references/external-review.md](references/external-review.md)).
+7. **Operator reviews `brief.md`** — ask the operator to review and approve ONLY `brief.md`; `slices.md` and `log.md` need no approval. Only if opted in, run the supplemental External Harness Review on the folder (see below and [references/external-review.md](references/external-review.md)).
 8. **Transition to implementation** — invoke `solopowers:workstream-driven-development`.
 
 ## Process Flow
@@ -89,6 +93,8 @@ digraph workstream_brainstorming {
     "Explore project context\n(look before asking)" [shape=box];
     "Clarifying questions\n(one per turn)" [shape=box];
     "Propose 2-3 approaches\n(with recommendation)" [shape=box];
+    "Opt-in question\n(playback, external review)" [shape=box];
+    "Playback opted in?" [shape=diamond];
     "Design playback (~200 words)\n(with opt-out)" [shape=box];
     "User approves approach?" [shape=diamond];
     "Dispatch document-writer\n(references/workstream-folder-template.md)" [shape=box];
@@ -99,11 +105,14 @@ digraph workstream_brainstorming {
     "Operator approves brief.md?" [shape=diamond];
     "Invoke workstream-driven-development" [shape=doublecircle style=filled fillcolor=lightgreen];
 
-    "Explore project context\n(look before asking)" -> "Clarifying questions\n(one per turn)";
-    "Explore project context\n(look before asking)" -> "Design playback (~200 words)\n(with opt-out)" [label="nothing open, one way"];
-    "Explore project context\n(look before asking)" -> "Propose 2-3 approaches\n(with recommendation)" [label="nothing to ask, several approaches"];
+    "Explore project context\n(look before asking)" -> "Opt-in question\n(playback, external review)";
+    "Opt-in question\n(playback, external review)" -> "Clarifying questions\n(one per turn)";
+    "Opt-in question\n(playback, external review)" -> "Playback opted in?" [label="nothing open, one way"];
+    "Opt-in question\n(playback, external review)" -> "Propose 2-3 approaches\n(with recommendation)" [label="nothing to ask, several approaches"];
     "Clarifying questions\n(one per turn)" -> "Propose 2-3 approaches\n(with recommendation)";
-    "Propose 2-3 approaches\n(with recommendation)" -> "Design playback (~200 words)\n(with opt-out)";
+    "Propose 2-3 approaches\n(with recommendation)" -> "Playback opted in?";
+    "Playback opted in?" -> "Design playback (~200 words)\n(with opt-out)" [label="yes"];
+    "Playback opted in?" -> "Dispatch document-writer\n(references/workstream-folder-template.md)" [label="no (default)"];
     "Design playback (~200 words)\n(with opt-out)" -> "User approves approach?";
     "User approves approach?" -> "Clarifying questions\n(one per turn)" [label="no, revise"];
     "User approves approach?" -> "Dispatch document-writer\n(references/workstream-folder-template.md)" [label="yes"];
@@ -144,22 +153,22 @@ In addition to standard compliance checks, the review evaluates the document fro
 
 Address any findings, commit the updated workstream folder, and re-review until the reviewer reports `Approved`. (For ad-hoc standalone probing, `builder-check-prompt.md` is also available).
 
-## Optional External Harness Review
+## Optional External Harness Review (Opt-In)
 
-External review is optional and user-coordinated. Harness A owns brainstorming, internal review, commits, package creation, report verification, finding adjudication, and WDD handoff. Harness B is an independent, user-launched reviewer session with no direct bridge; it reads only Git objects anchored at the package commit.
+Runs only if the operator opted in (default off). It reviews the workstream folder (`brief.md` + `slices.md`; `log.md` excluded). Harness A owns brainstorming, internal review, commits, package creation, report verification, finding adjudication, and WDD handoff. Harness B is an independent, user-launched reviewer session with no direct bridge; it reads only Git objects anchored at the package commit.
 
 Run these helpers by their absolute path, from the working tree you're executing in (never `cd` into the skill directory):
-- `bash scripts/external-review-workspace WORKSTREAM_FILE`
-- `bash scripts/external-review-package initial WORKSTREAM_FILE`
+- `bash scripts/external-review-workspace WORKSTREAM_FOLDER`
+- `bash scripts/external-review-package initial WORKSTREAM_FOLDER`
 - `external-workstream-document-reviewer-prompt.md`
 - `bash scripts/external-review-report publish PACKAGE DRAFT`
 - `bash scripts/external-review-report verify PACKAGE REPORT`
 
-For full protocol details, state machine transitions, and confirmation package handling, read [references/external-review.md](references/external-review.md).
+For full protocol details, state machine transitions, package format, and confirmation package handling, read [references/external-review.md](references/external-review.md).
 
 ## Handoff to Implementation
 
-Once the folder has passed internal review (and optional external review), present `brief.md` to the operator:
+Once the folder has passed internal review (and external review, if opted in), present `brief.md` to the operator:
 
 > "Workstream folder written and committed to `docs/workstreams/YYYY-MM-DD-<topic>/`. Please review `brief.md` (the only file that needs your approval) and let me know if you want any changes before we transition to `workstream-driven-development`."
 

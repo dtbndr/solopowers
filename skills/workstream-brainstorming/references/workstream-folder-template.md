@@ -138,8 +138,10 @@ Run all of the following before handoff. Each must pass clean:
 
 ## Canonical Template: `log.md`
 
-Brainstorming creates `log.md` with the header `# <Topic> Workstream Log` and nothing else (it is committed with the folder). The execution skill (`solopowers:workstream-driven-development`) owns its content and only appends: first body line `Isolation: <branch|worktree> — branch <name>`, then the pre-flight result, review verdicts, P2/P3 findings, and carry-forward.
+Brainstorming creates `log.md` with the header `# <Topic> Workstream Log` and one `Opt-ins:` line recording the operator's choices (see [opt-ins.md](opt-ins.md)); nothing else (it is committed with the folder). The execution skill (`solopowers:workstream-driven-development`) owns its content and only appends after it: `Isolation: <branch|worktree> — branch <name>`, then the pre-flight result, review verdicts, P2/P3 findings, and carry-forward.
 
 ```markdown
 # <Topic> Workstream Log
+
+Opt-ins: playback=<on|off>, external review=<on|off>
 ```

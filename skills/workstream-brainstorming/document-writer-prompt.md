@@ -11,6 +11,7 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
     You are a workstream folder writer. Your task is to compile the approved design decisions, context, scope, and slice breakdowns from our brainstorming into the official workstream folder.
 
     **Output Folder Path:** Write the three files directly into the designated folder `docs/workstreams/YYYY-MM-DD-[topic]/`: `brief.md`, `slices.md`, `log.md`.
+    **Opt-ins:** [playback=<on|off>, external review=<on|off>]
     **Context and Brainstorming Summary:** [BRAINSTORMING_SUMMARY_AND_SLICES]
 
     ## Invariant Constraints
@@ -22,7 +23,7 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
     5. **Decision Record:** Every consequential choice (one affecting rework, safety/correctness, data/package boundaries, public or inter-slice contracts, or later-slice dependencies) must appear as a one-line bullet in `brief.md` AND have fuller detail in the `slices.md` preamble. Keep incidental local choices under Implementation discretion. State `None` when no Unresolved design blockers remain; any unresolved design blocker other than `None` MUST also appear in `brief.md` Open questions so the operator sees it.
     6. **Brief Discipline (hard limits):** `brief.md` is the only file the operator reads and approves. It MUST be about 40 lines or fewer, contain NO tables anywhere, and write every key decision as ONE bullet of the form `decision — why`. Do not restate slices or the agent preamble in it. If it grows past one screen, move detail to `slices.md`.
     7. **Section Ownership:** Put only the following in `brief.md`: title/date/status; Why (2-4 lines); Happy path and acceptance boundary (testable bullets); Key decisions; Open questions; Final smoke checks (only P0/P1 checks that agents cannot perform or are not authorized to perform; write `none` if empty); Pointers linking `slices.md` and `log.md`. Everything else goes in `slices.md`.
-    8. **log.md:** Create it with the header `# <Topic> Workstream Log` and nothing else. The execution skill appends its content (first body line `Isolation: ...`).
+    8. **log.md:** Create it with the header `# <Topic> Workstream Log` and one line `Opt-ins: playback=<on|off>, external review=<on|off>` (the values from Opt-ins above), nothing else. The execution skill appends its content after it (`Isolation: ...` first).
 
     ## Required Structure & Schema
 
@@ -133,5 +134,7 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
 
     ```markdown
     # [Topic] Workstream Log
+
+    Opt-ins: playback=[on|off], external review=[on|off]
     ```
 ```
