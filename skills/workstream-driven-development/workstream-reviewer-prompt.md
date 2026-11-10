@@ -1,7 +1,7 @@
 # Slice Reviewer Prompt Template
 
-Use this template when dispatching a reviewer subagent. See the Harness Dispatch
-table in SKILL.md for how to dispatch on your harness. The reviewer
+Use this template when dispatching a reviewer subagent. See `references/harness-dispatch.md`
+for how to dispatch on your harness. The reviewer
 reads the slice's diff once and returns two verdicts: spec compliance and
 code quality.
 

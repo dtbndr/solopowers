@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Extract one slice's full text from a Workstream Document (the slices.md of a
 # workstream folder docs/workstreams/YYYY-MM-DD-<topic>/, or a single
-# workstream .md file) into a file the
+# workstream file, whose form is *.md or a path containing /) into a file the
 # implementer reads in one call, so the slice text never has to be pasted
 # through the controller's context.
 #
@@ -53,7 +53,12 @@ here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 if [ -n "$slug" ]; then
   dir=$("${BASH:-bash}" "$here/wsd-workspace" "$slug" "$workstream")
 else
-  dir=$("${BASH:-bash}" "$here/wsd-workspace" "$workstream")
+  # wsd-workspace treats a bare non-.md name as a slug; ./ forces the file form.
+  case "$workstream" in
+    */*) ws_arg=$workstream ;;
+    *) ws_arg="./$workstream" ;;
+  esac
+  dir=$("${BASH:-bash}" "$here/wsd-workspace" "$ws_arg")
 fi
 out="$dir/slice-${slice_id}-brief.md"
 

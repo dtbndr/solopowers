@@ -11,7 +11,8 @@
 #
 # Single source of truth for the workspace location, so slice-brief and
 # review-package cannot drift to different directories. It is also the single
-# source of truth for the slug: given only the workstream file, it derives one.
+# source of truth for the slug: given only the workstream file (a name ending
+# in .md or a path containing /), it derives one; any other bare name is a slug.
 #
 # Workstream layouts: a single file docs/workstreams/YYYY-MM-DD-<topic>.md
 # names the workspace from its own basename. A folder workstream

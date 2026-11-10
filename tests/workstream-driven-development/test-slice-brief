@@ -395,4 +395,11 @@ printf '# W\n\n### Slice A: One\n\nbody-single\n' > "$tmp/repo/docs/workstreams/
 "$slice_brief" "$tmp/repo/docs/workstreams/2026-03-01-single.md" A custom-single >/dev/null || fail "override (single): slice-brief failed"
 [ -f "$wsroot/custom-single/slice-A-brief.md" ] || fail "override (single): expected workspace 'custom-single'"
 
+# (i) a bare non-.md workstream name (no slash) is still a file, not a slug
+printf '# W\n\n### Slice A: One\n\nbody-bare\n' > "$tmp/repo/2026-04-01-y.txt"
+(cd "$tmp/repo" && "$slice_brief" 2026-04-01-y.txt A >/dev/null) || fail "bare name: slice-brief failed"
+[ -f "$wsroot/y.txt/slice-A-brief.md" ] || fail "bare name: expected workspace 'y.txt' (date prefix stripped)"
+[ "$(head -n1 "$wsroot/y.txt/progress.md")" = "# Workstream: 2026-04-01-y.txt" ] \
+  || fail "bare name: ledger header must name the file"
+
 echo 'slice-brief tests passed'

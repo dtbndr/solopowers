@@ -14,7 +14,8 @@ Before dispatching Slice 1 (e.g., Slice A), scan the workstream folder (`brief.m
 If conflicts, contradictions, or contract mismatches are found:
 - Surface them to the user immediately before implementation begins.
 - Explain the specific conflict, the affected slices, and the proposed resolution.
-- Update `brief.md` or `slices.md` once agreed (changes to `brief.md` need the operator's approval) before dispatching Slice 1.
+- Once agreed, update `brief.md` or `slices.md` (changes to `brief.md` need the operator's approval) before dispatching Slice 1. Make these edits INSIDE the isolation unit (after the isolation choice) and commit them there, not on the base branch.
+- After isolation setup, append a `Pre-flight: findings — <one-liner, resolution>` line to `<folder>/log.md` and commit it.
 
 If the pre-flight scan is clean:
-- Record that the pre-flight check was clean in the progress ledger and proceed to dispatch Slice 1.
+- After isolation setup, append a `Pre-flight: clean` line to `<folder>/log.md` (not the progress ledger, which does not exist yet) and commit it, then proceed to dispatch Slice 1.

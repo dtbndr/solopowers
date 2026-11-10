@@ -11,7 +11,7 @@ The final whole-workstream review inspects the entire branch diff across all com
    bash scripts/review-package "$MERGE_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
    ```
    where `WORKSTREAM_FILE` is always `<folder>/slices.md` and `WORKSPACE_SLUG` is the folder name without its leading `YYYY-MM-DD-`; `MERGE_BASE` is the commit the workstream branch started from (e.g. `git merge-base main HEAD`).
-3. Dispatch the final review using `solopowers:dispatching-code-review` ([code-reviewer.md](../../dispatching-code-review/code-reviewer.md)) on the most capable available model. Include the printed review package path in the dispatch so the final reviewer reads one unified file instead of re-deriving the diff with git commands.
+3. Dispatch the final review using `solopowers:dispatching-code-review` ([code-reviewer.md](../../dispatching-code-review/code-reviewer.md)) on the most capable available model. Supply `[PLAN_OR_REQUIREMENTS]` as `brief.md`'s happy path and acceptance boundary plus `<folder>/slices.md`. Include the printed review package path in the dispatch so the final reviewer reads one unified file instead of re-deriving the diff with git commands.
 4. Point the reviewer at the progress ledger's `Ruling (user)` lines and `minor (deferred)` lines so it can triage which decisions were made and which minors must be fixed before merge.
 
 ## Handling Final Review Findings ("No Second Fix Wave")
@@ -33,4 +33,4 @@ If the final whole-workstream review returns findings:
    rm -rf ".solopowers/wsd/<resolved-workspace>/"
    ```
    (The git history is the permanent record now; leave sibling workspace directories untouched).
-3. Record the final outcome in `<folder>/log.md`. Use `solopowers:finishing-a-development-branch` (called once, in both isolation modes) to guide the user through local merging, pushing, opening a PR, or branch cleanup.
+3. Record the final outcome in `<folder>/log.md` and commit that change (explicit path) before calling `solopowers:finishing-a-development-branch`. Use `solopowers:finishing-a-development-branch` (called once, in both isolation modes) to guide the user through local merging, pushing, opening a PR, or branch cleanup.

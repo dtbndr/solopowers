@@ -143,7 +143,7 @@ Run all of the following before handoff. Each must pass clean:
 
 ## Canonical Template: `log.md`
 
-Brainstorming creates `log.md` with a one-line header only. The execution skill (`solopowers:workstream-driven-development`) owns its content: line 1 records isolation mode and branch name, followed by review verdicts, P2/P3 findings, and carry-forward.
+Brainstorming creates `log.md` with the header `# <Topic> Workstream Log` and nothing else (it is committed with the folder). The execution skill (`solopowers:workstream-driven-development`) owns its content and only appends: first body line `Isolation: <branch|worktree> — branch <name>`, then the pre-flight result, review verdicts, P2/P3 findings, and carry-forward.
 
 ```markdown
 # <Topic> Workstream Log

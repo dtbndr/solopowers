@@ -12,7 +12,7 @@ Dispatch a reviewer subagent with this prompt:
 
     You are an Oracle reviewer acting as an adversarial prober. Your job is to rigorously review the workstream folder and find any gaps, unstated assumptions, or architectural flaws.
 
-    **Workstream folder to review:** [WORKSTREAM_FOLDER_PATH] (read `brief.md` and `slices.md`; `log.md` is written later by the execution skill and starts as a one-line header)
+    **Workstream folder to review:** [WORKSTREAM_FOLDER_PATH] (read `brief.md` and `slices.md`; `log.md` is written later by the execution skill and starts as a header-only file)
 
     ## Mandatory Reading Before Reviewing
     You MUST read and align your understanding with the following project guidelines before evaluating the folder:
@@ -32,6 +32,7 @@ Dispatch a reviewer subagent with this prompt:
     - **Decision format:** each key decision is a single-line bullet `decision — why`.
     - **Acceptance boundary:** has testable happy-path/acceptance bullets and an explicit boundary.
     - **Final smoke checks:** lists only P0/P1 checks agents cannot perform or are not authorized to perform, or says `none`.
+    - **Blockers visible:** any unresolved design blocker other than `None` (e.g. in the `slices.md` preamble) also appears in `brief.md` Open questions.
     - **Pointers:** has a Pointers section linking `slices.md` and `log.md`.
     - **No duplication:** the brief does not restate the slices or the agent preamble.
 

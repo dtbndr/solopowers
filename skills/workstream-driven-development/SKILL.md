@@ -44,27 +44,27 @@ digraph workstream_execution {
     }
 
     "Resume? (references/resuming.md step 0)" [shape=diamond];
-    "Resume per references/resuming.md\n(skip isolation, log.md, wsd-workspace setup)" [shape=box];
+    "Resume per references/resuming.md\n(skip isolation, log.md append, wsd-workspace setup)" [shape=box];
     "Read brief.md + slices.md, extract all slices, create Todo" [shape=box];
     "Pre-flight scan\n(references/preflight.md)" [shape=box];
     "Operator chooses isolation\n(ask once)" [shape=diamond];
     "Worktree\n(using-git-worktrees once)" [shape=box];
     "Branch\n(git switch -c ws/<slug>)" [shape=box];
-    "Commit log.md" [shape=box];
+    "Append Isolation line\nto log.md & commit" [shape=box];
     "More slices remain?" [shape=diamond];
     "Verify whole workstream\n(slices.md Final verification)" [shape=box];
     "Final review & finish\n(references/final-review.md)" [shape=box style=filled fillcolor=lightgreen];
 
-    "Resume? (references/resuming.md step 0)" -> "Resume per references/resuming.md\n(skip isolation, log.md, wsd-workspace setup)" [label="yes"];
+    "Resume? (references/resuming.md step 0)" -> "Resume per references/resuming.md\n(skip isolation choice, Isolation line, wsd-workspace setup)" [label="yes"];
     "Resume? (references/resuming.md step 0)" -> "Read brief.md + slices.md, extract all slices, create Todo" [label="no (first run)"];
-    "Resume per references/resuming.md\n(skip isolation, log.md, wsd-workspace setup)" -> "Dispatch implementer subagent\n(./implementer-prompt.md)" [label="per resume table"];
+    "Resume per references/resuming.md\n(skip isolation choice, Isolation line, wsd-workspace setup)" -> "Dispatch implementer subagent\n(./implementer-prompt.md)" [label="(state per resume table)"];
     "Read brief.md + slices.md, extract all slices, create Todo" -> "Pre-flight scan\n(references/preflight.md)";
     "Pre-flight scan\n(references/preflight.md)" -> "Operator chooses isolation\n(ask once)";
     "Operator chooses isolation\n(ask once)" -> "Worktree\n(using-git-worktrees once)" [label="worktree"];
     "Operator chooses isolation\n(ask once)" -> "Branch\n(git switch -c ws/<slug>)" [label="branch"];
-    "Worktree\n(using-git-worktrees once)" -> "Commit log.md";
-    "Branch\n(git switch -c ws/<slug>)" -> "Commit log.md";
-    "Commit log.md" -> "Dispatch implementer subagent\n(./implementer-prompt.md)";
+    "Worktree\n(using-git-worktrees once)" -> "Append Isolation line\nto log.md & commit";
+    "Branch\n(git switch -c ws/<slug>)" -> "Append Isolation line\nto log.md & commit";
+    "Append Isolation line\nto log.md & commit" -> "Dispatch implementer subagent\n(./implementer-prompt.md)";
     "Dispatch implementer subagent\n(./implementer-prompt.md)" -> "Implementer asks clarifying questions?";
     "Implementer asks clarifying questions?" -> "Answer questions & supply context" [label="yes"];
     "Answer questions & supply context" -> "Dispatch implementer subagent\n(./implementer-prompt.md)";
@@ -143,14 +143,13 @@ When `DONE`: Generate the review package (`bash scripts/review-package BASE HEAD
 
 ### 1. Resume Check, then Initial Set Up
 
-- **Resume check (FIRST, before pre-flight, the isolation choice, `log.md` creation, or any `wsd-workspace` call).** Decide from git state whether a workstream unit already exists by following step 0 of [references/resuming.md](references/resuming.md) (`git worktree list`, `ws/<slug>` branch, `Isolation:` line in `log.md`). If it does, this is a RESUME: follow `references/resuming.md` from step 0 and SKIP the rest of this section's isolation choice, `log.md` creation and `wsd-workspace` bullets. If no unit exists, it is a first run: continue below.
+- **Resume check (FIRST, before pre-flight, the isolation choice, `log.md` append, or any `wsd-workspace` call).** Follow step 0 of [references/resuming.md](references/resuming.md) (`git worktree list`, `ws/<slug>` branch, `Isolation:` line in `log.md`) to see whether a unit exists. If so, this is a RESUME: follow `references/resuming.md` and SKIP only this section's isolation choice, `log.md` append and `wsd-workspace` bullets. If no unit exists, it is a first run: continue below.
 
-- Read `<folder>/brief.md` (acceptance boundary, success criteria, final smoke checks) and `<folder>/slices.md` (preamble: key files, invariant, assumptions, final-verification commands; then the slices). Extract all slices.
-- Run the pre-flight scan over `brief.md` and `slices.md` (see [references/preflight.md](references/preflight.md)) before dispatching Slice 1.
+- Read `<folder>/brief.md` (acceptance boundary, final smoke checks) and `<folder>/slices.md` (preamble: key files, invariant, assumptions, final-verification commands; then the slices). Extract all slices, then create a `todo` task list: one task per slice, plus "Final verification and close branch".
+- Run the pre-flight scan over `brief.md` and `slices.md` (see [references/preflight.md](references/preflight.md)) and surface findings before the isolation choice; agreed edits happen inside the unit, and the result goes to `log.md` after isolation setup.
 - **Isolation choice (ask ONCE per workstream, never again on resume).** Agent recommends worktree or branch with a one-line reason; the operator decides. Worktree mode invokes `solopowers:using-git-worktrees` ONCE; branch mode is handled inline (clean tree, never on the default branch, `git switch -c ws/<slug>`). See [references/isolation.md](references/isolation.md).
-- Right after isolation setup, create and commit `<folder>/log.md` inside the isolation unit as its first commit (never on the default branch); line 1 is `# Log`, first body line `Isolation: <branch|worktree> — branch <name>` (see [references/isolation.md](references/isolation.md)).
+- Right after isolation setup, APPEND `Isolation: <branch|worktree> — branch <name>` to the existing `<folder>/log.md` (brainstorming created it; do not re-create) and commit it inside the isolation unit as its first commit (never on the default branch), then the pre-flight result (see [references/isolation.md](references/isolation.md)).
 - Resolve the workspace with `bash scripts/wsd-workspace <folder>/slices.md` (records the path in the ledger header; disambiguates slug collisions).
-- Create a `todo` task list: one task per slice, plus "Final verification and close branch".
 - `progress.md` (gitignored, in `.solopowers/wsd/<slug>/`) is the source of truth for slice state; `log.md` is the committed human/agent record. Completed slices are never re-dispatched.
 
 ### 2. Dispatching the Worker
