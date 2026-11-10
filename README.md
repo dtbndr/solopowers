@@ -4,7 +4,7 @@ A curated skill pack for solo development workflows, derived from [obra/superpow
 
 ## Origin
 
-solopowers began as local adaptations of superpowers for a workflow where **a single workstream folder** (`brief.md`, `slices.md`, `log.md`) replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one isolation unit per workstream (a git branch or worktree, the operator's choice), with **manual smoke-test pauses** between slices after automated review gates pass. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
+solopowers began as local adaptations of superpowers for a workflow where **a single workstream folder** (`brief.md`, `slices.md`, `log.md`) replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one isolation unit per workstream (a git branch or worktree, the operator's choice), with a single end-of-workstream smoke check for the P0/P1 checks agents cannot do, after automated review gates pass. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
 
 Workstream folders are stored at `docs/workstreams/YYYY-MM-DD-<topic>/`. `workstream-brainstorming` creates the folder; `workstream-driven-development` executes it sequentially in one branch or worktree.
 

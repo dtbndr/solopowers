@@ -51,7 +51,7 @@ Never fix findings yourself in the controller session — your context stays cle
 
 ## End-Smoke Variant
 
-For an end-smoke failure ([end-smoke.md](end-smoke.md)) there is no slice. Findings = `<workspace>/end-smoke-findings.md`; spec context = `brief.md`; the implementer and the re-review's `[BRIEF_FILE]` are that findings file plus the relevant `brief.md` acceptance boundary (not `slice-brief`). Ledger lines are `End smoke: fix round <R>/4 (...)`, `End smoke: escalated at cap — <Y> open`, `End smoke: Ruling (user): ...`. Everything else is unchanged, including the cap.
+For an end-smoke failure ([end-smoke.md](end-smoke.md)) there is no slice. Findings = `<workspace>/end-smoke-findings.md`; spec context = `brief.md`; the implementer and the re-review's `[BRIEF_FILE]` are that findings file plus the relevant `brief.md` acceptance boundary (not `slice-brief`). Ledger lines are `End smoke: fix round <R>/4 (...)`, `End smoke: escalated at cap — <Y> open`, `End smoke: Ruling (user): ...`. The implementer is a fresh dispatch in round 1 and writes `<workspace>/end-smoke-report.md`; later rounds and resumes read it. Everything else is unchanged, including the cap. Overrides: there is no `Slice <ID>: complete` write; when the loop ends review clean via user rulings that let it stand, write `End smoke: passed (rulings accepted)` and do not re-run the check; otherwise re-run the failed check ([end-smoke.md](end-smoke.md)).
 
 ## The Breaker (Cap Escalation)
 
@@ -90,7 +90,7 @@ A slice achieves **review clean** when:
 
 ### Completion
 
-Immediately when the slice achieves **review clean** (initial review with 0 fix rounds, after a fix round, or via user rulings), verify `HEAD == <head7>` and write to `progress.md`; no pause:
+Immediately when the slice achieves **review clean** (initial review with 0 fix rounds, after a fix round, or via user rulings), verify `HEAD == <head7>` (if not, stop and ask the operator) and write to `progress.md`; no pause:
 ```markdown
 Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings])
 ```

@@ -5,7 +5,7 @@ Part of `solopowers:workstream-driven-development`. Every slice in the workstrea
 ## Whole-Workstream Review
 
 The final whole-workstream review inspects the entire branch diff across all completed slices:
-1. Run the commands listed in the **Final verification** section of `<folder>/slices.md` (e.g. full test suite, linter, typecheck, build), and check the result against the acceptance boundary and success criteria in `<folder>/brief.md`. Then run the end smoke step ([end-smoke.md](end-smoke.md)) before dispatching the final review.
+1. Run the commands listed in the **Final verification** section of `<folder>/slices.md` (e.g. full test suite, linter, typecheck, build), and check the result against the acceptance boundary and success criteria in `<folder>/brief.md`. Then run the end smoke step ([end-smoke.md](end-smoke.md)) before dispatching the final review. Skip both Final verification and end smoke when `progress.md` already has `End smoke: passed` or `End smoke: skipped` (the SKILL graph ran them before this step); after an end-smoke fix loop, Final verification is re-run in full first.
 2. Generate the full review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
    bash scripts/review-package "$MERGE_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
@@ -28,9 +28,10 @@ If the final whole-workstream review returns P0/P1 findings (P2/P3 are logged to
 ## Finish and Cleanup
 
 1. Confirm that the final review is clean and all final verification commands pass.
-2. Delete the workstream workspace directory:
+2. Record the final outcome in `<folder>/log.md`, together with the `P2/P3:` entry copied from `<workspace>/p2p3.md` (if any), and commit that change (explicit path). Then append `End: final review clean` to `progress.md` (the finished state; the ledger is local, not committed).
+3. Delete the workstream workspace directory:
    ```bash
    rm -rf ".solopowers/wsd/<resolved-workspace>/"
    ```
    (The git history is the permanent record now; leave sibling workspace directories untouched).
-3. Record the final outcome in `<folder>/log.md`, together with the `P2/P3:` entry copied from `<workspace>/p2p3.md` (if any), and commit that change (explicit path) before calling `solopowers:finishing-a-development-branch`. Use `solopowers:finishing-a-development-branch` (called once, in both isolation modes) to guide the user through local merging, pushing, opening a PR, or branch cleanup.
+4. Use `solopowers:finishing-a-development-branch` (called once, in both isolation modes) to guide the user through local merging, pushing, opening a PR, or branch cleanup.
