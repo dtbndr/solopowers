@@ -158,7 +158,7 @@ When `DONE`: Generate the review package (`bash scripts/review-package BASE HEAD
 - Right after isolation setup, create and commit `<folder>/log.md` inside the isolation unit as its first commit (never on the default branch); line 1 is `# Log`, first body line `Isolation: <branch|worktree> — branch <name>` (see [references/isolation.md](references/isolation.md)).
 - Resolve the workspace with `bash scripts/wsd-workspace <folder>/slices.md` (records the path in the ledger header; disambiguates slug collisions).
 - Create a `todo` task list: one task per slice, plus "Final verification and close branch".
-- Check for a durable progress ledger before dispatching (see [references/resuming.md](references/resuming.md)). Completed slices are not re-dispatched. On resume, read the isolation mode from the CURRENT working tree's `log.md` and do not ask again; `progress.md` (gitignored, in `.solopowers/wsd/<slug>/`) stays the source of truth for slice state, while `log.md` is the committed human/agent record.
+- Check for a durable progress ledger before dispatching (see [references/resuming.md](references/resuming.md)). Completed slices are not re-dispatched. On resume, read the isolation mode from the isolation unit's `log.md` and do not ask again; `progress.md` (gitignored, in `.solopowers/wsd/<slug>/`) stays the source of truth for slice state, while `log.md` is the committed human/agent record.
 
 ### 2. Dispatching the Worker
 

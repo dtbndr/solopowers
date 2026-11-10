@@ -53,8 +53,14 @@ When resuming an interrupted session, locate the slice's **last state line** (sk
 
 ## Step-by-Step Resume Procedure
 
-1. Run `bash scripts/wsd-workspace <folder>/slices.md` to identify the resolved workspace directory.
-2. Read `<workspace>/progress.md` for slice state, and read the isolation mode from `log.md` in the CURRENT working tree (first body line: `Isolation: <branch|worktree> — branch <name>`). Do not ask the operator to choose isolation again; if the mode in `log.md` does not match the current checkout, stop and ask.
+0. **Locate the isolation unit BEFORE any `wsd-workspace` call** (it silently creates an empty ledger in whatever checkout you are in). After a restart you may be in the main checkout (worktree mode) or on the default branch after `git switch main` (branch mode).
+   - Derive `<slug>`: the workstream folder name minus its leading `YYYY-MM-DD-`. Run `git worktree list` and `git branch --list 'ws/<slug>'`.
+   - **Worktree mode:** if a worktree on `ws/<slug>` exists (or any worktree whose tree contains `<folder>/log.md` with an `Isolation:` line), `cd` into that worktree directory. Every later step (`wsd-workspace`, `slice-brief`, ledger, `log.md`, commits) runs there.
+   - **Branch mode:** if branch `ws/<slug>` exists and you are not on it, run `git switch ws/<slug>` only when the working tree is clean; otherwise stop and ask the operator.
+   - Read the mode from `<folder>/log.md` IN THE UNIT. **Stop and ask the operator** (never dispatch an implementer on the default branch, never run `wsd-workspace` outside the unit) if: the unit's `log.md` has no `Isolation:` line; no unit can be found but a ledger or log shows work was done; or you are on the default branch while a `ws/<slug>` branch exists and cannot be switched to.
+   - Only if NO `ws/<slug>` branch or worktree exists AND no `Isolation:` line exists anywhere is this a first run, not a resume: go through the normal isolation choice ([references/isolation.md](isolation.md)).
+1. From inside the unit, run `bash scripts/wsd-workspace <folder>/slices.md` to identify the resolved workspace directory.
+2. Read `<workspace>/progress.md` for slice state, and confirm the isolation mode from `log.md` in the unit (first body line: `Isolation: <branch|worktree> — branch <name>`). Do not ask the operator to choose isolation again; if the mode in `log.md` does not match the current checkout, stop and ask.
 3. If the ledger is legacy headerless and marks slices complete, confirm with the user: "Adopted existing ledger for <workstream>. Slices [X, Y] are marked complete in the ledger. Proceed with Slice [Z]?"
 4. Inspect the last state line for the first incomplete slice according to the Resume Dispatch Table above.
 5. Take the corresponding action from the table, carrying forward context from the preceding completed slice.
