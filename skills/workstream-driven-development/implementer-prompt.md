@@ -14,7 +14,7 @@ implementer subagent:
     ## Slice Brief
 
     Read your slice brief first: [BRIEF_FILE]
-    It contains the full slice goal, tasks, watch-outs, verification, and manual smoke test requirements.
+    It contains the full slice goal, tasks, watch-outs, and verification.
 
     ## Context
 

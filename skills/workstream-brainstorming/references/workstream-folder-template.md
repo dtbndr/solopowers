@@ -17,7 +17,7 @@ Only `brief.md` needs operator approval. `slices.md` and `log.md` need none.
 ### 1. Completeness and Sizing
 - **No Pseudo-code or Raw Implementation Code:** The folder deliberately contains no raw implementation code. Key file paths, API contracts, schema definitions, test targets, and verification commands are encouraged to eliminate ambiguity, but raw code generation belongs entirely to the slice implementer.
 - **Decision Completeness:** All design choices that could require rework if decided wrong MUST be settled. Incidental choices (variable names, internal helper decomposition, log message wording) are explicitly left to implementation discretion.
-- **Slice Sizing:** Slices are executed by low-cost models with limited context windows. Each slice should touch 1–5 files, have clear TDD tasks (red → green → verification), explicit watch-outs, verification commands, and manual smoke test steps. If a slice requires extensive prose to be unambiguous, split it.
+- **Slice Sizing:** Slices are executed by low-cost models with limited context windows. Each slice should touch 1–5 files, have clear TDD tasks (red → green → verification), explicit watch-outs, and verification commands (no per-slice manual smoke tests). If a slice requires extensive prose to be unambiguous, split it.
 - **Slice Heading Grammar:** Slice headings in `slices.md` use `### Slice <SLICE_ID>: <Slice Title>`, where `<SLICE_ID>` matches `[A-Z][0-9]*` (e.g., `A`, `A1`, `A2`). The ID is matched exactly by helper scripts (`slice-brief`).
 
 ### 2. Section Ownership
@@ -29,7 +29,7 @@ Only `brief.md` needs operator approval. `slices.md` and `log.md` need none.
 - Roughly one screen: about 40 lines maximum.
 - No tables anywhere in `brief.md`.
 - Each key decision is ONE bullet: `decision — why`.
-- Final smoke checks list only P0/P1 checks that agents cannot perform or are not authorized to perform. Write `none` if there are no such checks.
+- Final smoke checks list only P0/P1 checks that agents cannot perform or are not authorized to perform. Write `None` if there are no such checks; the operator runs them once at workstream end.
 
 ---
 
@@ -57,7 +57,7 @@ Only `brief.md` needs operator approval. `slices.md` and `log.md` need none.
 - <question that needs the operator, or `none`>
 
 ## Final smoke checks
-- <P0/P1 check agents cannot perform or are not authorized to perform, or `none`>
+- <only P0/P1 checks agents cannot or are not authorized to perform (provider/quota use, deploy, DNS/email/account changes, physical device); `None` if empty>
 
 ## Pointers
 - Slices (agents only): [slices.md](slices.md)
@@ -129,11 +129,6 @@ Run all of the following before handoff. Each must pass clean:
 
 #### Verification
 - Commands to run and assertions to check (use the project's actual test/build tooling)
-
-#### Manual smoke test
-- Setup / preconditions the user needs before testing
-- Explicit user actions to perform
-- Expected visible or behavioral outcome to confirm
 
 #### Carry-forward
 - State, APIs, or schema elements established in this slice that the next slice assumes to be present.

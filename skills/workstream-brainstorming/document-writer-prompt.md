@@ -17,7 +17,7 @@ Dispatch a document-writer subagent with this prompt:
 
     1. **Single-Artifact Invariant:** The workstream folder serves as both the design AND the implementation plan. This is NOT a separate plan or design specification. Do NOT create a separate `plan.md` or `spec.md`.
     2. **No Implementation Code Constraint:** The folder must contain NO production implementation code or pseudo-code. Key file paths, test commands, API contracts, column names, and verification instructions are highly encouraged, but actual logic/code generation must be offloaded entirely to the subsequent implementer.
-    3. **Actionable Slices:** Ensure each slice is sized appropriately for a lightweight, low-context implementer, with clear TDD tasks (red -> green loop) and manual smoke tests.
+    3. **Actionable Slices:** Ensure each slice is sized appropriately for a lightweight, low-context implementer, with clear TDD tasks (red -> green loop) and automated verification per slice (no per-slice manual smoke tests).
     4. **Commit the Files:** Once the files are written or revised, commit the folder to the repository.
     5. **Decision Record:** Every consequential choice (one affecting rework, safety/correctness, data/package boundaries, public or inter-slice contracts, or later-slice dependencies) must appear as a one-line bullet in `brief.md` AND have fuller detail in the `slices.md` preamble. Keep incidental local choices under Implementation discretion. State `None` when no Unresolved design blockers remain; any unresolved design blocker other than `None` MUST also appear in `brief.md` Open questions so the operator sees it.
     6. **Brief Discipline (hard limits):** `brief.md` is the only file the operator reads and approves. It MUST be about 40 lines or fewer, contain NO tables anywhere, and write every key decision as ONE bullet of the form `decision — why`. Do not restate slices or the agent preamble in it. If it grows past one screen, move detail to `slices.md`.
@@ -52,7 +52,7 @@ Dispatch a document-writer subagent with this prompt:
     - [question for the operator, or `none`]
 
     ## Final smoke checks
-    - [P0/P1 check agents cannot perform or are not authorized to perform, or `none`]
+    - [only P0/P1 checks agents cannot or are not authorized to perform (provider/quota use, deploy, DNS/email/account changes, physical device); `None` if empty]
 
     ## Pointers
     - Slices (agents only): [slices.md](slices.md)
@@ -122,11 +122,6 @@ Dispatch a document-writer subagent with this prompt:
 
     #### Verification
     - Commands to run and assertions to check (use the project's actual test/build tooling)
-
-    #### Manual smoke test
-    - Setup / preconditions the user needs before testing
-    - Explicit user actions to perform
-    - Expected visible or behavioral outcome to confirm
 
     #### Carry-forward
     - State, APIs, or schema elements established in this slice that the next slice assumes to be present.

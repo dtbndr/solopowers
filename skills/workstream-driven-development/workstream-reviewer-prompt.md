@@ -133,10 +133,9 @@ reviewer subagent:
       the implementation, or the report omits real RED/GREEN evidence, fail
       the compliance review.
 
-    **Manual smoke-test readiness:**
-    - Does the implementation support the documented manual smoke test
-      cleanly?
-    - Are any required user-visible flows, setup assumptions, or expected
+    **Slice verification:**
+    - Do the slice's automated verification commands cover its required
+      behavior, and are any required flows, setup assumptions, or expected
       outcomes obviously broken?
 
     ## Part 2: Code Quality

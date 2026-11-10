@@ -27,28 +27,28 @@ Per-slice entries in `progress.md` distinguish **state lines** (which define whe
 
 | Line | Written when |
 |---|---|
-| `Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test` | Initial review is ✅ + `Verdict: CLEAN` with every ⚠️ resolved, **or** a fix round has 0 open, **or** user rulings let the slice stand. Written immediately *before* pausing for the smoke test. |
 | `Slice <ID>: fix round <R>/4 (<X> addressed, <Y> open — …; commits <a7>..<b7>)` | Written after each fix round re-review. "Open" always means open P0/P1; P2/P3 live in `p2p3.md`, never in the ledger. |
 | `Slice <ID>: escalated at cap — <Y> open` | Written when round 4 still has open findings and the controller escalates to the user. |
 | `Slice <ID>: Ruling (user): <finding> — <decision>` | Annotation: written one per open finding once the user decides. |
 | `Slice <ID>: ⚠️ resolved — <item> — <evidence>` | Annotation: written when the controller resolves a `⚠️ Cannot verify` item. |
-| `Slice <ID>: smoke test failed (at <head7>) — <one-liner>` | Written when the user reports a manual smoke test failure; starts a fresh 4-round budget with `FIX_BASE` = `<head7>` recorded on the preceding `review clean` line. |
-| `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings], smoke test passed)` | Written immediately after the user confirms the manual smoke test passed. |
+| `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings])` | Written immediately when the slice is review clean: initial review is ✅ + `Verdict: CLEAN` with every ⚠️ resolved, **or** a fix round has 0 open, **or** user rulings let the slice stand. No pause. |
 
 ## Resume Dispatch Table
 
-When resuming an interrupted session, locate the slice's **last state line** (skip `Ruling (user)`, `⚠️ resolved` and legacy `minor (deferred)` lines when determining the last state line, unless inspecting rulings after `escalated at cap`):
+When resuming an interrupted session, locate the slice's **last state line** (skip `Ruling (user)`, `⚠️ resolved`, legacy `minor (deferred)`, and legacy `smoke test failed` lines; a legacy `review clean … awaiting smoke test` line counts as `complete` if `HEAD == <head7>` when determining the last state line, unless inspecting rulings after `escalated at cap`):
 
 | Last state line | Action on resume |
 |---|---|
 | `complete` | Skip the slice (already DONE). Resume at the next slice. |
-| `review clean (... — awaiting smoke test)` | Check current `HEAD` against `<head7>`. If `HEAD == <head7>`, **re-ask the user for the manual smoke test** (do NOT re-dispatch implementer or reviewer). If `HEAD != <head7>`, stop and ask the user how to handle the unreviewed commits past `<head7>` before running the smoke test. |
-| `fix round <R>/4` with `0 open` | Session stopped between appends: check current `HEAD` against `<b7>` (the round's reviewed head commit). If `HEAD == <b7>`, write `review clean (commits <base7>..<b7>) — awaiting smoke test` and ask the user for the smoke test; if `HEAD != <b7>`, stop and ask the user how to handle the unreviewed commits past `<b7>`. |
+| `fix round <R>/4` with `0 open` | Session stopped between appends: check current `HEAD` against `<b7>` (the round's reviewed head commit). If `HEAD == <b7>`, write `complete (commits <base7>..<b7>, review clean[, <K> user rulings])` and proceed to the next slice; if `HEAD != <b7>`, stop and ask the user how to handle the unreviewed commits past `<b7>`. |
 | `fix round <R>/4` (`R < 4`) with `>0 open` | Continue the fix loop at round `<R+1>` (see [references/fix-loop.md](fix-loop.md)). |
 | `fix round 4/4` with `>0 open`, or `escalated at cap — <Y> open` with no rulings | Re-present the escalation to the user; **never dispatch round 5**. |
-| `escalated at cap — <Y> open` followed by `Ruling (user)` lines | Compare the count of `Ruling (user)` lines against `<Y>`. If fewer than `<Y>` rulings are recorded, re-present the remaining unruled findings to the user before proceeding. Once all `<Y>` rulings are present: if rulings let the slice stand as-is without code changes, check current `HEAD` against `<b7>` (the round-4 reviewed head commit from the preceding `fix round 4/4` line); if `HEAD == <b7>`, write `review clean (commits <base7>..<b7>) — awaiting smoke test` and ask the user for the smoke test; if `HEAD != <b7>`, stop and ask the user how to handle the unreviewed commits past `<b7>`. If rulings direct code changes, start a fresh 4-round fix series (round 1/4) with `FIX_BASE` anchored to the round-4 `<b7>` commit (from the preceding `fix round 4/4` line, not current `HEAD`, in case a crash occurred after new commits landed before the round line was written) with the user-directed changes as findings. |
-| `smoke test failed (at <head7>) — <one-liner>` | Start the fix loop at round 1/4 (fresh 4-round budget) with `FIX_BASE` = `<head7>` recorded on the preceding `review clean` line, with the user's report as findings. |
+| `escalated at cap — <Y> open` followed by `Ruling (user)` lines | Compare the count of `Ruling (user)` lines against `<Y>`. If fewer than `<Y>` rulings are recorded, re-present the remaining unruled findings to the user before proceeding. Once all `<Y>` rulings are present: if rulings let the slice stand as-is without code changes, check current `HEAD` against `<b7>` (the round-4 reviewed head commit from the preceding `fix round 4/4` line); if `HEAD == <b7>`, write `complete (commits <base7>..<b7>, review clean[, <K> user rulings])` and proceed to the next slice; if `HEAD != <b7>`, stop and ask the user how to handle the unreviewed commits past `<b7>`. If rulings direct code changes, start a fresh 4-round fix series (round 1/4) with `FIX_BASE` anchored to the round-4 `<b7>` commit (from the preceding `fix round 4/4` line, not current `HEAD`, in case a crash occurred after new commits landed before the round line was written) with the user-directed changes as findings. |
 | No state line for this slice | Set `BASE` = previous slice's `complete` `<head7>` (for the first slice, the last setup commit: `git log -n1 --format=%H -G'^Pre-flight:' -- <folder>/log.md`, so Slice A's review excludes setup commits; if `log.md` has no `Pre-flight:` line, redo pre-flight first, see step 1a). If no commits exist past `BASE` (unstarted, or crashed before first commit), dispatch or resume the implementer from `BASE`. If commits exist past `BASE`: inspect the implementer report file; if implementation reported `DONE` or `DONE_WITH_CONCERNS` (matching `SKILL.md`), run the initial slice review (`bash scripts/review-package BASE HEAD ...`); otherwise resume/re-dispatch the implementer subagent. |
+
+### End smoke line
+
+After the last slice, `progress.md` carries `End smoke: pending|passed|skipped` ([end-smoke.md](end-smoke.md)). On resume with every slice `complete`: no line or `pending` means rerun Final verification, then the end-smoke step; `passed`/`skipped` means go to final review. A failed check is a fix loop; after it, reset the line to `pending`.
 
 ## Step-by-Step Resume Procedure
 

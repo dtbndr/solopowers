@@ -1,11 +1,11 @@
 # Final Review and Finish
 
-Part of `solopowers:workstream-driven-development`. Every slice in the workstream's `slices.md` is complete, verified, and smoke-tested.
+Part of `solopowers:workstream-driven-development`. Every slice in the workstream's `slices.md` is complete and verified.
 
 ## Whole-Workstream Review
 
 The final whole-workstream review inspects the entire branch diff across all completed slices:
-1. Run the commands listed in the **Final verification** section of `<folder>/slices.md` (e.g. full test suite, linter, typecheck, build), and check the result against the acceptance boundary and success criteria in `<folder>/brief.md`. The **Final smoke checks** in `brief.md` are the operator's manual end-to-end checks; ask the operator to run them (in their normal checkout when the work is on a branch, or note that a worktree lacks gitignored files such as `.env`, virtualenvs, and `node_modules`).
+1. Run the commands listed in the **Final verification** section of `<folder>/slices.md` (e.g. full test suite, linter, typecheck, build), and check the result against the acceptance boundary and success criteria in `<folder>/brief.md`. Then run the end smoke step ([end-smoke.md](end-smoke.md)) before dispatching the final review.
 2. Generate the full review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
    bash scripts/review-package "$MERGE_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"

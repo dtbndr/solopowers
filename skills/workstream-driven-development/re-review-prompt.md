@@ -111,7 +111,7 @@ Subagent (general-purpose):
 - `[BRIEF_FILE]` — the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from; run `scripts/` helpers by their absolute path, from the working tree)
 - `[SEVERITY_DEFINITIONS]` — same text given to the original reviewer
 - `[FINDINGS]` — the open P0/P1 findings, spec gaps (no P label) from the
-  previous review (or user smoke-test failure report, or code changes
+  previous review (or an end-smoke failure report, or code changes
   directed by user rulings), copied verbatim, one per bullet
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw

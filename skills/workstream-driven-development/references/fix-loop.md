@@ -5,7 +5,7 @@ Part of `solopowers:workstream-driven-development`.
 > [!IMPORTANT]
 > **Controller Instruction:** You MUST re-read this file (`references/fix-loop.md`) before every fix round. Conversation memory does not survive compaction.
 
-The fix loop is entered when an initial slice review reports spec compliance ❌, `Verdict: NEEDS FIXES` (an open P0/P1), or a confirmed ⚠️ gap; when a user reports a manual smoke-test failure; or when user rulings (`Ruling (user)`) after cap escalation direct code changes.
+The fix loop is entered when an initial slice review reports spec compliance ❌, `Verdict: NEEDS FIXES` (an open P0/P1), or a confirmed ⚠️ gap; when an end-smoke check fails ([end-smoke.md](end-smoke.md)); or when user rulings (`Ruling (user)`) after cap escalation direct code changes.
 
 Before the loop starts, two routes leave it immediately:
 
@@ -75,39 +75,19 @@ Slice <ID>: Ruling (user): <finding> — <decision>
 - If the user's rulings let the slice stand as-is without code changes, the slice achieves **review clean** (see Success Gate below) with `<head7>` tied to the round-4 `<b7>` commit (from the preceding `fix round 4/4` line).
 - If the user's rulings direct a code change, start a fresh 4-round fix series (round 1/4) with `FIX_BASE` anchored to the round-4 `<b7>` commit (from the `fix round 4/4 (...; commits <a7>..<b7>)` line) with the user-directed changes as findings.
 
-## Success Gate: Manual Smoke Test Pause
+## Success Gate: Review Clean
 
 ### Definition of "Review Clean"
 
 A slice achieves **review clean** when:
 1. The initial review is `✅ Slice compliant` + `Verdict: CLEAN` (no open P0/P1) with every `⚠️ Cannot verify` item resolved (see [references/cannot-verify.md](cannot-verify.md)), **OR**
-2. The latest fix round's scoped re-review ends `Verdict: CLEAN`: every `[FINDINGS]` item `ADDRESSED` (spec gaps, smoke-failure reports and user-ruled changes count as P0/P1 for the verdict), no new P0/P1 (`0 open`), **OR**
+2. The latest fix round's scoped re-review ends `Verdict: CLEAN`: every `[FINDINGS]` item `ADDRESSED` (spec gaps, end-smoke failures and user-ruled changes count as P0/P1 for the verdict), no new P0/P1 (`0 open`), **OR**
 3. Every open P0/P1 at the round-4 cap has a user ruling (`Ruling (user)`) that lets the slice stand.
 
-### Awaiting Smoke Test
+### Completion
 
-Immediately when the slice achieves **review clean** (whether on initial review with 0 fix rounds, after a fix round, or via user rulings), write to `progress.md` *before* pausing for the user's manual smoke test:
+Immediately when the slice achieves **review clean** (initial review with 0 fix rounds, after a fix round, or via user rulings), verify `HEAD == <head7>` and write to `progress.md`; no pause:
 ```markdown
-Slice <ID>: review clean (commits <base7>..<head7>) — awaiting smoke test
+Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings])
 ```
-(where `<base7>` is the commit before this slice began, and `<head7>` is the reviewed head commit: current `HEAD` for initial review, or `<b7>` from the latest `fix round` line; verify `HEAD == <head7>` before pausing).
-
-Then pause and ask the user to perform the manual smoke test for that slice:
-- Direct the user to the exact manual smoke test steps in `slices.md`.
-- Wait for user confirmation before proceeding to the next slice.
-
-### Smoke Test Outcome
-
-- **If the user confirms the smoke test passed:**
-  Immediately append to `progress.md`:
-  ```markdown
-  Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings], smoke test passed)
-  ```
-  Mark the slice complete in the Todo list, and proceed to the next slice.
-
-- **If the user reports a manual smoke test failure:**
-  Append to `progress.md`:
-  ```markdown
-  Slice <ID>: smoke test failed (at <head7>) — <one-liner>
-  ```
-  A smoke test failure starts a **fresh 4-round budget** (round 1/4). Set `FIX_BASE` = `<head7>` (the commit at the smoke pause, recorded on the preceding `review clean` line). The user's failure report becomes the findings for the implementer subagent. Run scoped re-review (`bash scripts/review-package "$FIX_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"`), repeating the fix loop until the slice achieves review clean again, followed by another smoke test pause.
+(`<base7>` is the commit before this slice began; `<head7>` is the reviewed head: current `HEAD` for initial review, or `<b7>` from the latest `fix round` line.) Mark the slice complete in the Todo list and proceed to the next slice. Human smoke testing happens once, at workstream end ([end-smoke.md](end-smoke.md)).

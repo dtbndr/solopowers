@@ -31,7 +31,7 @@ Dispatch a reviewer subagent with this prompt:
     - **Table-free:** no Markdown tables anywhere in `brief.md`.
     - **Decision format:** each key decision is a single-line bullet `decision — why`.
     - **Acceptance boundary:** has testable happy-path/acceptance bullets and an explicit boundary.
-    - **Final smoke checks:** lists only P0/P1 checks agents cannot perform or are not authorized to perform, or says `none`.
+    - **Final smoke checks:** lists only P0/P1 checks agents cannot perform or are not authorized to perform, or says `None`; no per-slice manual smoke test sections.
     - **Blockers visible:** any unresolved design blocker other than `None` (e.g. in the `slices.md` preamble) also appears in `brief.md` Open questions.
     - **Pointers:** has a Pointers section linking `slices.md` and `log.md`.
     - **No duplication:** the brief does not restate the slices or the agent preamble.
