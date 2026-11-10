@@ -8,6 +8,14 @@ solopowers began as local adaptations of superpowers for a workflow where **a si
 
 Workstream folders are stored at `docs/workstreams/YYYY-MM-DD-<topic>/`. `workstream-brainstorming` creates the folder; `workstream-driven-development` executes it sequentially in one branch or worktree.
 
+### What changed vs the original workflow
+
+- `brief.md` (about one page) is the only file the operator approves; `slices.md` and `log.md` are agent-facing.
+- The operator picks a git branch or a worktree once per workstream.
+- Slice reviewers grade findings P0-P3 with evidence; the loop exits when no P0/P1 is open, P2/P3 are logged (not fixed), and a 4-round cap escalates only for persistent P0/P1.
+- No per-slice smoke pause: one end-of-workstream smoke step, only for P0/P1 checks agents cannot do (skipped if none).
+- Reviewers run on the strongest model tier, workers on the standard tier. Brainstorming playback and external review are opt-in (the agent recommends, the operator chooses); external review targets the folder.
+
 ## Skills
 
 ### Workflow
