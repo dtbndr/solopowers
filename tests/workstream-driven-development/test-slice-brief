@@ -351,4 +351,48 @@ run_brief "$ws_d" A
 grep -q '^end-a$' "$tmp/repo/.solopowers/wsd/fence-d/slice-A-brief.md" || fail "tail of slice A missing"
 ! grep -q 'body-b' "$tmp/repo/.solopowers/wsd/fence-d/slice-A-brief.md" || fail "slice B leaked into brief A"
 
+# Folder-layout workstreams: slices.md inside docs/workstreams/YYYY-MM-DD-<topic>/
+folder_ws() { # date, topic -> prints slices.md path
+  mkdir -p "$tmp/repo/docs/workstreams/$1-$2"
+  printf '# W\n\n### Slice A: One\n\nbody-%s-%s\n' "$1" "$2" > "$tmp/repo/docs/workstreams/$1-$2/slices.md"
+  echo "$tmp/repo/docs/workstreams/$1-$2/slices.md"
+}
+wsroot="$tmp/repo/.solopowers/wsd"
+
+# (e) folder layout: slug comes from the parent folder, not "slices"
+fa=$(folder_ws 2026-01-01 auth)
+"$slice_brief" "$fa" A >/dev/null || fail "folder layout: slice-brief failed"
+[ -f "$wsroot/auth/slice-A-brief.md" ] || fail "folder layout: expected workspace 'auth'"
+[ ! -e "$wsroot/slices" ] || fail "folder layout: workspace named 'slices' must not exist"
+grep -q '^body-2026-01-01-auth$' "$wsroot/auth/slice-A-brief.md" || fail "folder layout: wrong brief content"
+[ "$(head -n1 "$wsroot/auth/progress.md")" = "# Workstream: docs/workstreams/2026-01-01-auth/slices.md" ] \
+  || fail "folder layout: ledger header must name its slices.md"
+
+# (f) two folders sharing a topic get different workspaces, each owning its header
+fb=$(folder_ws 2026-02-01 auth)
+"$slice_brief" "$fb" A >/dev/null || fail "second folder: slice-brief failed"
+[ -f "$wsroot/auth-2026-02-01/slice-A-brief.md" ] || fail "second folder: expected workspace 'auth-2026-02-01'"
+grep -q '^body-2026-02-01-auth$' "$wsroot/auth-2026-02-01/slice-A-brief.md" || fail "second folder: wrong brief content"
+grep -q '^body-2026-01-01-auth$' "$wsroot/auth/slice-A-brief.md" || fail "second folder overwrote the first workspace"
+[ "$(head -n1 "$wsroot/auth-2026-02-01/progress.md")" = "# Workstream: docs/workstreams/2026-02-01-auth/slices.md" ] \
+  || fail "second folder: ledger header must name its slices.md"
+[ "$(head -n1 "$wsroot/auth/progress.md")" = "# Workstream: docs/workstreams/2026-01-01-auth/slices.md" ] \
+  || fail "first folder ledger header changed"
+# rerun resolves to the same workspaces
+"$slice_brief" "$fa" A | grep -q 'workspace: auth)' || fail "rerun of first folder changed workspace"
+"$slice_brief" "$fb" A | grep -q 'workspace: auth-2026-02-01)' || fail "rerun of second folder changed workspace"
+
+# (g) single-file workstream behaves as before
+printf '# W\n\n### Slice A: One\n\nbody-single\n' > "$tmp/repo/docs/workstreams/2026-03-01-single.md"
+"$slice_brief" "$tmp/repo/docs/workstreams/2026-03-01-single.md" A >/dev/null || fail "single file: slice-brief failed"
+[ -f "$wsroot/single/slice-A-brief.md" ] || fail "single file: expected workspace 'single'"
+[ "$(head -n1 "$wsroot/single/progress.md")" = "# Workstream: docs/workstreams/2026-03-01-single.md" ] \
+  || fail "single file: ledger header changed"
+
+# (h) explicit SLUG_OVERRIDE still wins, for folder and single-file layouts
+"$slice_brief" "$fa" A custom-folder >/dev/null || fail "override (folder): slice-brief failed"
+[ -f "$wsroot/custom-folder/slice-A-brief.md" ] || fail "override (folder): expected workspace 'custom-folder'"
+"$slice_brief" "$tmp/repo/docs/workstreams/2026-03-01-single.md" A custom-single >/dev/null || fail "override (single): slice-brief failed"
+[ -f "$wsroot/custom-single/slice-A-brief.md" ] || fail "override (single): expected workspace 'custom-single'"
+
 echo 'slice-brief tests passed'
