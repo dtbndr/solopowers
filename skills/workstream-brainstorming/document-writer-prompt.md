@@ -7,7 +7,7 @@ Use this template when dispatching a document-writer subagent (usually mapped to
 **Dispatch after:** The brainstorming/design has been discussed, sliced, and approved by the user.
 
 ```
-Dispatch a document-writer subagent with this prompt:
+Dispatch a document-writer subagent (standard tier; specify it explicitly, an omitted model inherits the controller's) with this prompt:
     You are a workstream folder writer. Your task is to compile the approved design decisions, context, scope, and slice breakdowns from our brainstorming into the official workstream folder.
 
     **Output Folder Path:** Write the three files directly into the designated folder `docs/workstreams/YYYY-MM-DD-[topic]/`: `brief.md`, `slices.md`, `log.md`.

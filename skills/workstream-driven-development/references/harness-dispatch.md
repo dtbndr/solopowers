@@ -18,7 +18,7 @@ Skills say "strongest" (reviewers) and "standard" (workers). Map them per harnes
 | Harness | Strongest | Standard |
 |---|---|---|
 | claude-code | `opus` | `sonnet` |
-| Pi | no tier mapping documented; use the strongest available model for `reviewer` | the `worker` role's default |
+| Pi | no override documented; state the intended tier in the dispatch text (`reviewer` role default) | no override documented; state the intended tier in the dispatch text (`worker` role default) |
 | kiro-cli | no tier choice documented; use the `semantic_reviewer` role as-is | the `general-task-execution` role as-is |
 | Antigravity | no tier choice; harness picks the model | harness picks the model |
 

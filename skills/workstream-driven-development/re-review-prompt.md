@@ -104,8 +104,8 @@ Subagent (general-purpose):
 ```
 
 **Placeholders:**
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection; scoped
-  strongest tier, even for small fix diffs
+- `[MODEL]` — REQUIRED: strongest tier per SKILL.md Model Selection, even for scoped
+  re-reviews of small fix diffs
 - `[SLICE_ID]` — the slice identifier (e.g. `A`, `A1`); `end-smoke` in the end-smoke fix loop, where "slice brief" means the findings file
 - `[ROUND]` — current fix round number (e.g. `1`, `2`)
 - `[BRIEF_FILE]` — the slice brief file (end-smoke fix loop: `end-smoke-findings.md` plus the `brief.md` acceptance boundary, see fix-loop.md; otherwise `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from; run `scripts/` helpers by their absolute path, from the working tree)

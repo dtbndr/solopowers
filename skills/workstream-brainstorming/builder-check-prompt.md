@@ -1,6 +1,6 @@
 # Builder Check Prompt for Workstream Folders
 
-Dispatch a fresh subagent with this prompt once the workstream folder is drafted to evaluate it from an implementer's perspective.
+Dispatch a fresh subagent (strongest tier; specify it explicitly, an omitted model inherits the controller's) with this prompt once the workstream folder is drafted to evaluate it from an implementer's perspective.
 
 ```
 You are a software engineer who has been handed a workstream folder to implement slice-by-slice. You will not be able to talk to the person who wrote it.

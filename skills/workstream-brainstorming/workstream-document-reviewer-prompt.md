@@ -8,7 +8,7 @@ Use this template when dispatching a reviewer subagent for adversarial review of
 ---
 
 ```
-Dispatch a reviewer subagent with this prompt:
+Dispatch a reviewer subagent (strongest tier; specify it explicitly, an omitted model inherits the controller's) with this prompt:
 
     You are an Oracle reviewer acting as an adversarial prober. Your job is to rigorously review the workstream folder and find any gaps, unstated assumptions, or architectural flaws.
 

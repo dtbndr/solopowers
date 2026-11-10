@@ -122,6 +122,8 @@ digraph workstream_brainstorming {
 
 ## Platform-Specific Subagent Dispatch
 
+Model tier: document-reviewer and builder-check use the strongest tier; document-writer uses the standard tier (definitions: `solopowers:workstream-driven-development` Roles and Model Selection, `references/harness-dispatch.md`). Specify the tier explicitly; an omitted model inherits the controller's.
+
 Use the table below to dispatch document-writer and document-reviewer subagents on your harness:
 
 | Platform | Dispatch document-writer | Dispatch document-reviewer |

@@ -212,7 +212,7 @@ reviewer subagent:
 
 **Placeholders** (run `scripts/` helpers by their absolute path, from the working tree):
 
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
+- `[MODEL]` — REQUIRED: strongest tier per SKILL.md Model Selection
 - `[BRIEF_FILE]` — REQUIRED: the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID`
   prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
