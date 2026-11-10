@@ -43,6 +43,8 @@ digraph workstream_execution {
         "Append complete line,\nmark slice complete" [shape=box];
     }
 
+    "Resume? (references/resuming.md step 0)" [shape=diamond];
+    "Resume per references/resuming.md\n(skip isolation, log.md, wsd-workspace setup)" [shape=box];
     "Read brief.md + slices.md, extract all slices, create Todo" [shape=box];
     "Pre-flight scan\n(references/preflight.md)" [shape=box];
     "Operator chooses isolation\n(ask once)" [shape=diamond];
@@ -53,6 +55,9 @@ digraph workstream_execution {
     "Verify whole workstream\n(slices.md Final verification)" [shape=box];
     "Final review & finish\n(references/final-review.md)" [shape=box style=filled fillcolor=lightgreen];
 
+    "Resume? (references/resuming.md step 0)" -> "Resume per references/resuming.md\n(skip isolation, log.md, wsd-workspace setup)" [label="yes"];
+    "Resume? (references/resuming.md step 0)" -> "Read brief.md + slices.md, extract all slices, create Todo" [label="no (first run)"];
+    "Resume per references/resuming.md\n(skip isolation, log.md, wsd-workspace setup)" -> "Dispatch implementer subagent\n(./implementer-prompt.md)" [label="per resume table"];
     "Read brief.md + slices.md, extract all slices, create Todo" -> "Pre-flight scan\n(references/preflight.md)";
     "Pre-flight scan\n(references/preflight.md)" -> "Operator chooses isolation\n(ask once)";
     "Operator chooses isolation\n(ask once)" -> "Worktree\n(using-git-worktrees once)" [label="worktree"];
@@ -79,7 +84,7 @@ digraph workstream_execution {
 }
 ```
 
-*Diagram labels describe workflow roles; see Harness Dispatch section below for how to dispatch on your harness.*
+*Diagram labels describe workflow roles; see Harness Dispatch below for your harness.*
 
 ## Prompt Templates and Scripts
 
@@ -102,6 +107,8 @@ Detailed procedures that the controller reads fresh at specific workflow steps l
 - [references/fix-loop.md](references/fix-loop.md) - Bounded 4-round fix loop, cap escalation to the human, and test rules.
 - [references/final-review.md](references/final-review.md) - Final whole-workstream review, no second fix wave, and cleanup.
 - [references/isolation.md](references/isolation.md) - Branch-or-worktree choice, branch-mode rules, `log.md` setup.
+- [references/harness-dispatch.md](references/harness-dispatch.md) - Per-harness subagent dispatch and escalation tables.
+- [references/reviewer-prompts.md](references/reviewer-prompts.md) - Rules for filling the reviewer prompt template.
 - [references/resuming.md](references/resuming.md) - Durable progress ledger, workspace identity, header parsing, isolation mode from `log.md`, and session resume.
 - [references/handling-reports.md](references/handling-reports.md) - Handling non-DONE worker statuses (`BLOCKED`, `NEEDS_CONTEXT`, `DONE_WITH_CONCERNS`).
 - [references/cannot-verify.md](references/cannot-verify.md) - Resolving "⚠️ Cannot verify from diff" reviewer items.
@@ -124,23 +131,7 @@ Always specify the model explicitly when dispatching a subagent. An omitted mode
 
 ## Harness Dispatch
 
-Use the table below to dispatch implementer and reviewer subagents on your harness:
-
-| Harness | Dispatch implementer | Dispatch reviewer |
-|---|---|---|
-| Pi | built-in `worker` role | built-in `reviewer` role |
-| kiro-cli | `orchestrate_subagent(role: general-task-execution)` | `orchestrate_subagent(role: semantic_reviewer)` |
-| claude-code | `Task` tool with implementer prompt | `Task` tool with reviewer prompt |
-| Antigravity | describe the implementation task in natural language; harness spawns dynamically | describe the review task in natural language; harness spawns dynamically |
-
-### Escalation (subagent needs controller input mid-task)
-
-| Harness | How to escalate |
-|---|---|
-| Pi | `contact_supervisor` MCP tool |
-| kiro-cli | surface the question in response; controller resumes |
-| claude-code | surface the question in response; controller resumes |
-| Antigravity | subagent reports back; controller resumes with answer |
+How to dispatch implementer and reviewer subagents, and how they escalate, per harness: [references/harness-dispatch.md](references/harness-dispatch.md).
 
 ## Handling Worker Status
 
@@ -150,7 +141,9 @@ When `DONE`: Generate the review package (`bash scripts/review-package BASE HEAD
 
 ## Execution Flow
 
-### 1. Initial Set Up (Start of Workstream)
+### 1. Resume Check, then Initial Set Up
+
+- **Resume check (FIRST, before pre-flight, the isolation choice, `log.md` creation, or any `wsd-workspace` call).** Decide from git state whether a workstream unit already exists by following step 0 of [references/resuming.md](references/resuming.md) (`git worktree list`, `ws/<slug>` branch, `Isolation:` line in `log.md`). If it does, this is a RESUME: follow `references/resuming.md` from step 0 and SKIP the rest of this section's isolation choice, `log.md` creation and `wsd-workspace` bullets. If no unit exists, it is a first run: continue below.
 
 - Read `<folder>/brief.md` (acceptance boundary, success criteria, final smoke checks) and `<folder>/slices.md` (preamble: key files, invariant, assumptions, final-verification commands; then the slices). Extract all slices.
 - Run the pre-flight scan over `brief.md` and `slices.md` (see [references/preflight.md](references/preflight.md)) before dispatching Slice 1.
@@ -158,7 +151,7 @@ When `DONE`: Generate the review package (`bash scripts/review-package BASE HEAD
 - Right after isolation setup, create and commit `<folder>/log.md` inside the isolation unit as its first commit (never on the default branch); line 1 is `# Log`, first body line `Isolation: <branch|worktree> — branch <name>` (see [references/isolation.md](references/isolation.md)).
 - Resolve the workspace with `bash scripts/wsd-workspace <folder>/slices.md` (records the path in the ledger header; disambiguates slug collisions).
 - Create a `todo` task list: one task per slice, plus "Final verification and close branch".
-- Check for a durable progress ledger before dispatching (see [references/resuming.md](references/resuming.md)). Completed slices are not re-dispatched. On resume, read the isolation mode from the isolation unit's `log.md` and do not ask again; `progress.md` (gitignored, in `.solopowers/wsd/<slug>/`) stays the source of truth for slice state, while `log.md` is the committed human/agent record.
+- `progress.md` (gitignored, in `.solopowers/wsd/<slug>/`) is the source of truth for slice state; `log.md` is the committed human/agent record. Completed slices are never re-dispatched.
 
 ### 2. Dispatching the Worker
 
@@ -198,16 +191,7 @@ Everything pasted into a prompt or returned by a subagent stays resident in your
 
 ## Constructing Reviewer Prompts
 
-Per-slice reviews are slice-scoped gates; the broad review happens once at the final whole-workstream review. When filling the reviewer template:
-
-- Do not add open-ended directives like "check all uses" or "run race tests if useful" without a slice-specific reason.
-- Do not ask a reviewer to re-run tests the worker already ran — the worker's report carries the test evidence.
-- Do not pre-judge findings — never instruct a reviewer to ignore or not flag a specific issue. If the prompt contains "do not flag," "don't treat X as a defect," or "the workstream chose" — stop: you are pre-judging.
-- Copy binding requirements verbatim from the slice header in `slices.md` into the global-constraints block.
-- Pass the diff as a file using `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` with the recorded `BASE` commit (never `HEAD~1`).
-- Do not paste accumulated prior-slice history into later dispatches.
-- Dispatch fix subagents for Critical and Important findings. Record Minor findings in the progress ledger as deferred minors.
-- Findings labeled workstream-mandated are the user's decision: present the finding and the workstream text to the user.
+Rules for filling the reviewer template (slice-scoped, no pre-judging, diff as a file): [references/reviewer-prompts.md](references/reviewer-prompts.md). Read before every reviewer dispatch.
 
 ## Durable Progress and Session Resume
 
