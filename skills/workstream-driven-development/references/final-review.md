@@ -5,7 +5,7 @@ Part of `solopowers:workstream-driven-development`. Every slice in the workstrea
 ## Whole-Workstream Review
 
 The final whole-workstream review inspects the entire branch diff across all completed slices:
-1. Run the commands listed in the **Final verification** section of `<folder>/slices.md` (e.g. full test suite, linter, typecheck, build), and check the result against the acceptance boundary and success criteria in `<folder>/brief.md`. Then run the end smoke step ([end-smoke.md](end-smoke.md)) before dispatching the final review. Skip both Final verification and end smoke when `progress.md` already has `End smoke: passed`, `passed (rulings accepted)` or `skipped` (the SKILL graph ran them before this step); after an end-smoke fix loop, Final verification is re-run in full first.
+1. Run the commands listed in the **Final verification** section of `<folder>/slices.md` (e.g. full test suite, linter, typecheck, build), and check the result against the acceptance boundary and success criteria in `<folder>/brief.md`. Then run the end smoke step ([end-smoke.md](end-smoke.md)) before dispatching the final review. Skip both Final verification and end smoke when `progress.md` already has `End smoke: passed`, `passed (rulings accepted)` or `skipped` (these are written only after the full Final verification passed, so it is current).
 2. Generate the full review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
    bash scripts/review-package "$MERGE_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
@@ -28,7 +28,7 @@ If the final whole-workstream review returns P0/P1 findings (P2/P3 are logged to
 ## Finish and Cleanup
 
 1. Confirm that the final review is clean and all final verification commands pass.
-2. Record the finish in `<folder>/log.md`, including the fixed-format marker line `Final review: clean (at <h7>)` (`<h7>` = the reviewed head, 7 chars) and the `Smoke:` lines, and set `brief.md` `**Status**` to `Done`, together with the `P2/P3:` entry copied from `<workspace>/p2p3.md` (if any), and commit those changes (explicit paths). The committed marker is the durable finished state; the local ledger is not.
+2. Check `<folder>/log.md` first (a resumed run may already have uncommitted `Smoke:`, `P2/P3:` or `Final review:` lines; never append duplicates). Record the finish in `<folder>/log.md`, including the fixed-format marker line `Final review: clean (at <h7>)` (`<h7>` = the reviewed head, 7 chars) and the `Smoke:` lines, and set `brief.md` `**Status**` to `Done`, together with the `P2/P3:` entry copied from `<workspace>/p2p3.md` (if any), and commit those changes (explicit paths). The committed marker is the durable finished state; the local ledger is not.
 3. Only after that commit, delete the workstream workspace directory:
    ```bash
    rm -rf ".solopowers/wsd/<resolved-workspace>/"
