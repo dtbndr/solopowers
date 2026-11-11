@@ -97,6 +97,7 @@ A **breaking change** (major bump) is any of the following:
 - a change to the `.solopowers/wsd/` local state layout, unless existing in-flight workstreams keep working unchanged
 - a change to a helper script interface
 - an incompatible change to how WSD calls `using-git-worktrees` / `finishing-a-development-branch` (name, inputs, outcomes)
+- dropping a harness from the dispatch tables
 
 New skills or backwards-compatible behavior changes are minor; fixes are patch.
 

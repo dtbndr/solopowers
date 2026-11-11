@@ -144,7 +144,6 @@ Use the table below to dispatch document-writer and document-reviewer subagents 
 | Platform | Dispatch document-writer | Dispatch document-reviewer |
 |---|---|---|
 | Pi | built-in `delegate` role (`context: "fork"`) | built-in `oracle` role (`context: "fresh"`) |
-| kiro-cli | `orchestrate_subagent(role: plan-composer)` | `orchestrate_subagent(role: architecture-oracle)` |
 | claude-code | `Task` tool with document-writer prompt | `Task` tool with document-reviewer prompt |
 | Antigravity | describe the document-writing task in natural language | describe the adversarial review task in natural language |
 

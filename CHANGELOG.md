@@ -8,6 +8,10 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 - MIT `LICENSE`, preserving upstream's copyright notice (obra/superpowers, Copyright (c) 2025 Jesse Vincent).
 
+### Removed
+
+- kiro-cli harness support: dropped its rows from the dispatch tables (Pi, claude-code and Antigravity remain). **Breaking for kiro-cli users**; pin `v1.0.0` to keep it.
+
 ## [1.0.0] - 2026-11-11
 
 Baseline release, summarising the state at first tagging:
