@@ -59,9 +59,14 @@ AGENTS.md, CLAUDE.md          # Agent guidance
 # From local path
 npx skills add ~/Development/skills-ws/solopowers
 
-# From GitHub (after pushing)
+# From GitHub (tracks main)
 npx skills add https://github.com/dtbndr/solopowers
+
+# Pinned to a release (requires skills CLI >= 1.8)
+npx skills add dtbndr/solopowers@v1.0.0
 ```
+
+Unpinned installs track `main`; pin a tag for a stable version.
 
 ## Agent Dispatch
 

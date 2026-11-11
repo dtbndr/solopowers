@@ -85,3 +85,27 @@ bash tests/workstream-brainstorming/test-external-review-tools
 ```
 
 The inventory comparison verifies the current skill table in `using-solopowers` against the actual skill directories; migration aliases in `## Superseded Skills` are intentionally excluded.
+
+## Releases
+
+Versioning is SemVer, starting at `v1.0.0`, with annotated tags on `main`. Numbering is our own: upstream (superpowers) tags are not ours and are never fetched (`remote.upstream.tagOpt = --no-tags`).
+
+A **breaking change** (major bump) is any of the following:
+
+- a skill removed or renamed without a `## Superseded Skills` alias in `using-solopowers`
+- a change to the workstream folder contract: location (`docs/workstreams/YYYY-MM-DD-<topic>/`), file set (`brief.md`, `slices.md`, `log.md`), or markers skills parse (e.g. `Final review: clean`, `Isolation:` in `log.md`), unless existing in-flight workstreams keep working unchanged
+- a change to the `.solopowers/wsd/` local state layout, unless existing in-flight workstreams keep working unchanged
+- a change to a helper script interface
+- an incompatible change to how WSD calls `using-git-worktrees` / `finishing-a-development-branch` (name, inputs, outcomes)
+
+New skills or backwards-compatible behavior changes are minor; fixes are patch.
+
+Procedure (always pass `-R dtbndr/solopowers` to `gh`). `verify.yml` covers only part of the checklist, so the local run stays required.
+
+1. The Verification Checklist passes locally.
+2. Move `CHANGELOG.md` `Unreleased` entries under `## [X.Y.Z] - YYYY-MM-DD`.
+3. Commit.
+4. `git push origin main`.
+5. Wait for CI on that commit (the run may take a few seconds to register): `gh run watch -R dtbndr/solopowers --exit-status $(gh run list -R dtbndr/solopowers --workflow verify.yml --commit "$(git rev-parse HEAD)" --json databaseId -q '.[0].databaseId')`. If the run id is empty (run not registered yet), wait a few seconds and rerun the lookup. If CI is red, fix forward on main and repeat steps 1-5; never tag a red commit.
+6. `git tag -a vX.Y.Z -m "vX.Y.Z"`, then `git push origin vX.Y.Z` (never `git push --tags`).
+7. `awk '/^## \[X.Y.Z\]/{f=1;next} /^## \[/{f=0} f' CHANGELOG.md | gh release create vX.Y.Z -R dtbndr/solopowers --verify-tag --notes-file -`
