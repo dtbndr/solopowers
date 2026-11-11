@@ -68,6 +68,10 @@ npx skills add dtbndr/solopowers@v1.0.0
 
 Unpinned installs track `main`; pin a tag for a stable version.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Agent Dispatch
 
 solopowers dispatch skills include a platform routing table for Pi, kiro-cli, claude-code, and Antigravity. Each dispatch-bearing skill (e.g., `workstream-driven-development`, `dispatching-parallel-agents`, `dispatching-code-review`, `workstream-brainstorming`) contains a dispatch section (named `## Harness Dispatch` or `## Platform-Specific Subagent Dispatch` depending on the skill) with the concrete dispatch mechanism for your platform. No custom agent definitions or bridge skills are needed.
