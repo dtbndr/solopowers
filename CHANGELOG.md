@@ -4,6 +4,8 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-11
+
 ### Added
 
 - MIT `LICENSE`, preserving upstream's copyright notice (obra/superpowers, Copyright (c) 2025 Jesse Vincent).
