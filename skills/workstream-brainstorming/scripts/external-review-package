@@ -16,7 +16,7 @@ path=${bpath%/brief.md}; [ "$path/slices.md" = "$spath" ] || { echo 'unexpected 
 head=$(git rev-parse HEAD 2>/dev/null) || { echo 'HEAD is unresolved' >&2; exit 3; }
 for f in "$bpath" "$spath"; do git diff --quiet -- "$f" || { echo 'workstream has unstaged changes' >&2; exit 4; }; git diff --cached --quiet -- "$f" || { echo 'workstream has staged changes' >&2; exit 4; }; done
 bblob=$(git rev-parse "HEAD:$bpath" 2>/dev/null) && sblob=$(git rev-parse "HEAD:$spath" 2>/dev/null) || { echo 'workstream missing at HEAD' >&2; exit 3; }
-tmpb=$(mktemp); tmps=$(mktemp); trap 'rm -f "$tmpb" "$tmps" "${tmp:-}"' EXIT; git cat-file blob "$bblob" > "$tmpb"; git cat-file blob "$sblob" > "$tmps"
+tmpb=$(mktemp "${TMPDIR:-/tmp}/erp.XXXXXX"); tmps=$(mktemp "${TMPDIR:-/tmp}/erp.XXXXXX"); trap 'rm -f "$tmpb" "$tmps" "${tmp:-}" "${ltmp:-}"' EXIT; git cat-file blob "$bblob" > "$tmpb"; git cat-file blob "$sblob" > "$tmps"
 cmp -s "$tmpb" "$bpath" && cmp -s "$tmps" "$spath" || { echo 'workstream bytes differ from committed blobs' >&2; exit 4; }; digest=$(printf '%s\n%s\n' "$bblob" "$sblob" | shasum -a 256 | awk '{print $1}')
 ws=$("${BASH:-bash}" "$workspace_tool" "$path")
 prior= dispositions=; areas=(); disposition_lines=
@@ -46,9 +46,9 @@ fi
 stamp=${EXTERNAL_REVIEW_TEST_STAMP:-$(date -u +%Y%m%dT%H%M%S%3N 2>/dev/null || date -u +%Y%m%dT%H%M%S)}; suffix=${EXTERNAL_REVIEW_TEST_SUFFIX:-$(LC_ALL=C tr -dc 'a-f0-9' </dev/urandom | head -c 16 || true)}; [ -n "$suffix" ] || suffix=$$; id="${mode}-${stamp}-${suffix}"; final="$ws/packages/$id.review-package.md"; tmp="$ws/packages/.${id}.$$.$RANDOM.tmp"
 { echo '# External Workstream Folder Review Package'; echo; echo 'Schema-Version: 1'; echo "Package-ID: $id"; echo "Mode: $mode"; echo "Created-UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"; echo "Repository-Root: $root"; echo "Commit: $head"; echo "Workstream-Path: $path"; echo "Brief-Blob-OID: $bblob"; echo "Slices-Blob-OID: $sblob"; echo "Workstream-SHA256: $digest"; echo "Package-Path: $final"; echo; echo 'The Git blobs above (brief.md and slices.md; log.md is excluded) are the reviewed snapshot. The workstream folder remains the only design artifact.'; if [ "$mode" = confirmation ]; then echo; echo "Prior-Report: $prior"; echo "Prior-Report-SHA256: $(sha "$prior")"; echo 'Accepted-Blocker-Dispositions:'; printf '%s' "$disposition_lines"; echo 'Affected-Areas:'; printf '%s\n' "${areas[@]}"; fi; } > "$tmp"
 ln "$tmp" "$final" 2>/dev/null || { echo 'package collision or publication failure' >&2; exit 6; }; rm -f "$tmp"
-pdigest=$(sha "$final"); (set -o noclobber; printf '%s\n' "$pdigest" > "$final.sha256") 2>/dev/null || { rm -f "$final"; echo 'package digest publication failure' >&2; exit 6; }; trap - EXIT
+pdigest=$(sha "$final"); (set -o noclobber; printf '%s\n' "$pdigest" > "$final.sha256") 2>/dev/null || { rm -f "$final"; echo 'package digest publication failure' >&2; exit 6; }
 launch="Launch Harness B with:
 Use solopowers:workstream-brainstorming external reviewer prompt to review package $final. Read evidence only through Git objects at its recorded commit; do not edit the workstream folder or brainstorm. Write a draft under $ws/drafts/, then publish it with: $report_tool publish $final DRAFT_FILE"
-lfinal="$ws/packages/$id.launch.txt"; ltmp="$ws/packages/.${id}.$$.$RANDOM.launch.tmp"; trap 'rm -f "$ltmp"' EXIT
-{ printf '%s\n' "$launch" > "$ltmp" && ln "$ltmp" "$lfinal"; } 2>/dev/null || { rm -f "$ltmp" "$final" "$final.sha256"; echo 'launch file publication failure' >&2; exit 6; }; rm -f "$ltmp"; trap - EXIT
+lfinal="$ws/packages/$id.launch.txt"; ltmp="$ws/packages/.${id}.$$.$RANDOM.launch.tmp"
+{ printf '%s\n' "$launch" > "$ltmp" && ln "$ltmp" "$lfinal"; } 2>/dev/null || { rm -f "$ltmp" "$final" "$final.sha256"; echo 'launch file publication failure' >&2; exit 6; }; rm -f "$ltmp"
 echo "LAUNCH_FILE=$lfinal"; echo "PACKAGE_PATH=$final"; echo "PACKAGE_SHA256=$pdigest"; printf '%s\n' "$launch"

@@ -10,6 +10,9 @@ printf x >> 'docs/workstreams/a odd/slices.md'; expect_fail "$pkg" initial 'docs
 pkgout=$($pkg initial 'docs/workstreams/a odd'); package=$(printf '%s\n' "$pkgout"|sed -n 's/^PACKAGE_PATH=//p'); [ -f "$package" ] && [ -f "$package.sha256" ] || fail package
 check_launch(){ lo=$1; [ "$(printf '%s\n' "$lo"|head -n1|cut -c1-12)" = LAUNCH_FILE= ] || fail "$2 LAUNCH_FILE first line"; lf=$(printf '%s\n' "$lo"|sed -n '1s/^LAUNCH_FILE=//p'); pp=$(printf '%s\n' "$lo"|sed -n 's/^PACKAGE_PATH=//p'); [ -f "$lf" ] && grep -Fq 'Launch Harness B with:' "$lf" && grep -Fq "$pp" "$lf" || fail "$2 launch file"; [ "$(cat "$lf")" = "$(printf '%s\n' "$lo"|sed -n '/^Launch Harness B with:/,$p')" ] || fail "$2 launch content"; }
 check_launch "$pkgout" initial
+leak=$tmp/leakcheck; mkdir "$leak"; no_leak(){ [ -z "$(ls -A "$leak")" ] || fail "temp files leaked: $1"; }
+TMPDIR=$leak "$pkg" initial 'docs/workstreams/a odd' >/dev/null; no_leak 'initial success'
+printf x >> 'docs/workstreams/a odd/slices.md'; TMPDIR=$leak "$pkg" initial 'docs/workstreams/a odd' >/dev/null 2>&1 && fail 'dirty run succeeded'; git checkout -- 'docs/workstreams/a odd/slices.md'; no_leak 'initial early failure'
 make_draft(){ cat > "$1" <<EOF
 Schema-Version: 1
 Package-ID: $(field Package-ID "$package")
@@ -48,6 +51,7 @@ printf 'Disposition: D1|accepted|preserve final export\nDisposition: D1|accepted
 printf 'Disposition: D2|accepted|wrong lineage\n' > "$tmp/wrong-lineage"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$blockreport" --dispositions "$tmp/wrong-lineage" --affected-area 'Slice A'
 printf 'Disposition: D1|accepted|preserve final export\n' > "$tmp/dispositions"; relative_blockreport=${blockreport#$PWD/}; conf=$($pkg confirmation 'docs/workstreams/a odd' --prior-report "$relative_blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'); confpkg=$(printf '%s\n' "$conf"|sed -n 's/^PACKAGE_PATH=//p'); [ "$(field Prior-Report "$confpkg")" = "$blockreport" ] || fail 'confirmation prior report was not canonicalized'
 check_launch "$conf" confirmation
+TMPDIR=$leak "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$relative_blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A' >/dev/null; no_leak 'confirmation success'
 make_conf_draft(){ local draft=$1 conf_package=${2:-$confpkg}; cat > "$draft" <<EOF
 Schema-Version: 1
 Package-ID: $(field Package-ID "$conf_package")
