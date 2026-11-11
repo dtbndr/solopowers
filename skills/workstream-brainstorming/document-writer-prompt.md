@@ -1,62 +1,90 @@
-# Workstream Document Writer Prompt Template
+# Workstream Folder Writer Prompt Template
 
-Use this template when dispatching a document-writer subagent (usually mapped to Pi's built-in `delegate` role) to write the finalized Workstream Document.
+Use this template when dispatching a document-writer subagent (usually mapped to Pi's built-in `delegate` role) to write the finalized workstream folder.
 
-**Purpose:** Take the approved brainstorming, design decisions, and slice breakdowns, and structure them into the formal canonical Workstream Document.
+**Purpose:** Take the approved brainstorming, design decisions, and slice breakdowns, and structure them into the canonical workstream folder: `brief.md`, `slices.md`, and `log.md`.
 
 **Dispatch after:** The brainstorming/design has been discussed, sliced, and approved by the user.
 
 ```
-Dispatch a document-writer subagent with this prompt:
-    You are a Workstream Document writer. Your task is to compile the approved design decisions, context, scope, and slice breakdowns from our brainstorming into the official Workstream Document.
+Dispatch a document-writer subagent (standard tier; specify it explicitly, an omitted model inherits the controller's) with this prompt:
+    You are a workstream folder writer. Your task is to compile the approved design decisions, context, scope, and slice breakdowns from our brainstorming into the official workstream folder.
 
-    **Output File Path:** Write the completed document directly to the designated file path under `docs/workstreams/YYYY-MM-DD-[topic].md`.
+    **Output Folder Path:** Write the three files directly into the designated folder `docs/workstreams/YYYY-MM-DD-[topic]/`: `brief.md`, `slices.md`, `log.md`.
+    **Opt-ins:** playback=<on|off>, external review=<on|off> (if not given, write playback=off, external review=off)
     **Context and Brainstorming Summary:** [BRAINSTORMING_SUMMARY_AND_SLICES]
 
     ## Invariant Constraints
 
-    1. **Single-Artifact Invariant:** This is a Workstream Document, which serves as both the design AND the implementation plan. This is NOT a separate plan or design specification. Do NOT create a separate `plan.md` or `spec.md`.
-    2. **No Implementation Code Constraint:** The workstream document must contain NO production implementation code or pseudo-code. Key file paths, test commands, API contracts, column names, and verification instructions are highly encouraged, but actual logic/code generation must be offloaded entirely to the subsequent implementer.
-    3. **Actionable Slices:** Ensure each slice is sized appropriately for a lightweight, low-context implementer, with clear TDD tasks (red -> green loop) and manual smoke tests.
-    4. **Commit the File:** Once the file is written or revised, commit the canonical document to the repository.
-    5. **Decision Record:** Every consequential choice—one affecting rework, safety/correctness, data/package boundaries, public or inter-slice contracts, or later-slice dependencies—must have a complete decision-table row. Keep incidental local choices under Implementation discretion. State `None` when no Unresolved design blockers remain.
+    1. **Single-Artifact Invariant:** The workstream folder serves as both the design AND the implementation plan. This is NOT a separate plan or design specification. Do NOT create a separate `plan.md` or `spec.md`.
+    2. **No Implementation Code Constraint:** The folder must contain NO production implementation code or pseudo-code. Key file paths, test commands, API contracts, column names, and verification instructions are highly encouraged, but actual logic/code generation must be offloaded entirely to the subsequent implementer.
+    3. **Actionable Slices:** Ensure each slice is sized appropriately for a standard-tier worker with limited context, with clear TDD tasks (red -> green loop) and automated verification per slice (no per-slice manual smoke tests).
+    4. **Commit the Files:** Once the files are written or revised, commit the folder to the repository.
+    5. **Decision Record:** Every consequential choice (one affecting rework, safety/correctness, data/package boundaries, public or inter-slice contracts, or later-slice dependencies) must appear as a one-line bullet in `brief.md` AND have fuller detail in the `slices.md` preamble. Keep incidental local choices under Implementation discretion. State `None` when no Unresolved design blockers remain; any unresolved design blocker other than `None` MUST also appear in `brief.md` Open questions so the operator sees it.
+    6. **Brief Discipline (hard limits):** `brief.md` is the only file the operator reads and approves. It MUST be about 40 lines or fewer, contain NO tables anywhere, and write every key decision as ONE bullet of the form `decision — why`. Do not restate slices or the agent preamble in it. If it grows past one screen, move detail to `slices.md`.
+    7. **Section Ownership:** Put only the following in `brief.md`: title/date/status; Why (2-4 lines); Happy path and acceptance boundary (testable bullets); Key decisions; Open questions; Final smoke checks (only P0/P1 checks that agents cannot perform or are not authorized to perform; write `none` if empty); Pointers linking `slices.md` and `log.md`. Everything else goes in `slices.md`.
+    8. **log.md:** Create it with the header `# <Topic> Workstream Log` and one line `Opt-ins: playback=<on|off>, external review=<on|off>` (the values from Opt-ins above), nothing else. The execution skill appends its content after it (`Isolation: ...` first).
 
     ## Required Structure & Schema
 
-    You MUST write the document using this exact Markdown structure:
+    You MUST write the files using this exact Markdown structure.
+
+    ### brief.md
 
     ```markdown
-    # [Topic] Workstream
+    # [Topic] Workstream Brief
 
     **Date**: YYYY-MM-DD
     **Status**: Planned
-    **Merged**: [Target branch, e.g. dev or main]
-    **Objective**: Clear, concise statement of the ultimate goal.
 
-    ## Context
+    ## Why
+    2-4 lines: the problem and what the operator gets.
 
-    ### Problem
-    What is currently wrong, inefficient, or missing?
+    ## Happy path and acceptance boundary
+    - Testable outcome 1
+    - Testable outcome 2
+    - Boundary: what is explicitly not part of this workstream
 
-    ### Approved simplification
-    What constraints have been agreed upon to simplify the task and avoid over-engineering?
+    ## Key decisions
+    - [decision] — [why]
+    - [decision] — [why]
 
-    ### Target behaviour
-    How should the system behave once the workstream is finished?
+    ## Open questions
+    - [question for the operator, or `none`]
 
-    ### Deliberate simplification for this workstream
-    What is explicitly deferred, out of scope, or accepted as a limitation for this workstream?
+    ## Final smoke checks
+    - [only P0/P1 checks agents cannot or are not authorized to perform (provider/quota use, deploy, DNS/email/account changes, physical device); `None` if empty]
 
-    ### Architecture invariant
+    ## Pointers
+    - Slices (agents only): [slices.md](slices.md)
+    - Log (agents only): [log.md](log.md)
+    ```
+
+    ### slices.md
+
+    ```markdown
+    # [Topic] Workstream Slices
+
+    Agent-facing. The operator does not need to read this file.
+
+    ## Objective
+    Clear, concise statement of the ultimate goal.
+
+    ## Scope
+    **In scope**
+    - Bullet 1
+
+    **Out of scope**
+    - Bullet 1
+
+    ## Key files
+    - `path/to/file` (`@pkg`): brief description of its role in this workstream
+
+    ## Architecture invariant
     What are the strict design, folder, or boundary rules that must never be violated?
 
-    ### Design decisions and assumptions
-
-    | ID | Settled decision | Why / evidence | Rejected alternative | Relied-on assumption | Revisit when |
-    | -- | ---------------- | -------------- | -------------------- | -------------------- | ------------ |
-    | D1 | [decision] | [rationale] | [what was rejected] | [what this depends on] | [condition that reopens it] |
-
-    Include a complete row for every consequential choice.
+    ## Assumptions and design decisions
+    For each consequential choice in the brief: the settled decision, why or evidence, the rejected alternative, the relied-on assumption, and what would reopen it. Include a complete entry for every consequential choice.
 
     ### Implementation discretion
     List intentionally local choices for WDD, such as naming, helper decomposition, local type/import mechanics, and fixture construction, where they do not affect an architecture boundary.
@@ -64,29 +92,16 @@ Dispatch a document-writer subagent with this prompt:
     ### Unresolved design blockers
     List remaining approval-blocking questions, or state `None`.
 
-    ---
-
-    ## Workstream scope
-
-    **In scope**
-    - Bullet 1
-    - Bullet 2
-
-    **Out of scope**
-    - Bullet 1
-    - Bullet 2
+    ## Final verification
+    Run all of the following before handoff. Each must pass clean:
+    - [ ] Tests pass (exact command)
+    - [ ] Type check passes (exact command)
+    - [ ] Linter passes (exact command)
+    - [ ] Formatter passes (exact command)
 
     ---
 
-    ## Key files
-
-    | File | Package | Current role |
-    | ---- | ------- | ------------ |
-    | `path/to/file` | Name or `@pkg` | Brief description of its role in this workstream |
-
-    ---
-
-    ## Scoped workstream slices
+    ## Slices
 
     Slice headings use the exact format `### Slice <SLICE_ID>: <Slice Title>`, where `<SLICE_ID>` matches `[A-Z][0-9]*`. `A` is the baseline example; `A1` and `A2` are also valid.
 
@@ -109,32 +124,17 @@ Dispatch a document-writer subagent with this prompt:
     #### Verification
     - Commands to run and assertions to check (use the project's actual test/build tooling)
 
-    #### Manual smoke test
-    - Setup / preconditions the user needs before testing
-    - Explicit user actions to perform
-    - Expected visible or behavioral outcome to confirm
-
     #### Carry-forward
     - State, APIs, or schema elements established in this slice that the next slice assumes to be present.
 
     *(Repeat for Slice A1, Slice A2, or other sequentially ordered slice IDs.)*
+    ```
 
-    ---
+    ### log.md
 
-    ## Final verification
+    ```markdown
+    # [Topic] Workstream Log
 
-    Run all of the following before handoff. Each must pass clean:
-    - [ ] Tests pass
-    - [ ] Type check passes
-    - [ ] Linter passes
-    - [ ] Formatter passes
-
-    ---
-
-    ## Success criteria
-
-    All criteria met:
-    - [ ] Specific behavior 1
-    - [ ] Specific behavior 2
+    Opt-ins: playback=<on|off>, external review=<on|off>
     ```
 ```

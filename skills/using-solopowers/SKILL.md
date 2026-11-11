@@ -35,7 +35,7 @@ These thoughts mean STOP—you're rationalizing:
 
 **Feature work, multi-file changes** → `workstream-brainstorming` → `workstream-driven-development`
 
-The workstream model has four non-negotiable invariants: one canonical Workstream Document (no separate spec/plan artifacts), strictly sequential slice execution (one at a time, never parallel), one worktree per full workstream (not per slice), and a mandatory manual smoke-test pause after every review-approved slice before advancing.
+The workstream model has four non-negotiable invariants: one canonical workstream folder (`brief.md`, the only file the operator approves, and `slices.md` and `log.md` for agents; no separate spec/plan artifacts), strictly sequential slice execution (one at a time, never parallel), one isolation unit per workstream (a branch or a worktree, the operator's choice; never per slice), and a single human smoke test at the end of the workstream, limited to P0/P1 checks agents cannot perform or are not authorized to perform (skipped when there are none).
 
 **Bug fixes, single-file changes** → work directly with `test-driven-development`.
 
@@ -52,8 +52,8 @@ The workstream model has four non-negotiable invariants: one canonical Workstrea
 | Skill | Use when... |
 |---|---|
 | `workstream-brainstorming` | Multi-file changes or behavior changes that need design |
-| `workstream-driven-development` | Executing an approved Workstream Document slice-by-slice |
-| `using-git-worktrees` | Starting feature work that needs workspace isolation |
+| `workstream-driven-development` | Executing an approved workstream folder (`brief.md` + `slices.md`) slice-by-slice |
+| `using-git-worktrees` | Worktree isolation, only when the operator chooses a worktree (rather than a branch) for a workstream |
 | `finishing-a-development-branch` | Work is complete and you need to merge, PR, or clean up |
 | `dispatching-parallel-agents` | Facing 2+ independent tasks with no shared state |
 
@@ -79,7 +79,7 @@ The workstream model has four non-negotiable invariants: one canonical Workstrea
 | Upstream skill | Replaced by |
 |---|---|
 | `brainstorming` | `workstream-brainstorming` |
-| `writing-plans` | _(eliminated — workstream doc replaces separate plans)_ |
+| `writing-plans` | _(eliminated — the workstream folder replaces separate plans)_ |
 | `executing-plans` | `workstream-driven-development` |
 | `subagent-driven-development` | `workstream-driven-development` |
 | `using-superpowers` | `using-solopowers` |

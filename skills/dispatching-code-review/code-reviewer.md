@@ -28,22 +28,22 @@ Dispatch a reviewer subagent with this prompt:
     git diff [BASE_SHA]..[HEAD_SHA]
     ```
 
-    ## The Workstream Document is a vision document
+    ## The workstream is a vision document
 
-    The Workstream Document says what the software must do. It does not enumerate every
+    The workstream (`brief.md` acceptance boundary plus `slices.md`) says what the software must do. It does not enumerate every
     input, environment, or condition the software will meet. For behavior
-    the Workstream Document is silent on, judge by what a reasonable person using this
+    the workstream is silent on, judge by what a reasonable person using this
     software would expect: a reasonable person's expectation is a
-    requirement, and a Workstream Document's silence is not permission. Grade such
-    findings by their effect on that person, not by whether the Workstream Document
+    requirement, and a workstream's silence is not permission. Grade such
+    findings by their effect on that person, not by whether the workstream
     mentions the trigger.
 
     ## Declined to judge
 
     Before your verdict, list every behavior you considered and set aside
-    as outside the plan or Workstream Document, one line each, with the reason. The
+    as outside the plan or workstream, one line each, with the reason. The
     controller/executor triages each line and anything conflicting with the plan or
-    Workstream Document goes to the user (see Constructing Reviewer Prompts); nothing
+    workstream goes to the user (see Constructing Reviewer Prompts); nothing
     you set aside is dropped silently. An empty list means you set nothing aside.
 
     ## Read-Only Review
@@ -86,7 +86,12 @@ Dispatch a reviewer subagent with this prompt:
 
     ## Calibration
 
-    Categorize issues by actual severity. Not everything is Critical.
+    Grade EVERY finding P0, P1, P2 or P3:
+
+    [SEVERITY_DEFINITIONS]
+
+    P0/P1 require evidence (file:line, failing command or test output, or a
+    concrete scenario); without it, downgrade to P2.
     Acknowledge what was done well before listing issues — accurate praise
     helps the implementer trust the rest of the feedback.
 
@@ -102,34 +107,19 @@ Dispatch a reviewer subagent with this prompt:
 
     ### Issues
 
-    #### Critical (Must Fix)
-    [Bugs, security issues, data loss risks, broken functionality]
-
-    #### Important (Should Fix)
-    [Architecture problems, missing features, poor error handling, test gaps]
-
-    #### Minor (Nice to Have)
-    [Code style, optimization opportunities, documentation polish]
-
-    For each issue:
-    - File:line reference
-    - What's wrong
-    - Why it matters
-    - How to fix (if not obvious)
+    One bullet each: `P<0-3> — <file:line> — what is wrong, why it matters,
+    how to fix (if not obvious) — Evidence: <required for P0/P1>`.
 
     ### Recommendations
     [Improvements for code quality, architecture, or process]
 
-    ### Assessment
-
-    **Ready to merge?** [Yes | No | With fixes]
-
-    **Reasoning:** [1-2 sentence technical assessment]
+    Final line, exactly one of:
+    `Verdict: CLEAN` (no P0/P1) | `Verdict: NEEDS FIXES (<n> P0/P1)`
 
     ## Critical Rules
 
     **DO:**
-    - Categorize by actual severity
+    - Grade by actual severity (P0-P3), evidence for P0/P1
     - Be specific (file:line, not vague)
     - Explain WHY each issue matters
     - Acknowledge strengths
@@ -137,7 +127,7 @@ Dispatch a reviewer subagent with this prompt:
 
     **DON'T:**
     - Say "looks good" without checking
-    - Mark nitpicks as Critical
+    - Mark nitpicks as P0/P1
     - Give feedback on code you didn't actually read
     - Be vague ("improve error handling")
     - Avoid giving a clear verdict
@@ -147,11 +137,12 @@ Dispatch a reviewer subagent with this prompt:
 **Placeholders:**
 
 - `[DESCRIPTION]` — brief summary of what was built
-- `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements)
+- `[PLAN_OR_REQUIREMENTS]` — what it should do (plan file path, task text, or requirements; if a workstream folder exists, `brief.md`'s acceptance boundary plus `slices.md`)
 - `[BASE_SHA]` — starting commit
 - `[HEAD_SHA]` — ending commit
+- `[SEVERITY_DEFINITIONS]` — P0-P3 definitions: the project's `.memory/*grounding*.md` P0/P1 definitions if present, else the default: P0 breaks stated behavior/acceptance, loses data, is a security hole, or fails build/tests; P1 is a correctness bug or missing required behavior on the intended path; P2 is real but non-blocking; P3 is nit/style
 
-**Reviewer returns:** Strengths, Issues (Critical / Important / Minor), Recommendations, Assessment
+**Reviewer returns:** Strengths, Issues (P0-P3 with evidence), Recommendations, `Verdict:` line
 
 ## Example Output
 
@@ -163,30 +154,12 @@ Dispatch a reviewer subagent with this prompt:
 
 ### Issues
 
-#### Important
-1. **Missing help text in CLI wrapper**
-   - File: index-conversations:1-31
-   - Issue: No --help flag, users won't discover --concurrency
-   - Fix: Add --help case with usage examples
-
-2. **Date validation missing**
-   - File: search.ts:25-27
-   - Issue: Invalid dates silently return no results
-   - Fix: Validate ISO format, throw error with example
-
-#### Minor
-1. **Progress indicators**
-   - File: indexer.ts:130
-   - Issue: No "X of Y" counter for long operations
-   - Impact: Users don't know how long to wait
+- P1 — index-conversations:1-31 — No --help flag, users won't discover --concurrency. Fix: add --help case. Evidence: running `index-conversations --help` starts a full index run.
+- P1 — search.ts:25-27 — Invalid dates silently return no results. Fix: validate ISO format. Evidence: `search --from 2024-13-45` exits 0 with empty output.
+- P3 — indexer.ts:130 — No "X of Y" counter for long operations.
 
 ### Recommendations
-- Add progress reporting for user experience
 - Consider config file for excluded projects (portability)
 
-### Assessment
-
-**Ready to merge: With fixes**
-
-**Reasoning:** Core implementation is solid with good architecture and tests. Important issues (help text, date validation) are easily fixed and don't affect core functionality.
+Verdict: NEEDS FIXES (2 P0/P1)
 ```

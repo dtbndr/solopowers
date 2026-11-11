@@ -4,17 +4,23 @@ set -euo pipefail
 base=$(cd "${BASH_SOURCE[0]%/*}/../../skills/workstream-brainstorming/scripts" && pwd); ws="$base/external-review-workspace"; pkg="$base/external-review-package"; rpt="$base/external-review-report"; tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 fail(){ echo "FAIL: $*" >&2; exit 1; }; expect_fail(){ "$@" >/dev/null 2>&1 && fail "expected failure: $*" || true; }
 field(){ sed -n "s/^$1: //p" "$2"|head -n1; }
-cd "$tmp"; git init -q repo; cd repo; git config user.email test@example.invalid; git config user.name test; mkdir -p docs/workstreams; printf '# Test\n' > 'docs/workstreams/a odd.md'; git add .; git commit -qm initial
-out=$($ws 'docs/workstreams/a odd.md'); [ -d "$out/packages" ] || fail workspace; [ -z "$(git status --porcelain)" ] || fail 'workspace dirtied status'; git check-ignore -q "${out#$PWD/}/probe" || fail 'workspace not ignored'
-printf x >> 'docs/workstreams/a odd.md'; expect_fail "$pkg" initial 'docs/workstreams/a odd.md'; git checkout -- 'docs/workstreams/a odd.md'; printf x >> 'docs/workstreams/a odd.md'; git add .; expect_fail "$pkg" initial 'docs/workstreams/a odd.md'; git reset -q; git checkout -- 'docs/workstreams/a odd.md'; expect_fail "$pkg" initial docs/workstreams/missing.md; expect_fail "$pkg" initial ../escape
-pkgout=$($pkg initial 'docs/workstreams/a odd.md'); package=$(printf '%s\n' "$pkgout"|sed -n 's/^PACKAGE_PATH=//p'); [ -f "$package" ] && [ -f "$package.sha256" ] || fail package
+cd "$tmp"; git init -q repo; cd repo; git config user.email test@example.invalid; git config user.name test; mkdir -p 'docs/workstreams/a odd'; for f in brief slices log; do printf '# Test %s\n' $f > "docs/workstreams/a odd/$f.md"; done; git add .; git commit -qm initial
+out=$($ws 'docs/workstreams/a odd'); [ -d "$out/packages" ] || fail workspace; [ -z "$(git status --porcelain)" ] || fail 'workspace dirtied status'; git check-ignore -q "${out#$PWD/}/probe" || fail 'workspace not ignored'
+printf x >> 'docs/workstreams/a odd/slices.md'; expect_fail "$pkg" initial 'docs/workstreams/a odd'; git checkout -- 'docs/workstreams/a odd/slices.md'; printf x >> 'docs/workstreams/a odd/slices.md'; git add .; expect_fail "$pkg" initial 'docs/workstreams/a odd'; git reset -q; git checkout -- 'docs/workstreams/a odd/slices.md'; expect_fail "$pkg" initial docs/workstreams/missing; rm -f 'docs/workstreams/a odd/log.md'; printf dirty > 'docs/workstreams/a odd/log.md'; $pkg initial 'docs/workstreams/a odd' >/dev/null || fail 'uncommitted log.md must not block'; git checkout -- 'docs/workstreams/a odd/log.md'; expect_fail "$pkg" initial 'docs/workstreams/a odd/brief.md'; expect_fail "$pkg" initial ../escape
+pkgout=$($pkg initial 'docs/workstreams/a odd'); package=$(printf '%s\n' "$pkgout"|sed -n 's/^PACKAGE_PATH=//p'); [ -f "$package" ] && [ -f "$package.sha256" ] || fail package
+check_launch(){ lo=$1; [ "$(printf '%s\n' "$lo"|head -n1|cut -c1-12)" = LAUNCH_FILE= ] || fail "$2 LAUNCH_FILE first line"; lf=$(printf '%s\n' "$lo"|sed -n '1s/^LAUNCH_FILE=//p'); pp=$(printf '%s\n' "$lo"|sed -n 's/^PACKAGE_PATH=//p'); [ -f "$lf" ] && grep -Fq 'Launch Harness B with:' "$lf" && grep -Fq "$pp" "$lf" || fail "$2 launch file"; [ "$(cat "$lf")" = "$(printf '%s\n' "$lo"|sed -n '/^Launch Harness B with:/,$p')" ] || fail "$2 launch content"; }
+check_launch "$pkgout" initial
+leak=$tmp/leakcheck; mkdir "$leak"; no_leak(){ [ -z "$(ls -A "$leak")" ] || fail "temp files leaked: $1"; }
+TMPDIR=$leak "$pkg" initial 'docs/workstreams/a odd' >/dev/null; no_leak 'initial success'
+printf x >> 'docs/workstreams/a odd/slices.md'; TMPDIR=$leak "$pkg" initial 'docs/workstreams/a odd' >/dev/null 2>&1 && fail 'dirty run succeeded'; git checkout -- 'docs/workstreams/a odd/slices.md'; no_leak 'initial early failure'
 make_draft(){ cat > "$1" <<EOF
 Schema-Version: 1
 Package-ID: $(field Package-ID "$package")
 Mode: initial
 Commit: $(field Commit "$package")
-Workstream-Path: docs/workstreams/a odd.md
-Blob-OID: $(field Blob-OID "$package")
+Workstream-Path: docs/workstreams/a odd
+Brief-Blob-OID: $(field Brief-Blob-OID "$package")
+Slices-Blob-OID: $(field Slices-Blob-OID "$package")
 Workstream-SHA256: $(field Workstream-SHA256 "$package")
 Package-Path: $package
 Recommendation: Ready for user approval/WDD
@@ -27,30 +33,33 @@ EOF
 draft="$out/drafts/report.md"; make_draft "$draft"
 mkdir "$tmp/other"; git -C "$tmp/other" init -q; rout=$(cd "$tmp/other" && "$rpt" publish "$package" "$draft"); report=$(printf '%s\n' "$rout"|sed -n 's/^REPORT_PATH=//p'); "$rpt" verify "$package" "$report" >/dev/null || fail verify; [[ "$report" == "$out/reports/"* ]] || fail cross-repo
 printf tamper >> "$report"; expect_fail "$rpt" verify "$package" "$report"
-cp "$package" "$tmp/bad-package"; cp "$package.sha256" "$tmp/bad-package.sha256"; sed -i.bak 's/^Blob-OID: .*/Blob-OID: deadbeef/' "$tmp/bad-package"; rm "$tmp/bad-package.bak"; expect_fail "$rpt" publish "$tmp/bad-package" "$draft"
+cp "$package" "$tmp/bad-package"; cp "$package.sha256" "$tmp/bad-package.sha256"; sed -i.bak 's/^Slices-Blob-OID: .*/Slices-Blob-OID: deadbeef/' "$tmp/bad-package"; rm "$tmp/bad-package.bak"; expect_fail "$rpt" publish "$tmp/bad-package" "$draft"
 cp "$draft" "$tmp/bad-draft"; sed -i.bak 's/Implementation-Concern-Count: 1/Implementation-Concern-Count: 0/' "$tmp/bad-draft"; rm "$tmp/bad-draft.bak"; expect_fail "$rpt" publish "$package" "$tmp/bad-draft"
 cp "$draft" "$tmp/ready-blocker"; sed -i.bak 's/Design-Blocker-Count: 0/Design-Blocker-Count: 1/' "$tmp/ready-blocker"; rm "$tmp/ready-blocker.bak"; expect_fail "$rpt" publish "$package" "$tmp/ready-blocker"
 cp "$draft" "$tmp/duplicate-findings"; sed -i.bak 's/Implementation-Concern-Count: 1/Implementation-Concern-Count: 2/' "$tmp/duplicate-findings"; rm "$tmp/duplicate-findings.bak"; printf 'Finding: implementation-concern|I1|Slice B|duplicate ID\n' >> "$tmp/duplicate-findings"; expect_fail "$rpt" publish "$package" "$tmp/duplicate-findings"
-($pkg initial 'docs/workstreams/a odd.md' > "$tmp/p1") & a=$!; ($pkg initial 'docs/workstreams/a odd.md' > "$tmp/p2") & b=$!; wait $a; wait $b; [ "$(sed -n 's/^PACKAGE_PATH=//p' "$tmp/p1")" != "$(sed -n 's/^PACKAGE_PATH=//p' "$tmp/p2")" ] || fail package-concurrency
-EXTERNAL_REVIEW_TEST_STAMP=20000101T000000000 EXTERNAL_REVIEW_TEST_SUFFIX=fixed "$pkg" initial 'docs/workstreams/a odd.md' >/dev/null; expect_fail env EXTERNAL_REVIEW_TEST_STAMP=20000101T000000000 EXTERNAL_REVIEW_TEST_SUFFIX=fixed "$pkg" initial 'docs/workstreams/a odd.md'
+($pkg initial 'docs/workstreams/a odd' > "$tmp/p1") & a=$!; ($pkg initial 'docs/workstreams/a odd' > "$tmp/p2") & b=$!; wait $a; wait $b; [ "$(sed -n 's/^PACKAGE_PATH=//p' "$tmp/p1")" != "$(sed -n 's/^PACKAGE_PATH=//p' "$tmp/p2")" ] || fail package-concurrency
+EXTERNAL_REVIEW_TEST_STAMP=20000101T000000000 EXTERNAL_REVIEW_TEST_SUFFIX=fixed "$pkg" initial 'docs/workstreams/a odd' >/dev/null; expect_fail env EXTERNAL_REVIEW_TEST_STAMP=20000101T000000000 EXTERNAL_REVIEW_TEST_SUFFIX=fixed "$pkg" initial 'docs/workstreams/a odd'
 make_draft "$out/drafts/r1"; make_draft "$out/drafts/r2"; ($rpt publish "$package" "$out/drafts/r1" > "$tmp/r1") & a=$!; ($rpt publish "$package" "$out/drafts/r2" > "$tmp/r2") & b=$!; wait $a; wait $b; [ "$(sed -n 's/^REPORT_PATH=//p' "$tmp/r1")" != "$(sed -n 's/^REPORT_PATH=//p' "$tmp/r2")" ] || fail report-concurrency
 EXTERNAL_REVIEW_TEST_STAMP=20000101T000000000 EXTERNAL_REVIEW_TEST_SUFFIX=fixed "$rpt" publish "$package" "$draft" >/dev/null; expect_fail env EXTERNAL_REVIEW_TEST_STAMP=20000101T000000000 EXTERNAL_REVIEW_TEST_SUFFIX=fixed "$rpt" publish "$package" "$draft"
 # Confirmation validates prior digest, accepted-blocker lineage, and immutable scope.
 blockdraft="$out/drafts/block"; make_draft "$blockdraft"; sed -i.bak 's/Recommendation: Ready for user approval\/WDD/Recommendation: Revise design/; s/Design-Blocker-Count: 0/Design-Blocker-Count: 1/; s/Implementation-Concern-Count: 1/Implementation-Concern-Count: 0/; s/Finding: implementation-concern|I1|Slice A|add a fixture test/Finding: design-blocker|D1|Slice A|unsafe deletion/' "$blockdraft"; rm "$blockdraft.bak"; blockreport=$("$rpt" publish "$package" "$blockdraft"|sed -n 's/^REPORT_PATH=//p'); git commit --allow-empty -qm revision
-printf 'Disposition: D1|accepted|preserve final export\n' > "$tmp/dispositions"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd.md' --prior-report "$blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'
-printf '\nDecision: preserve final export\n' >> 'docs/workstreams/a odd.md'; git add 'docs/workstreams/a odd.md'; git commit -qm 'resolve export deletion blocker'
-branch=$(git branch --show-current); git checkout -q --orphan unrelated-confirmation; git rm -qr --cached .; rm -rf docs; mkdir -p docs/workstreams; printf '# Unrelated\n' > 'docs/workstreams/a odd.md'; git add docs/workstreams; git commit -qm unrelated-confirmation
-expect_fail "$pkg" confirmation 'docs/workstreams/a odd.md' --prior-report "$blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'; git checkout -q "$branch"
-printf 'Disposition: D1|accepted|preserve final export\nDisposition: D1|accepted|different reason\n' > "$tmp/duplicate-dispositions"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd.md' --prior-report "$blockreport" --dispositions "$tmp/duplicate-dispositions" --affected-area 'Slice A'
-printf 'Disposition: D2|accepted|wrong lineage\n' > "$tmp/wrong-lineage"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd.md' --prior-report "$blockreport" --dispositions "$tmp/wrong-lineage" --affected-area 'Slice A'
-printf 'Disposition: D1|accepted|preserve final export\n' > "$tmp/dispositions"; relative_blockreport=${blockreport#$PWD/}; conf=$($pkg confirmation 'docs/workstreams/a odd.md' --prior-report "$relative_blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'); confpkg=$(printf '%s\n' "$conf"|sed -n 's/^PACKAGE_PATH=//p'); [ "$(field Prior-Report "$confpkg")" = "$blockreport" ] || fail 'confirmation prior report was not canonicalized'
+printf 'Disposition: D1|accepted|preserve final export\n' > "$tmp/dispositions"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'
+printf '\nDecision: preserve final export\n' >> 'docs/workstreams/a odd/slices.md'; git add 'docs/workstreams/a odd/slices.md'; git commit -qm 'resolve export deletion blocker'
+branch=$(git branch --show-current); git checkout -q --orphan unrelated-confirmation; git rm -qr --cached .; rm -rf docs; mkdir -p 'docs/workstreams/a odd'; printf '# Unrelated\n' | tee 'docs/workstreams/a odd/brief.md' > 'docs/workstreams/a odd/slices.md'; git add docs/workstreams; git commit -qm unrelated-confirmation
+expect_fail "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'; git checkout -q "$branch"
+printf 'Disposition: D1|accepted|preserve final export\nDisposition: D1|accepted|different reason\n' > "$tmp/duplicate-dispositions"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$blockreport" --dispositions "$tmp/duplicate-dispositions" --affected-area 'Slice A'
+printf 'Disposition: D2|accepted|wrong lineage\n' > "$tmp/wrong-lineage"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$blockreport" --dispositions "$tmp/wrong-lineage" --affected-area 'Slice A'
+printf 'Disposition: D1|accepted|preserve final export\n' > "$tmp/dispositions"; relative_blockreport=${blockreport#$PWD/}; conf=$($pkg confirmation 'docs/workstreams/a odd' --prior-report "$relative_blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'); confpkg=$(printf '%s\n' "$conf"|sed -n 's/^PACKAGE_PATH=//p'); [ "$(field Prior-Report "$confpkg")" = "$blockreport" ] || fail 'confirmation prior report was not canonicalized'
+check_launch "$conf" confirmation
+TMPDIR=$leak "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$relative_blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A' >/dev/null; no_leak 'confirmation success'
 make_conf_draft(){ local draft=$1 conf_package=${2:-$confpkg}; cat > "$draft" <<EOF
 Schema-Version: 1
 Package-ID: $(field Package-ID "$conf_package")
 Mode: confirmation
 Commit: $(field Commit "$conf_package")
-Workstream-Path: docs/workstreams/a odd.md
-Blob-OID: $(field Blob-OID "$conf_package")
+Workstream-Path: docs/workstreams/a odd
+Brief-Blob-OID: $(field Brief-Blob-OID "$conf_package")
+Slices-Blob-OID: $(field Slices-Blob-OID "$conf_package")
 Workstream-SHA256: $(field Workstream-SHA256 "$conf_package")
 Package-Path: $conf_package
 Recommendation: Ready for user approval/WDD
@@ -61,8 +70,48 @@ EOF
 }
 confdraft="$out/drafts/confirmation"; make_conf_draft "$confdraft"; (cd "$tmp/other" && "$rpt" publish "$confpkg" "$confdraft") >/dev/null || fail 'confirmation publish with canonical prior report'
 # Preserve compatibility with hand-authored, repository-relative Prior-Report fields.
-relconf=$($pkg confirmation 'docs/workstreams/a odd.md' --prior-report "$blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'); relconfpkg=$(printf '%s\n' "$relconf"|sed -n 's/^PACKAGE_PATH=//p'); sed -i.bak "s|^Prior-Report: .*|Prior-Report: $relative_blockreport|" "$relconfpkg"; rm "$relconfpkg.bak"; shasum -a 256 "$relconfpkg" | awk '{print $1}' > "$relconfpkg.sha256"
+relconf=$($pkg confirmation 'docs/workstreams/a odd' --prior-report "$blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'); relconfpkg=$(printf '%s\n' "$relconf"|sed -n 's/^PACKAGE_PATH=//p'); sed -i.bak "s|^Prior-Report: .*|Prior-Report: $relative_blockreport|" "$relconfpkg"; rm "$relconfpkg.bak"; shasum -a 256 "$relconfpkg" | awk '{print $1}' > "$relconfpkg.sha256"
 relconfdraft="$out/drafts/relative-confirmation"; make_conf_draft "$relconfdraft" "$relconfpkg"; relreport=$(cd "$tmp/other" && "$rpt" publish "$relconfpkg" "$relconfdraft"|sed -n 's/^REPORT_PATH=//p'); (cd "$tmp/other" && "$rpt" verify "$relconfpkg" "$relreport") >/dev/null || fail 'confirmation verify with relative prior report'
 printf '\nSlice B\n' >> "$confpkg"; expect_fail "$rpt" publish "$confpkg" "$confdraft"
 printf tamper >> "$blockreport"; expect_fail "$rpt" verify "$confpkg" "$out/drafts/r1"
+# Hardening: dirty/untracked inputs, log.md freedom, tamper, file-path argument, digest boundaries, brief-only confirmation.
+cd "$tmp"; git init -q repo2; cd repo2; git config user.email test@example.invalid; git config user.name test; W=docs/workstreams/w; mkdir -p $W
+printf 'ab' > $W/brief.md; printf 'c' > $W/slices.md; printf 'log\n' > $W/log.md; git add .; git commit -qm init
+printf x >> $W/brief.md; expect_fail "$pkg" initial $W; git checkout -- $W/brief.md
+printf x >> $W/log.md; p2=$($pkg initial $W) || fail 'dirty log.md must be allowed'; git checkout -- $W/log.md
+p2path=$(printf '%s\n' "$p2"|sed -n 's/^PACKAGE_PATH=//p'); d_ab_c=$(field Workstream-SHA256 "$p2path")
+expect_fail "$pkg" initial $W/brief.md
+cp "$p2path" "$tmp/tb"; sed -i.bak 's/^Brief-Blob-OID: .*/Brief-Blob-OID: deadbeef/' "$tmp/tb"; rm "$tmp/tb.bak"; shasum -a 256 "$tmp/tb" | awk '{print $1}' > "$tmp/tb.sha256"
+mk2(){ cat > "$1" <<EOF
+Schema-Version: 1
+Package-ID: $(field Package-ID "$p2path")
+Mode: initial
+Commit: $(field Commit "$p2path")
+Workstream-Path: $W
+Brief-Blob-OID: $(field Brief-Blob-OID "$p2path")
+Slices-Blob-OID: $(field Slices-Blob-OID "$p2path")
+Workstream-SHA256: $(field Workstream-SHA256 "$p2path")
+Package-Path: $p2path
+Recommendation: Revise design
+Design-Blocker-Count: 1
+Implementation-Concern-Count: 0
+Advisory-Count: 0
+Finding: design-blocker|D1|Slice A|unsafe deletion
+EOF
+}
+mk2 "$tmp/d2"; expect_fail "$rpt" publish "$tmp/tb" "$tmp/d2"
+r2=$($rpt publish "$p2path" "$tmp/d2"|sed -n 's/^REPORT_PATH=//p'); [ -f "$r2" ] || fail 'publish blocker report'
+printf 'Disposition: D1|accepted|fix\n' > "$tmp/disp2"
+expect_fail "$pkg" confirmation $W --prior-report "$r2" --dispositions "$tmp/disp2" --affected-area 'Slice A'
+printf 'y' >> $W/brief.md; git add $W/brief.md; git commit -qm 'brief only'
+c2=$($pkg confirmation $W --prior-report "$r2" --dispositions "$tmp/disp2" --affected-area 'Slice A') || fail 'brief-only change must be accepted as changed'
+[ "$(field Workstream-SHA256 "$(printf '%s\n' "$c2"|sed -n 's/^PACKAGE_PATH=//p')")" != "$d_ab_c" ] || fail 'digest unchanged'
+git rm -q --cached $W/slices.md; git commit -qm 'untrack slices'; [ -f $W/slices.md ] || fail setup; expect_fail "$pkg" initial $W  # untracked slices.md
+# Boundary shift: brief 'ab' + slices 'c' vs 'a' + 'bc' must differ.
+cd "$tmp"; git init -q repo3; cd repo3; git config user.email test@example.invalid; git config user.name test; mkdir -p $W
+printf 'a' > $W/brief.md; printf 'bc' > $W/slices.md; git add .; git commit -qm init
+d_a_bc=$(field Workstream-SHA256 "$($pkg initial $W|sed -n 's/^PACKAGE_PATH=//p')")
+git rm -q --cached $W/brief.md; git commit -qm 'untrack brief'; expect_fail "$pkg" initial $W  # untracked brief.md
+git add $W/brief.md $W/slices.md 2>/dev/null; git commit -qm retrack
+[ -n "$d_a_bc" ] && [ "$d_a_bc" != "$d_ab_c" ] || fail 'boundary-shift digests must differ'
 echo 'external review tool tests passed'

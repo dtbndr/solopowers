@@ -10,12 +10,15 @@ This file contains information for AI coding agents working on this project.
 
 These principles drive fork/adapt/eliminate decisions when upstream (superpowers) changes arrive:
 
-- The canonical planning artifact is a **single workstream document**. Do not reintroduce separate spec/plan artifacts.
+- The canonical planning artifact is one **workstream folder** with a human-readable `brief.md` (the only file the operator approves) and agent-facing `slices.md` and `log.md`. Do not reintroduce separate spec/plan artifacts.
 - Execution is **sequential and slice-based**. Upstream changes that assume independent parallel tasks may need adaptation.
-- **One worktree per workstream**, not per task or slice. Workspace-isolation patterns must preserve this.
-- **Manual smoke-test pause after review pass** is a required workflow gate. Upstream changes that remove human-in-the-loop points require adaptation.
+- **One isolation unit per workstream** (a git branch or a git worktree, chosen by the operator), never per task or slice. Workspace-isolation patterns must preserve this.
+- **Human smoke testing happens once, at the end of the workstream**, limited to P0/P1 checks agents cannot perform or are not authorized to perform. Skip it when that set is empty.
+- Upstream changes that remove human-in-the-loop points require adaptation.
+- Operator choices (playback, external review, isolation mode) follow one convention: the agent recommends an option with a one-line reason and the operator decides.
 - Upstream rigor (TDD enforcement, review discipline) should be **mapped onto workstream slices**, not upstream artifact assumptions.
 - Skills must not leak superpowers-specific artifact references (`docs/superpowers/specs`, `docs/superpowers/plans`) when those concepts do not exist in solopowers.
+- Review runs on the strongest model tier, implementation on the standard tier; do not route reviews to cheaper tiers.
 - Upstream drift is a managed risk. Preserve compatibility where possible, but **do not compromise the workstream model** to stay in sync.
 
 ## Directory Structure
@@ -50,7 +53,7 @@ Document decisions in `research/` (gitignored, local only).
 
 `workstream-driven-development` explicitly references these skills by name:
 
-- `using-git-worktrees` — called at workstream start
+- `using-git-worktrees` — called at workstream start when the operator chooses worktree isolation (branch mode is handled inline by workstream-driven-development)
 - `finishing-a-development-branch` — called at workstream end
 
 Changes to these skills have downstream impact on WSD. Verify compatibility before modifying.
@@ -78,6 +81,7 @@ bash tests/skill-helper-paths/test-wsd-helper-paths.sh
 bash tests/skill-layout/test-no-dev-files-in-skills.sh
 bash tests/workstream-driven-development/test-slice-brief
 bash tests/workstream-driven-development/test-wsd-repo-guard
+bash tests/workstream-brainstorming/test-external-review-tools
 ```
 
 The inventory comparison verifies the current skill table in `using-solopowers` against the actual skill directories; migration aliases in `## Superseded Skills` are intentionally excluded.

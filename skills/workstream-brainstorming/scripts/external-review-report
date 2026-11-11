@@ -10,26 +10,26 @@ usage(){ echo 'usage: external-review-report publish PACKAGE_FILE DRAFT_FILE | v
 [ -f "$package" ] || { echo 'package missing' >&2; exit 3; }
 package_field(){ field "$1" "$package"; }
 validate_package(){
-  local root commit path blob digest declared actual
-  for k in Schema-Version Package-ID Mode Repository-Root Commit Workstream-Path Blob-OID Workstream-SHA256 Package-Path; do [ -n "$(package_field "$k")" ] || { echo "malformed package: $k" >&2; return 3; }; done
+  local root commit path bblob sblob digest declared actual
+  for k in Schema-Version Package-ID Mode Repository-Root Commit Workstream-Path Brief-Blob-OID Slices-Blob-OID Workstream-SHA256 Package-Path; do [ -n "$(package_field "$k")" ] || { echo "malformed package: $k" >&2; return 3; }; done
   [ "$(package_field Schema-Version)" = 1 ] || { echo 'unsupported package schema' >&2; return 3; }
   case "$(package_field Mode)" in initial|confirmation);; *) echo 'invalid package mode' >&2; return 3;; esac
   [ "$(real "$(package_field Package-Path)")" = "$package" ] || { echo 'package path identity mismatch' >&2; return 3; }
   [ -f "$package.sha256" ] && [ "$(cat "$package.sha256")" = "$(sha "$package")" ] || { echo 'package digest sidecar mismatch' >&2; return 3; }
-  root=$(package_field Repository-Root); commit=$(package_field Commit); path=$(package_field Workstream-Path); blob=$(package_field Blob-OID); digest=$(package_field Workstream-SHA256)
+  root=$(package_field Repository-Root); commit=$(package_field Commit); path=$(package_field Workstream-Path); bblob=$(package_field Brief-Blob-OID); sblob=$(package_field Slices-Blob-OID); digest=$(package_field Workstream-SHA256)
   [ "$(git -C "$root" rev-parse --show-toplevel 2>/dev/null)" = "$root" ] || { echo 'package repository unavailable or mismatched' >&2; return 3; }
   case "$path" in /*|*'..'*|*$'\n'*|*$'\r'*) echo 'unsafe package workstream path' >&2; return 3;; esac
   git -C "$root" cat-file -e "$commit^{commit}" 2>/dev/null || { echo 'package commit is invalid' >&2; return 3; }
-  actual=$(git -C "$root" rev-parse "$commit:$path" 2>/dev/null) || { echo 'package path missing at commit' >&2; return 3; }
-  [ "$actual" = "$blob" ] || { echo 'package blob does not match commit tree' >&2; return 3; }
-  actual=$(git -C "$root" cat-file blob "$blob" | shasum -a 256 | awk '{print $1}')
+  actual=$(git -C "$root" rev-parse "$commit:$path/brief.md" 2>/dev/null) && [ "$actual" = "$bblob" ] || { echo 'package brief.md blob does not match commit tree' >&2; return 3; }
+  actual=$(git -C "$root" rev-parse "$commit:$path/slices.md" 2>/dev/null) && [ "$actual" = "$sblob" ] || { echo 'package slices.md blob does not match commit tree' >&2; return 3; }
+  actual=$(printf '%s\n%s\n' "$bblob" "$sblob" | shasum -a 256 | awk '{print $1}')
   [ "$actual" = "$digest" ] || { echo 'package blob digest mismatch' >&2; return 3; }
 }
 find_count(){ grep -Ec "^Finding: $1\|" "$2" || true; }
 validate_report(){
   local f=$1 k declared actual
-  for k in Schema-Version Package-ID Mode Commit Workstream-Path Blob-OID Workstream-SHA256 Package-Path Recommendation Design-Blocker-Count Implementation-Concern-Count Advisory-Count; do [ -n "$(field "$k" "$f")" ] || { echo "missing report field: $k" >&2; return 3; }; done
-  for k in Package-ID Mode Commit Workstream-Path Blob-OID Workstream-SHA256 Package-Path; do [ "$(field "$k" "$f")" = "$(package_field "$k")" ] || { echo "report/package mismatch: $k" >&2; return 3; }; done
+  for k in Schema-Version Package-ID Mode Commit Workstream-Path Brief-Blob-OID Slices-Blob-OID Workstream-SHA256 Package-Path Recommendation Design-Blocker-Count Implementation-Concern-Count Advisory-Count; do [ -n "$(field "$k" "$f")" ] || { echo "missing report field: $k" >&2; return 3; }; done
+  for k in Package-ID Mode Commit Workstream-Path Brief-Blob-OID Slices-Blob-OID Workstream-SHA256 Package-Path; do [ "$(field "$k" "$f")" = "$(package_field "$k")" ] || { echo "report/package mismatch: $k" >&2; return 3; }; done
   [ "$(field Schema-Version "$f")" = 1 ] || { echo 'unsupported report schema' >&2; return 3; }
   case "$(field Recommendation "$f")" in 'Revise design'|'Ready for user approval/WDD');; *) echo 'invalid recommendation' >&2; return 4;; esac
   for k in Design-Blocker-Count Implementation-Concern-Count Advisory-Count; do [[ $(field "$k" "$f") =~ ^[0-9]+$ ]] || { echo "invalid $k" >&2; return 4; }; done

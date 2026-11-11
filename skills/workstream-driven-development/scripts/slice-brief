@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
-# Extract one slice's full text from a Workstream Document into a file the
+# Extract one slice's full text from a Workstream Document (the slices.md of a
+# workstream folder docs/workstreams/YYYY-MM-DD-<topic>/, or a single
+# workstream file, whose form is *.md or a path containing /) into a file the
 # implementer reads in one call, so the slice text never has to be pasted
 # through the controller's context.
 #
 # Usage: slice-brief WORKSTREAM_FILE SLICE_ID [SLUG_OVERRIDE]
 # Default output: .solopowers/wsd/<slug>/slice-<ID>-brief.md
-# slug is auto-derived from the workstream filename (date prefix stripped)
+# The slug is derived by wsd-workspace: from the workstream filename (date
+# prefix stripped), or from the parent folder name when the file is slices.md.
+# An explicit SLUG_OVERRIDE wins.
 #
 # Exit codes: 0 brief written; 2 usage error; 3 slice not found;
 # 4 an unclosed code fence hides a later Slice heading while the requested
@@ -38,17 +42,24 @@ fi
   exit 2
 }
 
-# Derive slug from filename: strip directory, .md extension, and leading YYYY-MM-DD-
+slug=""
 if [ $# -eq 3 ] && [ -n "$3" ]; then
   slug=$3
-else
-  slug=$(basename "$workstream" .md | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//')
 fi
 
 # Invoke via bash rather than direct exec: some extractors (Python zipfile)
 # strip Unix exec bits when unpacking marketplace packages (#2040).
 here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
-dir=$("${BASH:-bash}" "$here/wsd-workspace" "$slug" "$workstream")
+if [ -n "$slug" ]; then
+  dir=$("${BASH:-bash}" "$here/wsd-workspace" "$slug" "$workstream")
+else
+  # wsd-workspace treats a bare non-.md name as a slug; ./ forces the file form.
+  case "$workstream" in
+    */*) ws_arg=$workstream ;;
+    *) ws_arg="./$workstream" ;;
+  esac
+  dir=$("${BASH:-bash}" "$here/wsd-workspace" "$ws_arg")
+fi
 out="$dir/slice-${slice_id}-brief.md"
 
 rc=0

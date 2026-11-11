@@ -4,9 +4,17 @@ A curated skill pack for solo development workflows, derived from [obra/superpow
 
 ## Origin
 
-solopowers began as local adaptations of superpowers for a workflow where **a single workstream document** replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one git worktree per workstream, with **manual smoke-test pauses** between slices after automated review gates pass. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
+solopowers began as local adaptations of superpowers for a workflow where **a single workstream folder** (`brief.md`, `slices.md`, `log.md`) replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one isolation unit per workstream (a git branch or worktree, the operator's choice), with a single end-of-workstream smoke check for the P0/P1 checks agents cannot do, after automated review gates pass. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
 
-Workstream Documents are stored at `docs/workstreams/YYYY-MM-DD-<topic>.md`. `workstream-brainstorming` creates the document; `workstream-driven-development` executes it sequentially in one worktree.
+Workstream folders are stored at `docs/workstreams/YYYY-MM-DD-<topic>/`. `workstream-brainstorming` creates the folder; `workstream-driven-development` executes it sequentially in one branch or worktree.
+
+### What changed vs the original workflow
+
+- `brief.md` (about one page) is the only file the operator approves; `slices.md` and `log.md` are agent-facing.
+- The operator picks a git branch or a worktree once per workstream.
+- Slice reviewers grade findings P0-P3 with evidence; the loop exits when no P0/P1 is open, P2/P3 are logged (not fixed), and a 4-round cap escalates only for persistent P0/P1.
+- No per-slice smoke pause: one end-of-workstream smoke step, only for P0/P1 checks agents cannot do (skipped if none).
+- Reviewers run on the strongest model tier, workers on the standard tier. Brainstorming playback and external review are opt-in (the agent recommends, the operator chooses); external review targets the folder.
 
 ## Skills
 
@@ -15,8 +23,8 @@ Workstream Documents are stored at `docs/workstreams/YYYY-MM-DD-<topic>.md`. `wo
 | Skill | Origin | Description |
 |---|---|---|
 | `workstream-brainstorming` | Original | Explore feature ideas and design before implementation |
-| `workstream-driven-development` | Original | Execute workstream documents slice-by-slice with subagent dispatch |
-| `using-git-worktrees` | [superpowers](https://github.com/obra/superpowers) | Isolated git worktrees for feature work |
+| `workstream-driven-development` | Original | Execute workstream folders slice-by-slice with subagent dispatch |
+| `using-git-worktrees` | [superpowers](https://github.com/obra/superpowers) | Isolated git worktrees for feature work (used when the operator chooses a worktree) |
 | `finishing-a-development-branch` | [superpowers](https://github.com/obra/superpowers) | Structured merge/PR/cleanup branch completion |
 | `dispatching-parallel-agents` | [superpowers](https://github.com/obra/superpowers) | Run multiple independent subagents concurrently |
 

@@ -10,10 +10,20 @@
 # commits without modifying any tracked file.
 #
 # Single source of truth for the workspace location, so slice-brief and
-# review-package cannot drift to different directories.
+# review-package cannot drift to different directories. It is also the single
+# source of truth for the slug: given only the workstream file (a name ending
+# in .md or a path containing /), it derives one; any other bare name is a slug.
 #
-# Basename slugs collide when two Workstream Documents share a slug (dropping
-# the date prefix, e.g. 2026-01-01-auth.md vs 2026-02-01-auth.md), so each
+# Workstream layouts: a single file docs/workstreams/YYYY-MM-DD-<topic>.md
+# names the workspace from its own basename. A folder workstream
+# docs/workstreams/YYYY-MM-DD-<topic>/ passes its slices.md as the workstream
+# file; because every folder has a file called slices.md, the slug and the date
+# prefix come from the PARENT FOLDER name (date prefix stripped for the slug)
+# instead of the basename.
+#
+# Slugs collide when two Workstream Documents share a slug (dropping the date
+# prefix, e.g. 2026-01-01-auth.md vs 2026-02-01-auth.md, or the folders
+# 2026-01-01-auth/ vs 2026-02-01-auth/), so each
 # workspace records its owning Workstream Document's path in a ledger header
 # at create time. A workspace owned by a different Workstream Document is
 # skipped and the slug disambiguated (with the date prefix or counter) so stale
@@ -50,6 +60,17 @@ toplevel=$("${BASH:-bash}" "$here/wsd-repo")
 root=$(CDPATH='' cd -- "$toplevel" && pwd -P)
 base="$root/.solopowers/wsd"
 
+# Name a workstream is known by: the file's basename without .md, or, for a
+# folder workstream's slices.md, the parent folder's name.
+ws_name() {
+  local f="$1" parent
+  if [ "$(basename -- "$f")" = "slices.md" ]; then
+    parent=$(CDPATH='' cd -- "$(dirname -- "$f")" 2>/dev/null && pwd -P) || parent=""
+    [ -n "$parent" ] && { basename -- "$parent"; return 0; }
+  fi
+  basename -- "$f" .md
+}
+
 workstream_file=""
 slug=""
 
@@ -64,7 +85,7 @@ if [ $# -eq 2 ]; then
 else
   if [[ "$1" == *.md || "$1" == */* ]]; then
     workstream_file=$1
-    slug=$(basename "$workstream_file" .md | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//')
+    slug=$(ws_name "$workstream_file" | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//')
   else
     slug=$1
   fi
@@ -83,7 +104,7 @@ if [ -n "$workstream_file" ]; then
     "$root"/*) workstream_id=${workstream_abs#"$root"/} ;;
     *)         workstream_id=$workstream_abs ;;
   esac
-  date_prefix=$(basename "$workstream_file" | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
+  date_prefix=$(ws_name "$workstream_file" | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
 fi
 
 owns() {

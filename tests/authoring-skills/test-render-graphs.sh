@@ -160,6 +160,35 @@ else
   fail "SVG output has SVG markup"
 fi
 
+# Undeclared quoted edge endpoints (label typos) must fail the lint
+LINT="$REPO_ROOT/tests/authoring-skills/lint-dot-nodes.js"
+lint_bad="$TEST_ROOT/lint-bad.md"
+cat >"$lint_bad" <<'EOF'
+```dot
+digraph bad {
+    "Node A" [shape=box];
+    "Node B" [shape=box];
+    "Node A" -> "Node B (typo)" [label="x"];
+}
+```
+EOF
+lint_good="$TEST_ROOT/lint-good.md"
+cat >"$lint_good" <<'EOF'
+```dot
+digraph good {
+    "Node A" [shape=box];
+    "Node B" [shape=box];
+    "Node A" -> "Node B" [label="x"];
+}
+```
+EOF
+lint_out="$("$NODE_BIN" "$LINT" "$lint_bad" 2>&1)"
+if [[ $? -ne 0 ]]; then pass "lint fails on undeclared edge endpoint"; else fail "lint fails on undeclared edge endpoint"; fi
+assert_contains "$lint_out" 'Node B (typo)' "lint names the undeclared endpoint"
+if "$NODE_BIN" "$LINT" "$lint_good" >/dev/null 2>&1; then pass "lint passes on consistent graph"; else fail "lint passes on consistent graph"; fi
+real_out="$(cd "$REPO_ROOT" && grep -rl '```dot' skills | grep '\.md$' | xargs "$NODE_BIN" "$LINT" 2>&1)"
+if [[ $? -eq 0 ]]; then pass "all skill digraphs declare their edge endpoints"; else fail "all skill digraphs declare their edge endpoints"; printf '%s\n' "$real_out"; fi
+
 echo
 echo "Results: $PASSES passed, $FAILURES failed"
 

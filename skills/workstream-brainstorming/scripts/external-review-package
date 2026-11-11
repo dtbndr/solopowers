@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
-# Publish a commit-anchored external Workstream review manifest; Git is snapshot.
+# Publish a commit-anchored external review manifest for a workstream folder (brief.md + slices.md; log.md excluded); Git is snapshot.
 set -euo pipefail
 self=${BASH_SOURCE[0]%/*}; workspace_tool="$self/external-review-workspace"; report_tool="$self/external-review-report"
 sha(){ shasum -a 256 "$1" | awk '{print $1}'; }
 field(){ sed -n "s/^$1: //p" "$2" | head -n1; }
 absolute(){ (cd "$(dirname "$1")" && printf '%s/%s' "$PWD" "$(basename "$1")"); }
-usage(){ echo 'usage: external-review-package initial WORKSTREAM_FILE | external-review-package confirmation WORKSTREAM_FILE --prior-report REPORT --dispositions FILE --affected-area AREA [...]' >&2; exit 2; }
-[ "$#" -ge 2 ] || usage; mode=$1; file=$2; shift 2
+usage(){ echo 'usage: external-review-package initial WORKSTREAM_FOLDER | external-review-package confirmation WORKSTREAM_FOLDER --prior-report REPORT --dispositions FILE --affected-area AREA [...]' >&2; exit 2; }
+[ "$#" -ge 2 ] || usage; mode=$1; dir=${2%/}; shift 2
 case "$mode" in initial|confirmation);; *) usage;; esac
 root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo 'not a Git worktree' >&2; exit 3; }
-case "$file" in /*|*'..'*|*$'\n'*|*$'\r'*) echo 'unsafe repository-relative Workstream path' >&2; exit 3;; esac
-path=$(git ls-files --full-name -- "$file" | head -n1); [ -n "$path" ] || { echo 'Workstream is not tracked' >&2; exit 3; }
+case "$dir" in /*|*'..'*|*$'\n'*|*$'\r'*) echo 'unsafe repository-relative workstream folder path' >&2; exit 3;; esac
+bpath=$(git ls-files --full-name -- "$dir/brief.md" | head -n1); spath=$(git ls-files --full-name -- "$dir/slices.md" | head -n1)
+[ -n "$bpath" ] && [ -n "$spath" ] || { echo 'workstream folder must track brief.md and slices.md' >&2; exit 3; }
+path=${bpath%/brief.md}; [ "$path/slices.md" = "$spath" ] || { echo 'unexpected workstream folder layout' >&2; exit 3; }
 head=$(git rev-parse HEAD 2>/dev/null) || { echo 'HEAD is unresolved' >&2; exit 3; }
-git diff --quiet -- "$path" || { echo 'Workstream has unstaged changes' >&2; exit 4; }; git diff --cached --quiet -- "$path" || { echo 'Workstream has staged changes' >&2; exit 4; }
-blob=$(git rev-parse "HEAD:$path" 2>/dev/null) || { echo 'Workstream missing at HEAD' >&2; exit 3; }
-tmpblob=$(mktemp); trap 'rm -f "$tmpblob" "${tmp:-}"' EXIT; git cat-file blob "$blob" > "$tmpblob"; cmp -s "$tmpblob" "$path" || { echo 'Workstream bytes differ from committed blob' >&2; exit 4; }; digest=$(sha "$tmpblob")
+for f in "$bpath" "$spath"; do git diff --quiet -- "$f" || { echo 'workstream has unstaged changes' >&2; exit 4; }; git diff --cached --quiet -- "$f" || { echo 'workstream has staged changes' >&2; exit 4; }; done
+bblob=$(git rev-parse "HEAD:$bpath" 2>/dev/null) && sblob=$(git rev-parse "HEAD:$spath" 2>/dev/null) || { echo 'workstream missing at HEAD' >&2; exit 3; }
+tmpb=$(mktemp "${TMPDIR:-/tmp}/erp.XXXXXX"); tmps=$(mktemp "${TMPDIR:-/tmp}/erp.XXXXXX"); trap 'rm -f "$tmpb" "$tmps" "${tmp:-}" "${ltmp:-}"' EXIT; git cat-file blob "$bblob" > "$tmpb"; git cat-file blob "$sblob" > "$tmps"
+cmp -s "$tmpb" "$bpath" && cmp -s "$tmps" "$spath" || { echo 'workstream bytes differ from committed blobs' >&2; exit 4; }; digest=$(printf '%s\n%s\n' "$bblob" "$sblob" | shasum -a 256 | awk '{print $1}')
 ws=$("${BASH:-bash}" "$workspace_tool" "$path")
 prior= dispositions=; areas=(); disposition_lines=
 if [ "$mode" = confirmation ]; then
@@ -24,12 +27,12 @@ if [ "$mode" = confirmation ]; then
  for area in "${areas[@]}"; do [[ "$area" =~ ^[^[:space:]].*$ ]] || { echo 'affected area must be nonempty' >&2; exit 5; }; done
  prior_package=$(field Package-Path "$prior"); [ -n "$prior_package" ] && "${BASH:-bash}" "$report_tool" verify "$prior_package" "$prior" >/dev/null || { echo 'invalid prior report' >&2; exit 5; }
  [ "$(field Mode "$prior")" = initial ] || { echo 'confirmation requires initial prior report' >&2; exit 5; }
- [ "$(field Workstream-Path "$prior")" = "$path" ] || { echo 'prior report is not in this Workstream review chain' >&2; exit 5; }
- # A confirmation must follow an initial-review revision of this canonical document.
- initial_commit=$(field Commit "$prior_package"); initial_blob=$(field Blob-OID "$prior_package")
- [ -n "$initial_commit" ] && [ -n "$initial_blob" ] || { echo 'prior package lacks initial revision identity' >&2; exit 5; }
+ [ "$(field Workstream-Path "$prior")" = "$path" ] || { echo 'prior report is not in this workstream review chain' >&2; exit 5; }
+ # A confirmation must follow an initial-review revision of this workstream folder.
+ initial_commit=$(field Commit "$prior_package"); initial_digest=$(field Workstream-SHA256 "$prior_package")
+ [ -n "$initial_commit" ] && [ -n "$initial_digest" ] || { echo 'prior package lacks initial revision identity' >&2; exit 5; }
  git merge-base --is-ancestor "$initial_commit" "$head" || { echo 'confirmation HEAD does not descend from initial review commit' >&2; exit 5; }
- [ "$blob" != "$initial_blob" ] || { echo 'confirmation Workstream blob is unchanged from initial review' >&2; exit 5; }
+ [ "$digest" != "$initial_digest" ] || { echo 'confirmation brief.md and slices.md are unchanged from initial review' >&2; exit 5; }
  # Machine-readable accepted dispositions must name unique design-blocker IDs in prior report.
  while IFS= read -r line || [ -n "$line" ]; do
    [[ "$line" =~ ^Disposition:\ ([^'|'[:space:]]+)\|accepted\|.+$ ]] || { echo 'invalid disposition; use Disposition: ID|accepted|reason' >&2; exit 5; }
@@ -41,10 +44,11 @@ if [ "$mode" = confirmation ]; then
  [ -n "$disposition_lines" ] || { echo 'at least one accepted disposition is required' >&2; exit 5; }
 fi
 stamp=${EXTERNAL_REVIEW_TEST_STAMP:-$(date -u +%Y%m%dT%H%M%S%3N 2>/dev/null || date -u +%Y%m%dT%H%M%S)}; suffix=${EXTERNAL_REVIEW_TEST_SUFFIX:-$(LC_ALL=C tr -dc 'a-f0-9' </dev/urandom | head -c 16 || true)}; [ -n "$suffix" ] || suffix=$$; id="${mode}-${stamp}-${suffix}"; final="$ws/packages/$id.review-package.md"; tmp="$ws/packages/.${id}.$$.$RANDOM.tmp"
-{ echo '# External Workstream Review Package'; echo; echo 'Schema-Version: 1'; echo "Package-ID: $id"; echo "Mode: $mode"; echo "Created-UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"; echo "Repository-Root: $root"; echo "Commit: $head"; echo "Workstream-Path: $path"; echo "Blob-OID: $blob"; echo "Workstream-SHA256: $digest"; echo "Package-Path: $final"; echo; echo 'The Git blob above is the reviewed snapshot. The canonical Workstream Document remains the only design artifact.'; if [ "$mode" = confirmation ]; then echo; echo "Prior-Report: $prior"; echo "Prior-Report-SHA256: $(sha "$prior")"; echo 'Accepted-Blocker-Dispositions:'; printf '%s' "$disposition_lines"; echo 'Affected-Areas:'; printf '%s\n' "${areas[@]}"; fi; } > "$tmp"
+{ echo '# External Workstream Folder Review Package'; echo; echo 'Schema-Version: 1'; echo "Package-ID: $id"; echo "Mode: $mode"; echo "Created-UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"; echo "Repository-Root: $root"; echo "Commit: $head"; echo "Workstream-Path: $path"; echo "Brief-Blob-OID: $bblob"; echo "Slices-Blob-OID: $sblob"; echo "Workstream-SHA256: $digest"; echo "Package-Path: $final"; echo; echo 'The Git blobs above (brief.md and slices.md; log.md is excluded) are the reviewed snapshot. The workstream folder remains the only design artifact.'; if [ "$mode" = confirmation ]; then echo; echo "Prior-Report: $prior"; echo "Prior-Report-SHA256: $(sha "$prior")"; echo 'Accepted-Blocker-Dispositions:'; printf '%s' "$disposition_lines"; echo 'Affected-Areas:'; printf '%s\n' "${areas[@]}"; fi; } > "$tmp"
 ln "$tmp" "$final" 2>/dev/null || { echo 'package collision or publication failure' >&2; exit 6; }; rm -f "$tmp"
-pdigest=$(sha "$final"); (set -o noclobber; printf '%s\n' "$pdigest" > "$final.sha256") 2>/dev/null || { rm -f "$final"; echo 'package digest publication failure' >&2; exit 6; }; trap - EXIT
-echo "PACKAGE_PATH=$final"; echo "PACKAGE_SHA256=$pdigest"; cat <<EOF
-Launch Harness B with:
-Use solopowers:workstream-brainstorming external reviewer prompt to review package $final. Read evidence only through Git objects at its recorded commit; do not edit the Workstream or brainstorm. Write a draft under $ws/drafts/, then publish it with: $report_tool publish $final DRAFT_FILE
-EOF
+pdigest=$(sha "$final"); (set -o noclobber; printf '%s\n' "$pdigest" > "$final.sha256") 2>/dev/null || { rm -f "$final"; echo 'package digest publication failure' >&2; exit 6; }
+launch="Launch Harness B with:
+Use solopowers:workstream-brainstorming external reviewer prompt to review package $final. Read evidence only through Git objects at its recorded commit; do not edit the workstream folder or brainstorm. Write a draft under $ws/drafts/, then publish it with: $report_tool publish $final DRAFT_FILE"
+lfinal="$ws/packages/$id.launch.txt"; ltmp="$ws/packages/.${id}.$$.$RANDOM.launch.tmp"
+{ printf '%s\n' "$launch" > "$ltmp" && ln "$ltmp" "$lfinal"; } 2>/dev/null || { rm -f "$ltmp" "$final" "$final.sha256"; echo 'launch file publication failure' >&2; exit 6; }; rm -f "$ltmp"
+echo "LAUNCH_FILE=$lfinal"; echo "PACKAGE_PATH=$final"; echo "PACKAGE_SHA256=$pdigest"; printf '%s\n' "$launch"

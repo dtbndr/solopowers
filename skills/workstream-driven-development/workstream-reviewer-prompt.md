@@ -1,9 +1,9 @@
 # Slice Reviewer Prompt Template
 
-Use this template when dispatching a reviewer subagent. See the Harness Dispatch
-table in SKILL.md for how to dispatch on your harness. The reviewer
-reads the slice's diff once and returns two verdicts: spec compliance and
-code quality.
+Use this template when dispatching a reviewer subagent. See `references/harness-dispatch.md`
+for how to dispatch on your harness. The reviewer
+reads the slice's diff once and returns spec compliance plus severity-graded
+findings (P0-P3) and a verdict.
 
 **Purpose:** Verify one slice's implementation matches its requirements (nothing
 more, nothing less) and is well-built (clean, tested, maintainable)
@@ -11,8 +11,8 @@ more, nothing less) and is well-built (clean, tested, maintainable)
 ```
 reviewer subagent:
   description: "Review Slice [SLICE_ID] (compliance + quality)"
-  model: [MODEL — REQUIRED: choose per SKILL.md Model Selection; an omitted
-         model silently inherits the session's most expensive one]
+  model: [MODEL — REQUIRED: strongest tier per SKILL.md Model Selection; an omitted
+         model silently inherits the session's model]
   prompt: |
     You are reviewing one slice's implementation: first whether it matches its
     requirements, then whether it is well-built. This is a slice-scoped gate,
@@ -25,6 +25,10 @@ reviewer subagent:
 
     Workstream-level constraints that bind this slice:
     [GLOBAL_CONSTRAINTS]
+
+    Acceptance boundary from `brief.md` (grade the slice against this as
+    well as the slice brief):
+    [ACCEPTANCE_BOUNDARY]
 
     ## What the Implementer Claims They Built
 
@@ -63,22 +67,22 @@ reviewer subagent:
     spawn child agents. Perform the review yourself; if blocked or needing
     context, report that directly to the controller.
 
-    ## The Workstream Document is a vision document
+    ## The workstream is a vision document
 
-    The Workstream Document says what the software must do. It does not
+    The workstream (`brief.md` acceptance boundary plus the slice brief) says what the software must do. It does not
     enumerate every input, environment, or condition the software will
-    meet. For behavior the Workstream Document is silent on, judge by what
+    meet. For behavior the workstream is silent on, judge by what
     a reasonable person using this software would expect: a reasonable
-    person's expectation is a requirement, and a Workstream Document's
+    person's expectation is a requirement, and a workstream's
     silence is not permission. Grade such findings by their effect on that
-    person, not by whether the Workstream Document mentions the trigger.
+    person, not by whether the workstream mentions the trigger.
 
     ## Declined to judge
 
     Before your verdict, list every behavior you considered and set aside
-    as outside the Workstream Document, one line each, with the reason. The
+    as outside the workstream, one line each, with the reason. The
     controller triages each line and anything conflicting with the
-    Workstream Document goes to the user (see Constructing Reviewer Prompts);
+    workstream goes to the user (see Constructing Reviewer Prompts);
     nothing you set aside is dropped silently. An empty list means you set
     nothing aside.
 
@@ -129,10 +133,9 @@ reviewer subagent:
       the implementation, or the report omits real RED/GREEN evidence, fail
       the compliance review.
 
-    **Manual smoke-test readiness:**
-    - Does the implementation support the documented manual smoke test
-      cleanly?
-    - Are any required user-visible flows, setup assumptions, or expected
+    **Slice verification:**
+    - Do the slice's automated verification commands cover its required
+      behavior, and are any required flows, setup assumptions, or expected
       outcomes obviously broken?
 
     ## Part 2: Code Quality
@@ -155,7 +158,7 @@ reviewer subagent:
     - Are units decomposed so they can be understood and tested
       independently?
     - Is the implementation following the key files list and architecture
-      invariants from the Workstream Document?
+      invariants from `slices.md`?
     - Did this change create new files that are already large, or
       significantly grow existing files? (Don't flag pre-existing file
       sizes — focus on what this slice's change contributed.)
@@ -170,21 +173,19 @@ reviewer subagent:
     file:line, or a check you ran — no preamble, no process narration,
     no closing summary.
 
-    ## Calibration
+    ## Severity
 
-    Categorize issues by actual severity. Not everything is Critical.
-    Important means this slice cannot be trusted until it is fixed: incorrect
-    or fragile behavior, a missed requirement, or maintainability damage you
-    would block a merge over — verbatim duplication of a logic block,
-    swallowed errors, tests that assert nothing. "Coverage could be broader"
-    and polish suggestions are Minor.
-    If the Workstream Document explicitly mandates something this rubric calls
-    a defect (a test that asserts nothing, verbatim duplication of a logic
-    block), that IS a finding — report it as Important, labeled
-    workstream-mandated. The workstream's authorship does not grade its own
-    work; the human decides.
-    Acknowledge what was done well before listing issues — accurate praise
-    helps the implementer trust the rest of the feedback.
+    Grade EVERY finding P0, P1, P2 or P3:
+
+    [SEVERITY_DEFINITIONS]
+
+    Evidence is mandatory for P0/P1: a file:line, failing command or test
+    output, or a concrete scenario that triggers it. A P0/P1 without
+    evidence is downgraded to P2. A stated implementer rationale never
+    downgrades a finding. If the workstream mandates something these
+    definitions call a defect, report it at its grade labeled
+    workstream-mandated; the human decides. Open with what was done well,
+    briefly.
 
     ## Output Format
 
@@ -199,31 +200,28 @@ reviewer subagent:
     ### Strengths
     [What's well done? Be specific.]
 
-    ### Issues
+    ### Findings
 
-    #### Critical (Must Fix)
-    #### Important (Should Fix)
-    #### Minor (Nice to Have)
+    One bullet each: `P<0-3> — <file:line> — <what is wrong, why it matters>
+    — Evidence: <required for P0/P1>`. "None" if none.
 
-    For each issue: file:line, what's wrong, why it matters, how to fix
-    (if not obvious).
+    Final line, exactly one of:
 
-    ### Assessment
-
-    **Slice quality:** [Approved | Needs fixes]
-
-    **Reasoning:** [1-2 sentence technical assessment]
+    `Verdict: CLEAN` (no P0/P1) | `Verdict: NEEDS FIXES (<n> P0/P1)`
 ```
 
 **Placeholders** (run `scripts/` helpers by their absolute path, from the working tree):
 
-- `[MODEL]` — REQUIRED: reviewer model per SKILL.md Model Selection
+- `[MODEL]` — REQUIRED: strongest tier per SKILL.md Model Selection
 - `[BRIEF_FILE]` — REQUIRED: the slice brief file (`bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID`
   prints the path; same file the implementer worked from)
 - `[GLOBAL_CONSTRAINTS]` — the binding requirements copied verbatim from
-  the Workstream Document's Slice header: exact values, formats, watch-outs,
+  the slice header in `slices.md`: exact values, formats, watch-outs,
   and stated relationships between components (not process rules — those
   are already in this template)
+- `[ACCEPTANCE_BOUNDARY]` — the "Happy path and acceptance boundary" text copied
+  verbatim from `<folder>/brief.md`
+- `[SEVERITY_DEFINITIONS]` — REQUIRED: see [references/reviewer-prompts.md](references/reviewer-prompts.md)
 - `[REPORT_FILE]` — REQUIRED: the file the implementer wrote its detailed
   report to
 - `[BASE_SHA]` — commit before this slice
@@ -232,8 +230,8 @@ reviewer subagent:
   package to (`bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` prints the
   unique path it wrote; the package never enters the controller's context)
 
-**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Issues
-(Critical/Important/Minor), Slice quality verdict
+**Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Findings
+(P0-P3 with evidence), `Verdict:` line
 
 A fix dispatch can address spec gaps and quality findings together;
 re-review after fixes covers both verdicts.

@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback
+description: Use when worktree isolation is chosen for a workstream or feature - ensures an isolated workspace exists via native tools or git worktree fallback
 ---
 
 # Using Git Worktrees
@@ -97,7 +97,7 @@ git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
 
-**Sandbox fallback:** If `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
+**Sandbox fallback:** If invoked by `workstream-driven-development`, do not fall back: report the failure and stop (the caller offers branch mode). Otherwise, if `git worktree add` fails with a permission error (sandbox denial), tell the user the sandbox blocked worktree creation and you're working in the current directory instead. Then run setup and baseline tests in place.
 
 ## Step 2: Project Setup
 

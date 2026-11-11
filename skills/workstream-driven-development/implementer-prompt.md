@@ -1,20 +1,20 @@
 # Implementer Subagent Prompt Template (Workstream Slice)
 
-Use this template when dispatching an implementer subagent to execute a specific workstream slice. See the Harness Dispatch table in SKILL.md for how to dispatch on your harness.
+Use this template when dispatching an implementer subagent to execute a specific workstream slice. See `references/harness-dispatch.md` for how to dispatch on your harness.
 
 The implementer runs with isolated context — it does NOT inherit the controller's session history. This aligns with WSD's curated-input principle. Pass all needed files and the slice brief explicitly.
 
 ```
 implementer subagent:
   description: "Implement Slice [SLICE_ID]: [Slice Title]"
-  model: [MODEL — REQUIRED: choose per SKILL.md model-selection guidance]
+  model: [MODEL — REQUIRED: standard tier per SKILL.md Model Selection]
   prompt: |
     You are implementing Slice [SLICE_ID]: [Slice Title]
 
     ## Slice Brief
 
     Read your slice brief first: [BRIEF_FILE]
-    It contains the full slice goal, tasks, watch-outs, verification, and manual smoke test requirements.
+    It contains the full slice goal, tasks, watch-outs, and verification.
 
     ## Context
 
