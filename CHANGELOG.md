@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-11
+
+### Changed
+
+- `LICENSE`: 2026 copyright holder is now the maintainer's legal name (upstream's notice unchanged).
+- README: the pinned install example now uses `v2.0.0`.
+
 ## [2.0.0] - 2026-11-11
 
 ### Added
