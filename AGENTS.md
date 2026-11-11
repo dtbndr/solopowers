@@ -109,3 +109,5 @@ Procedure (always pass `-R dtbndr/solopowers` to `gh`). `verify.yml` covers only
 5. Wait for CI on that commit (the run may take a few seconds to register): `gh run watch -R dtbndr/solopowers --exit-status $(gh run list -R dtbndr/solopowers --workflow verify.yml --commit "$(git rev-parse HEAD)" --json databaseId -q '.[0].databaseId')`. If the run id is empty (run not registered yet), wait a few seconds and rerun the lookup. If CI is red, fix forward on main and repeat steps 1-5; never tag a red commit.
 6. `git tag -a vX.Y.Z -m "vX.Y.Z"`, then `git push origin vX.Y.Z` (never `git push --tags`).
 7. `awk '/^## \[X.Y.Z\]/{f=1;next} /^## \[/{f=0} f' CHANGELOG.md | gh release create vX.Y.Z -R dtbndr/solopowers --verify-tag --notes-file -`
+
+Release tags are immutable: the GitHub ruleset "Protect release tags" blocks deleting or moving any `v*` tag, with no bypass. Do not retag a published version; ship a new patch release instead. Only if a tag was pushed to the wrong commit before anyone pinned it, the operator must temporarily disable that ruleset (repo Settings > Rules) to fix it, then re-enable it.
