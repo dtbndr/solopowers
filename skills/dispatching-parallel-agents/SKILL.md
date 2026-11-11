@@ -202,6 +202,5 @@ From debugging session (2025-10-03):
 | Harness | Dispatch implementer | Dispatch investigator | Parallel dispatch |
 |---|---|---|---|
 | Pi | built-in `worker` role | built-in `scout` role | multiple dispatch calls in one response |
-| kiro-cli | `orchestrate_subagent(role: general-task-execution)` | `orchestrate_subagent(role: context-gatherer)` | multiple calls in one response |
 | claude-code | `Task` tool with implementer prompt | `Task` tool with investigation prompt | multiple `Task` calls in one response |
 | Antigravity | describe the task in natural language | describe the investigation in natural language | list all tasks in one prompt; state "run these as parallel subagents" |

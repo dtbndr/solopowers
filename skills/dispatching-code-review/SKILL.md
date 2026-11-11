@@ -119,6 +119,5 @@ See template at: [code-reviewer.md](code-reviewer.md)
 | Harness | Dispatch reviewer |
 |---|---|
 | Pi | built-in `reviewer` role |
-| kiro-cli | `orchestrate_subagent(role: semantic_reviewer)` |
 | claude-code | `Task` tool with reviewer prompt |
 | Antigravity | describe the review task in natural language; harness spawns dynamically |
