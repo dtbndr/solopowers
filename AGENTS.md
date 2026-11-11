@@ -103,11 +103,11 @@ New skills or backwards-compatible behavior changes are minor; fixes are patch.
 Procedure (always pass `-R dtbndr/solopowers` to `gh`). `verify.yml` covers only part of the checklist, so the local run stays required.
 
 1. The Verification Checklist passes locally.
-2. Move `CHANGELOG.md` `Unreleased` entries under `## [X.Y.Z] - YYYY-MM-DD`.
-3. Commit.
-4. `git push origin main`.
-5. Wait for CI on that commit (the run may take a few seconds to register): `gh run watch -R dtbndr/solopowers --exit-status $(gh run list -R dtbndr/solopowers --workflow verify.yml --commit "$(git rev-parse HEAD)" --json databaseId -q '.[0].databaseId')`. If the run id is empty (run not registered yet), wait a few seconds and rerun the lookup. If CI is red, fix forward on main and repeat steps 1-5; never tag a red commit.
-6. `git tag -a vX.Y.Z -m "vX.Y.Z"`, then `git push origin vX.Y.Z` (never `git push --tags`).
+2. Branch from an up-to-date `main` (`git switch -c release/vX.Y.Z`; not `ws/…`, which is for workstreams) and move `CHANGELOG.md` `Unreleased` entries under `## [X.Y.Z] - YYYY-MM-DD`.
+3. Commit, push the branch, and open a PR: `git push -u origin HEAD`, then `gh pr create -R dtbndr/solopowers --fill`. Direct pushes to `main` are rejected by the "Protect main" ruleset.
+4. Wait for `verify` on the PR: `gh pr checks <n> -R dtbndr/solopowers --watch --fail-fast`. Then merge with the admin override: `gh pr merge <n> -R dtbndr/solopowers --admin --squash --delete-branch`. The override is needed because you cannot approve your own PR; it skips every ruleset rule, so never merge before `verify` is green.
+5. `git switch main && git pull --ff-only`, then `SHA=$(git rev-parse HEAD)`. The squash merge created a new commit, so the PR run does not cover it: wait for the push-triggered run on that exact SHA (the run may take a few seconds to register): `gh run watch -R dtbndr/solopowers --exit-status $(gh run list -R dtbndr/solopowers --workflow verify.yml --commit "$SHA" --json databaseId -q '.[0].databaseId')`. If the run id is empty (run not registered yet), wait a few seconds and rerun the lookup. If CI is red, fix forward through another PR and repeat steps 1-5; never tag a red commit.
+6. Tag that exact commit, never a stale local `HEAD`: `git tag -a vX.Y.Z -m "vX.Y.Z" "$SHA"`, then `git push origin vX.Y.Z` (never `git push --tags`).
 7. `awk '/^## \[X.Y.Z\]/{f=1;next} /^## \[/{f=0} f' CHANGELOG.md | gh release create vX.Y.Z -R dtbndr/solopowers --verify-tag --notes-file -`
 
 Release tags are immutable: the GitHub ruleset "Protect release tags" blocks deleting or moving any `v*` tag, with no bypass. Do not retag a published version; ship a new patch release instead. Only if a tag was pushed to the wrong commit before anyone pinned it, the operator must temporarily disable that ruleset (repo Settings > Rules) to fix it, then re-enable it.
