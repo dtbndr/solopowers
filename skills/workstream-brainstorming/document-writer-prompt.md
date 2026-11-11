@@ -12,7 +12,7 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
 
     **Output Folder Path:** Write the three files directly into the designated folder `docs/workstreams/YYYY-MM-DD-[topic]/`: `brief.md`, `slices.md`, `log.md`.
     **Opt-ins:** playback=<on|off>, external review=<on|off> (if not given, write playback=off, external review=off)
-    **Context and Brainstorming Summary:** [BRAINSTORMING_SUMMARY_AND_SLICES]
+    **Context and Brainstorming Summary:** [BRAINSTORMING_SUMMARY_AND_SLICES] (includes the list of decisions and assumptions settled in the session; every listed item must get an entry in `slices.md` Assumptions and design decisions or appear in `brief.md`)
 
     ## Invariant Constraints
 
