@@ -8,6 +8,8 @@ cd "$tmp"; git init -q repo; cd repo; git config user.email test@example.invalid
 out=$($ws 'docs/workstreams/a odd'); [ -d "$out/packages" ] || fail workspace; [ -z "$(git status --porcelain)" ] || fail 'workspace dirtied status'; git check-ignore -q "${out#$PWD/}/probe" || fail 'workspace not ignored'
 printf x >> 'docs/workstreams/a odd/slices.md'; expect_fail "$pkg" initial 'docs/workstreams/a odd'; git checkout -- 'docs/workstreams/a odd/slices.md'; printf x >> 'docs/workstreams/a odd/slices.md'; git add .; expect_fail "$pkg" initial 'docs/workstreams/a odd'; git reset -q; git checkout -- 'docs/workstreams/a odd/slices.md'; expect_fail "$pkg" initial docs/workstreams/missing; rm -f 'docs/workstreams/a odd/log.md'; printf dirty > 'docs/workstreams/a odd/log.md'; $pkg initial 'docs/workstreams/a odd' >/dev/null || fail 'uncommitted log.md must not block'; git checkout -- 'docs/workstreams/a odd/log.md'; expect_fail "$pkg" initial 'docs/workstreams/a odd/brief.md'; expect_fail "$pkg" initial ../escape
 pkgout=$($pkg initial 'docs/workstreams/a odd'); package=$(printf '%s\n' "$pkgout"|sed -n 's/^PACKAGE_PATH=//p'); [ -f "$package" ] && [ -f "$package.sha256" ] || fail package
+check_launch(){ lo=$1; [ "$(printf '%s\n' "$lo"|head -n1|cut -c1-12)" = LAUNCH_FILE= ] || fail "$2 LAUNCH_FILE first line"; lf=$(printf '%s\n' "$lo"|sed -n '1s/^LAUNCH_FILE=//p'); pp=$(printf '%s\n' "$lo"|sed -n 's/^PACKAGE_PATH=//p'); [ -f "$lf" ] && grep -Fq 'Launch Harness B with:' "$lf" && grep -Fq "$pp" "$lf" || fail "$2 launch file"; }
+check_launch "$pkgout" initial
 make_draft(){ cat > "$1" <<EOF
 Schema-Version: 1
 Package-ID: $(field Package-ID "$package")
@@ -45,6 +47,7 @@ expect_fail "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$blockr
 printf 'Disposition: D1|accepted|preserve final export\nDisposition: D1|accepted|different reason\n' > "$tmp/duplicate-dispositions"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$blockreport" --dispositions "$tmp/duplicate-dispositions" --affected-area 'Slice A'
 printf 'Disposition: D2|accepted|wrong lineage\n' > "$tmp/wrong-lineage"; expect_fail "$pkg" confirmation 'docs/workstreams/a odd' --prior-report "$blockreport" --dispositions "$tmp/wrong-lineage" --affected-area 'Slice A'
 printf 'Disposition: D1|accepted|preserve final export\n' > "$tmp/dispositions"; relative_blockreport=${blockreport#$PWD/}; conf=$($pkg confirmation 'docs/workstreams/a odd' --prior-report "$relative_blockreport" --dispositions "$tmp/dispositions" --affected-area 'Slice A'); confpkg=$(printf '%s\n' "$conf"|sed -n 's/^PACKAGE_PATH=//p'); [ "$(field Prior-Report "$confpkg")" = "$blockreport" ] || fail 'confirmation prior report was not canonicalized'
+check_launch "$conf" confirmation
 make_conf_draft(){ local draft=$1 conf_package=${2:-$confpkg}; cat > "$draft" <<EOF
 Schema-Version: 1
 Package-ID: $(field Package-ID "$conf_package")
