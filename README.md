@@ -62,11 +62,11 @@ npx skills add ~/Development/skills-ws/solopowers
 # From GitHub (tracks main)
 npx skills add https://github.com/dtbndr/solopowers
 
-# Pinned to a release (requires skills CLI >= 1.8)
-npx skills add dtbndr/solopowers@v2.0.1
+# Pinned to a release (requires skills CLI >= 1.8); replace vX.Y.Z with a tag
+npx skills add dtbndr/solopowers@vX.Y.Z
 ```
 
-Unpinned installs track `main`; pin a tag for a stable version.
+Unpinned installs track `main`; pin a tag for a stable version. See [Releases](https://github.com/dtbndr/solopowers/releases) for available tags.
 
 ## Contributing
 
