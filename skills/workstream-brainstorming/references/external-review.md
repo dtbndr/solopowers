@@ -11,7 +11,7 @@ Harness B is an independent, user-launched reviewer session with no bridge to Ha
 Run each helper by its absolute path, from the working tree you're executing in (never `cd` into the skill directory).
 
 - `bash scripts/external-review-workspace WORKSTREAM_FOLDER` — Creates a local self-ignoring `.solopowers/workstream-reviews/...` audit workspace. It is append-only by protocol, not durable archival storage.
-- `bash scripts/external-review-package initial WORKSTREAM_FOLDER` — Requires `brief.md` and `slices.md` tracked and committed (unstaged or staged changes to either fail; `log.md` is ignored). Creates a commit- and blob-anchored package manifest writes the canonical launch instruction for Harness B to `LAUNCH_FILE` (printed as the first stdout line) and prints it.
+- `bash scripts/external-review-package initial WORKSTREAM_FOLDER` — Requires `brief.md` and `slices.md` tracked and committed (unstaged or staged changes to either fail; `log.md` is ignored). Creates a commit- and blob-anchored package manifest, writes the canonical launch instruction for Harness B to `LAUNCH_FILE` (printed as the first stdout line) and prints it.
 - `external-workstream-document-reviewer-prompt.md` — Harness B’s dedicated contract prompt.
 - `bash scripts/external-review-report publish PACKAGE DRAFT` — Mechanically validates and publishes Harness B’s report draft.
 - `bash scripts/external-review-report verify PACKAGE REPORT` — Runs on Harness A to verify cryptographic integrity and schema compliance of the report before adjudication.
@@ -20,7 +20,7 @@ Run each helper by its absolute path, from the working tree you're executing in 
 
 1. **A-internal-ready:** The mandatory internal document review (`workstream-document-reviewer-prompt.md`) has passed (`Approved`), decision provenance is complete (`slices.md` Assumptions and design decisions), and the workstream folder is committed. External review runs after this gate and before the operator reviews `brief.md`.
 2. **external-skipped:** If the operator did not opt in (`external review=off` in `log.md`), skip this protocol and proceed directly to the operator's review of `brief.md`, then WDD.
-3. **initial-package:** Harness A runs `bash scripts/external-review-package initial WORKSTREAM_FOLDER`. Harness A reads `LAUNCH_FILE` (first stdout line) and, in the SAME message and without being asked, pastes its contents verbatim in a fenced code block for the user to paste into Harness B, then waits. No paraphrasing; never only the path or digest.
+3. **initial-package:** Harness A runs `bash scripts/external-review-package initial WORKSTREAM_FOLDER`. Harness A reads `LAUNCH_FILE` (first stdout line), quotes it verbatim, including the 'Launch Harness B with:' header line, in a fenced code block, in the same message, unprompted, for the operator to paste into Harness B, then waits. No paraphrasing; never only the path or digest.
 4. **initial-report:** Harness B writes its draft and publishes via `bash scripts/external-review-report publish PACKAGE DRAFT`. Harness A runs `bash scripts/external-review-report verify PACKAGE REPORT`, then enters adjudication, even when the blocker count is zero.
 5. **A-adjudication:** Harness A accepts or rejects findings with the user:
    - Commit accepted implementation concerns into the relevant slice's Tasks in `slices.md`, Watch out, or Verification guidance.
@@ -33,7 +33,7 @@ Run each helper by its absolute path, from the working tree you're executing in 
      --dispositions "$DISPOSITIONS_FILE" \
      --affected-area "$AFFECTED_AREA"
    ```
-   Same relay rule: read `LAUNCH_FILE`, paste its contents verbatim in a fenced code block in the same message, unprompted, then wait.
+   Same relay rule: read `LAUNCH_FILE`, quote verbatim, including the 'Launch Harness B with:' header line, in a fenced code block, in the same message, unprompted, for the operator to paste into Harness B, then wait.
 7. **confirmation-report:** Harness B verifies the prior report, then reviews only the accepted dispositions, listed affected areas, and resulting regressions. Harness A verifies and adjudicates the confirmation report. If no accepted blocker remains, external review ends. A newly evidenced blocker requires explicit user authorization before any further pass; no third pass is automatic.
 
 ## Finding Classification

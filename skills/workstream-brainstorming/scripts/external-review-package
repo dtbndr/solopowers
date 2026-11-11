@@ -50,5 +50,5 @@ pdigest=$(sha "$final"); (set -o noclobber; printf '%s\n' "$pdigest" > "$final.s
 launch="Launch Harness B with:
 Use solopowers:workstream-brainstorming external reviewer prompt to review package $final. Read evidence only through Git objects at its recorded commit; do not edit the workstream folder or brainstorm. Write a draft under $ws/drafts/, then publish it with: $report_tool publish $final DRAFT_FILE"
 lfinal="$ws/packages/$id.launch.txt"; ltmp="$ws/packages/.${id}.$$.$RANDOM.launch.tmp"; trap 'rm -f "$ltmp"' EXIT
-printf '%s\n' "$launch" > "$ltmp"; ln "$ltmp" "$lfinal" 2>/dev/null || { rm -f "$ltmp" "$final" "$final.sha256"; echo 'launch file publication failure' >&2; exit 6; }; rm -f "$ltmp"; trap - EXIT
+{ printf '%s\n' "$launch" > "$ltmp" && ln "$ltmp" "$lfinal"; } 2>/dev/null || { rm -f "$ltmp" "$final" "$final.sha256"; echo 'launch file publication failure' >&2; exit 6; }; rm -f "$ltmp"; trap - EXIT
 echo "LAUNCH_FILE=$lfinal"; echo "PACKAGE_PATH=$final"; echo "PACKAGE_SHA256=$pdigest"; printf '%s\n' "$launch"

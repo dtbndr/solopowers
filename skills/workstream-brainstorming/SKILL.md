@@ -166,7 +166,7 @@ Runs only if the operator opted in (default off), after the internal reviewer ap
 Run these helpers by their absolute path, from the working tree you're executing in (never `cd` into the skill directory):
 - `bash scripts/external-review-workspace WORKSTREAM_FOLDER`
 - `bash scripts/external-review-package initial WORKSTREAM_FOLDER`
-  After it runs, in the same message and unprompted, quote the launch block (contents of `LAUNCH_FILE`) verbatim in a fenced code block for the operator to paste into Harness B.
+  After it runs, in the same message and unprompted, quote the launch block (contents of `LAUNCH_FILE`) verbatim, including the 'Launch Harness B with:' header line, in a fenced code block, in the same message, unprompted, for the operator to paste into Harness B.
 - `external-workstream-document-reviewer-prompt.md`
 - `bash scripts/external-review-report publish PACKAGE DRAFT`
 - `bash scripts/external-review-report verify PACKAGE REPORT`
