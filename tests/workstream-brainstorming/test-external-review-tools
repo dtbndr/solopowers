@@ -4,6 +4,11 @@ set -euo pipefail
 base=$(cd "${BASH_SOURCE[0]%/*}/../../skills/workstream-brainstorming/scripts" && pwd); ws="$base/external-review-workspace"; pkg="$base/external-review-package"; rpt="$base/external-review-report"; tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 fail(){ echo "FAIL: $*" >&2; exit 1; }; expect_fail(){ "$@" >/dev/null 2>&1 && fail "expected failure: $*" || true; }
 field(){ sed -n "s/^$1: //p" "$2"|head -n1; }
+# Pin the semantic contract, not the surrounding prompt prose. Override for mutation tests.
+prompt=${EXTERNAL_REVIEW_TEST_PROMPT:-"$base/../external-workstream-document-reviewer-prompt.md"}
+grep -Fq 'SHA-256 of the text `<brief-blob-oid>\n<slices-blob-oid>\n`' "$prompt" || fail 'reviewer prompt missing OID-text digest definition'
+grep -Fq 'printf '\''%s\n%s\n'\'' "$brief_oid" "$slices_oid" | shasum -a 256' "$prompt" || fail 'reviewer prompt missing digest recipe'
+! grep -Fq 'brief bytes then slices bytes' "$prompt" || fail 'reviewer prompt contains obsolete file-bytes definition'
 cd "$tmp"; git init -q repo; cd repo; git config user.email test@example.invalid; git config user.name test; mkdir -p 'docs/workstreams/a odd'; for f in brief slices log; do printf '# Test %s\n' $f > "docs/workstreams/a odd/$f.md"; done; git add .; git commit -qm initial
 out=$($ws 'docs/workstreams/a odd'); [ -d "$out/packages" ] || fail workspace; [ -z "$(git status --porcelain)" ] || fail 'workspace dirtied status'; git check-ignore -q "${out#$PWD/}/probe" || fail 'workspace not ignored'
 printf x >> 'docs/workstreams/a odd/slices.md'; expect_fail "$pkg" initial 'docs/workstreams/a odd'; git checkout -- 'docs/workstreams/a odd/slices.md'; printf x >> 'docs/workstreams/a odd/slices.md'; git add .; expect_fail "$pkg" initial 'docs/workstreams/a odd'; git reset -q; git checkout -- 'docs/workstreams/a odd/slices.md'; expect_fail "$pkg" initial docs/workstreams/missing; rm -f 'docs/workstreams/a odd/log.md'; printf dirty > 'docs/workstreams/a odd/log.md'; $pkg initial 'docs/workstreams/a odd' >/dev/null || fail 'uncommitted log.md must not block'; git checkout -- 'docs/workstreams/a odd/log.md'; expect_fail "$pkg" initial 'docs/workstreams/a odd/brief.md'; expect_fail "$pkg" initial ../escape
@@ -75,11 +80,15 @@ relconfdraft="$out/drafts/relative-confirmation"; make_conf_draft "$relconfdraft
 printf '\nSlice B\n' >> "$confpkg"; expect_fail "$rpt" publish "$confpkg" "$confdraft"
 printf tamper >> "$blockreport"; expect_fail "$rpt" verify "$confpkg" "$out/drafts/r1"
 # Hardening: dirty/untracked inputs, log.md freedom, tamper, file-path argument, digest boundaries, brief-only confirmation.
-cd "$tmp"; git init -q repo2; cd repo2; git config user.email test@example.invalid; git config user.name test; W=docs/workstreams/w; mkdir -p $W
+cd "$tmp"; git -c init.defaultObjectFormat=sha1 init -q repo2; cd repo2; git config user.email test@example.invalid; git config user.name test; W=docs/workstreams/w; mkdir -p $W
 printf 'ab' > $W/brief.md; printf 'c' > $W/slices.md; printf 'log\n' > $W/log.md; git add .; git commit -qm init
 printf x >> $W/brief.md; expect_fail "$pkg" initial $W; git checkout -- $W/brief.md
 printf x >> $W/log.md; p2=$($pkg initial $W) || fail 'dirty log.md must be allowed'; git checkout -- $W/log.md
 p2path=$(printf '%s\n' "$p2"|sed -n 's/^PACKAGE_PATH=//p'); d_ab_c=$(field Workstream-SHA256 "$p2path")
+# Independently precomputed Git SHA-1 blob IDs and SHA-256 of their newline-terminated text.
+[ "$(field Brief-Blob-OID "$p2path")" = 9ae9e86b7bd6cb1472d9373702d8249973da0832 ] || fail 'known brief blob OID'
+[ "$(field Slices-Blob-OID "$p2path")" = 3410062ba67c5ed59b854387a8bc0ec012479368 ] || fail 'known slices blob OID'
+[ "$d_ab_c" = 2fac7dbd8eaeecb796079dfc27adb8af64aa6cfba54b1be1a953853519de8d34 ] || fail 'known workstream digest'
 expect_fail "$pkg" initial $W/brief.md
 cp "$p2path" "$tmp/tb"; sed -i.bak 's/^Brief-Blob-OID: .*/Brief-Blob-OID: deadbeef/' "$tmp/tb"; rm "$tmp/tb.bak"; shasum -a 256 "$tmp/tb" | awk '{print $1}' > "$tmp/tb.sha256"
 mk2(){ cat > "$1" <<EOF
@@ -100,6 +109,25 @@ Finding: design-blocker|D1|Slice A|unsafe deletion
 EOF
 }
 mk2 "$tmp/d2"; expect_fail "$rpt" publish "$tmp/tb" "$tmp/d2"
+# Tamper each fresh package in place, re-sign its sidecar, and demand the intended
+# diagnostic: a generic failure could be an earlier package-identity check.
+reject_package_field(){
+  local key=$1 value=$2 diagnostic=$3 candidate output
+  candidate=$($pkg initial "$W" | sed -n 's/^PACKAGE_PATH=//p')
+  sed -i.bak "s/^$key: .*/$key: $value/" "$candidate"; rm "$candidate.bak"
+  shasum -a 256 "$candidate" | awk '{print $1}' > "$candidate.sha256"
+  if output=$("$rpt" publish "$candidate" "$tmp/d2" 2>&1); then fail "tampered $key accepted"; fi
+  [ "$output" = "$diagnostic" ] || fail "tampered $key rejected for wrong reason: $output"
+}
+reject_package_field Brief-Blob-OID deadbeef 'package brief.md blob does not match commit tree'
+reject_package_field Slices-Blob-OID deadbeef 'package slices.md blob does not match commit tree'
+b_oid=$(field Brief-Blob-OID "$p2path"); s_oid=$(field Slices-Blob-OID "$p2path")
+for wrong_digest in \
+  "$(printf 'abc' | shasum -a 256 | awk '{print $1}')" \
+  "$(printf '%s\n%s\n' "$s_oid" "$b_oid" | shasum -a 256 | awk '{print $1}')" \
+  "$(printf '%s\n%s' "$b_oid" "$s_oid" | shasum -a 256 | awk '{print $1}')"; do
+  reject_package_field Workstream-SHA256 "$wrong_digest" 'package blob digest mismatch'
+done
 r2=$($rpt publish "$p2path" "$tmp/d2"|sed -n 's/^REPORT_PATH=//p'); [ -f "$r2" ] || fail 'publish blocker report'
 printf 'Disposition: D1|accepted|fix\n' > "$tmp/disp2"
 expect_fail "$pkg" confirmation $W --prior-report "$r2" --dispositions "$tmp/disp2" --affected-area 'Slice A'
