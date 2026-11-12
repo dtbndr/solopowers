@@ -4,6 +4,8 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-11-12
+
 ### Fixed
 
 - `workstream-brainstorming`: the external reviewer prompt now defines `Workstream-SHA256` as the SHA-256 of `<brief-blob-oid>\n<slices-blob-oid>\n` (with the `printf … | shasum -a 256` recipe), matching `references/external-review.md` and the package script, instead of the ambiguous "brief bytes then slices bytes".
