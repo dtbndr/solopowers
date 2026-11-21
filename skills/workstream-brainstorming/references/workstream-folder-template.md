@@ -101,7 +101,7 @@ Intentionally left to `workstream-driven-development`:
 {Remaining open design questions that block approval, or `None`.}
 
 ## Final verification
-Run applicable commands before handoff and record exact commands/results. A known pre-existing failure must be identified by command and failure, distinguished from new failures, and not described as passing. An unchanged, verified baseline failure is not by itself a new blocker.
+Run all applicable commands before final handoff and record exact commands/results. Every required final verification command must pass. Any failing required check blocks completion; if the operator changes scope, document that change and ensure every check that remains required passes.
 - [ ] Tests: command and result, including known pre-existing failures
 - [ ] Type check: command and result
 - [ ] Linter: command and result
@@ -118,11 +118,11 @@ Run applicable commands before handoff and record exact commands/results. A know
 #### Tasks
 
 **`file/to/modify`**
-- [ ] For intentional behavior changes, establish meaningful RED for the changed behavior (a relevant existing failing test may qualify); for pure refactors, use relevant before/after evidence and characterization coverage as needed
-- [ ] Run relevant focused checks and record actual commands/results; identify verified pre-existing failures separately from new failures
-- [ ] Implement the specified change, keeping intentional behavior changes distinct from refactoring
-- [ ] Re-run the relevant focused checks and report actual outcomes; do not claim a failing test or suite is green
-- [ ] Commit the slice changes once implementation and required verification are complete; known unchanged baseline failures must be reported, not represented as passes
+- [ ] For intentional behavior changes, establish meaningful RED before editing for the missing behavior; a relevant existing test may qualify only if verified to fail for that reason. For pure refactors, identify the affected contract and capture matching or demonstrably equivalent before/after evidence; add targeted characterization coverage before editing when existing checks do not exercise a material affected contract. For mixed work, do both for their respective changes.
+- [ ] Run focused checks and record exact commands/results; distinguish verified unchanged baseline failures from new failures.
+- [ ] Implement the specified change with minimum scope, then rerun relevant focused checks and record outcomes.
+- [ ] Before reporting slice DONE, run the full project-required verification suite and report actual results. Fix regressions and identify verified unchanged baseline failures separately; do not describe a failing suite as green. An unchanged baseline failure does not by itself block slice handoff, but never waives final workstream verification, where every required check must pass.
+- [ ] Commit the slice changes only after implementation and required slice verification are complete.
 
 #### Watch out
 - Caveats, risks, or API constraints

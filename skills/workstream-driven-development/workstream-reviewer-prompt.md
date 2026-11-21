@@ -97,8 +97,8 @@ reviewer subagent:
 
     ## Tests
 
-    The implementer already ran the tests and reported results with TDD
-    evidence for exactly this code. Do not re-run the suite to confirm their
+    The implementer already ran the tests and reported results with Test
+    Evidence for exactly this code. Do not re-run the suite to confirm their
     report. Run a test only when reading the code raises a specific doubt
     that no existing run answers — and then a focused test, never a
     package-wide suite, race detector run, or repeated/high-count loop. If
@@ -124,17 +124,28 @@ reviewer subagent:
     unchanged code or spans slices), report it as a ⚠️ item instead of
     broadening your search.
 
-    **Test and evidence verification:**
-    - For intentional behavior changes, is there meaningful RED evidence for
-      the missing behavior (a relevant existing failing test may qualify),
-      followed by GREEN?
-    - For pure refactors, is relevant before/after evidence supplied, with
-      characterization tests where needed? Do not demand artificial RED or a
-      test diff when existing coverage/evidence is appropriate.
-    - Are selected tests relevant to the changed contract, risks, and
-      dependencies? Triage failures rather than reflexively fixing old code
-      or weakening valid assertions; separate intentional changes.
-    - Missing or implausible evidence for the applicable case fails review.
+    **Test Evidence verification:**
+    - For intentional behavior changes, verify RED existed before editing and
+      failed for the intended missing behavior, followed by GREEN. Existing
+      tests qualify only when verified to fail for that behavior; if already
+      passing, investigate rather than treating them as RED.
+    - For pure refactors, verify the affected contract and matching or
+      demonstrably equivalent pre-edit and post-edit checks. Require targeted
+      characterization coverage before editing when existing checks do not
+      exercise a material affected contract.
+    - For mixed work, verify both evidence paths for their respective changes.
+    - Verify the implementer triaged failures without weakening valid
+      assertions. To substantiate an unchanged baseline failure, require the
+      same check on BASE and slice tip, or demonstrably equivalent checks for
+      the same behavior, with revisions, commands, and comparable failure
+      evidence. Verified unchanged failures may be reported separately at
+      slice handoff; new failures are regressions. Treat failures without
+      baseline comparison as unverified and grade them under the severity and
+      evidence rules; missing proof alone does not automatically make a failure
+      P0. Final workstream completion still requires every required check to
+      pass.
+    - Missing or implausible evidence should be reported as `⚠️ Cannot verify`;
+      uncertainty alone does not establish a P0/P1 defect.
 
     **Slice verification:**
     - Do the slice's automated verification commands cover its required
@@ -208,6 +219,9 @@ reviewer subagent:
     One bullet each: `P<0-3> — <file:line> — <what is wrong, why it matters>
     — Evidence: <required for P0/P1>`. "None" if none.
 
+    Report missing evidence as `⚠️ Cannot verify` and state what evidence is
+    missing. Keep the existing verdict line and exact values below unchanged.
+
     Final line, exactly one of:
 
     `Verdict: CLEAN` (no P0/P1) | `Verdict: NEEDS FIXES (<n> P0/P1)`
@@ -234,7 +248,7 @@ reviewer subagent:
   unique path it wrote; the package never enters the controller's context)
 
 **Reviewer returns:** Spec Compliance verdict (✅/❌/⚠️), Strengths, Findings
-(P0-P3 with evidence), `Verdict:` line
+(P0-P3 with evidence), and the unchanged `Verdict:` line
 
 A fix dispatch can address spec gaps and quality findings together;
 re-review after fixes covers both verdicts.

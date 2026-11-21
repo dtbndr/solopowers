@@ -15,13 +15,13 @@ For intentional behavior changes, establish meaningful failing-test evidence bef
 
 ## When to Use
 
-Use this guidance for new features, bug fixes, behavior changes, and refactoring. Intentional behavior changes require relevant failing-test evidence; pure refactors require relevant before/after evidence and characterization coverage as needed. Throwaway prototypes, generated code, and configuration-only changes may not have meaningful tests; report the verification appropriate to their risk and scope.
+Use this guidance for new features, bug fixes, behavior changes, and refactoring. Intentional behavior changes require relevant failing-test evidence; pure refactors require relevant before/after evidence and characterization coverage as needed. Throwaway prototypes, generated code, and configuration-only changes may lack meaningful tests; ask the operator before treating them as exceptions.
 
 ## The Behavior-Change Rule
 
-For intentional behavior changes, establish meaningful RED before implementation: a relevant test demonstrating the missing behavior, then verify it fails for the expected reason. A relevant existing failing test may provide RED evidence; do not require a new test merely to create a test diff.
+For intentional behavior changes, establish meaningful RED before implementation: a relevant test demonstrating the missing behavior, then verify it fails for the expected reason. A relevant existing failing test may provide RED evidence only when verified before editing to fail for the intended missing behavior; do not require a new test merely to create a test diff. If it passes before edits, investigate rather than delete it.
 
-Pure refactors do not introduce intended behavior changes, so do not invent one to force RED. Use relevant before/after evidence and add characterization coverage when needed. In either case, select tests against the changed contract, risks, and dependencies. Triage failures: distinguish regressions from pre-existing failures, do not reflexively fix unrelated old code or weaken valid assertions, and keep intentional changes separate.
+Pure refactors do not introduce intended behavior changes, so do not invent one to force RED. Identify the affected contract, capture a pre-edit baseline, and repeat the same or demonstrably equivalent checks afterward. Add targeted characterization tests before editing when existing checks do not exercise a material affected contract; if credible evidence cannot be established, report a blocker. In either case, select tests against the changed contract, risks, and dependencies. Triage failures: distinguish regressions from pre-existing failures, do not reflexively fix unrelated old code or weaken valid assertions, and keep intentional changes separate.
 
 ## Red-Green-Refactor for Intentional Behavior Changes
 
@@ -108,9 +108,9 @@ Confirm:
 
 If a new test passes immediately, determine whether it already captures existing behavior; do not treat that as RED for the intended change. A test error is not evidence of the missing behavior. For pre-existing failures, record and distinguish them from failures introduced by the change.
 
-### Baseline and Refactor Workflow
+## Baseline and Refactor Workflow
 
-For a pure refactor, record relevant baseline behavior and verification before editing, then compare after editing; add characterization coverage when needed. For mixed work, use meaningful RED evidence for intentional behavior changes and before/after evidence for refactors. Report verified unchanged baseline failures at slice handoff as baseline failures, not passes. This does not relax required workstream-end final review or finishing verification gates; those existing gates remain unchanged.
+For a pure refactor, record relevant baseline behavior and verification before editing, then compare after editing; add characterization coverage when needed. For mixed work, use meaningful RED evidence for intentional behavior changes and before/after evidence for refactors. To call a failure pre-existing and unchanged, run the same check on the relevant base revision and the changed revision, or use demonstrably equivalent checks for the same behavior; report both revisions, commands, and comparable failure evidence. Without this comparison, label the failure unverified, not pre-existing. In WSD, verified unchanged failures may be reported separately at slice handoff, not counted as passes. Standalone work has no slice-handoff exception: run required project verification and report actual results. These rules do not relax final all-pass verification gates.
 
 ### Implement and Verify the Change
 
@@ -160,7 +160,7 @@ npm test path/to/test.test.ts
 
 Confirm and report what actually ran and its result. Do not claim other tests passed unless they were executed; identify any known pre-existing failures by name and distinguish them from new failures. A failing check or suite is not green.
 
-If a relevant check fails, triage whether the change caused it. Fix regressions in scope; report known pre-existing failures by name without reflexively changing unrelated code or weakening valid assertions. Run the project's required broader verification before completion and report any failures; a failure is never described as green.
+If a relevant check fails, triage whether the change caused it. Fix regressions in scope; report known pre-existing failures by name without reflexively changing unrelated code or weakening valid assertions. Run the full project-required verification suite before completion and report any failures; a failure is never described as green.
 
 ### REFACTOR - Clean Up
 
@@ -249,11 +249,11 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
 
-## Red Flags - STOP and Start Over
+## Red Flags
 
 - Code before test
 - Test after implementation
-- Test passes immediately
+- A test that passes before implementation: investigate whether it actually tests the intended missing behavior; do not delete a valid test.
 - Can't explain why test failed
 - Tests added "later"
 - Rationalizing "just this once"
@@ -265,7 +265,7 @@ Tests-first force edge case discovery before implementing. Tests-after verify yo
 - "TDD is dogmatic, I'm being pragmatic"
 - "This is different because..."
 
-**All of these mean: Delete code. Start over with TDD.**
+**For intentional behavior code written before valid RED, stop and discard that code rather than reusing it as a reference; restart with the failing test.** A test that passes before implementation is investigated, not deleted. Pure refactors follow the baseline/refactor workflow, not this rule.
 
 ## Example: Bug Fix
 
@@ -305,6 +305,8 @@ PASS
 Extract validation for multiple fields if needed.
 
 ## Verification Checklist
+When RED setup or assertion is broken, repair the test and rerun it before implementation. When a valid assertion exposes a regression, fix the implementation—not the assertion—and rerun. Implement the minimum change to pass, then run the full project-required suite before completion.
+
 
 Before marking work complete:
 
@@ -346,4 +348,4 @@ Production code → test exists and failed first
 Otherwise → not TDD
 ```
 
-No exceptions without the user's permission.
+Exceptions require operator approval. The discard-not-reuse rule applies to intentional behavior code written before valid RED, not refactors or tests that pass before implementation. For standalone work, run required project verification and report exact results; the baseline allowance applies only to WSD slice handoff, never final completion.

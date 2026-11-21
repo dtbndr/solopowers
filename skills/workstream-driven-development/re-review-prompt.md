@@ -20,10 +20,22 @@ Subagent (general-purpose):
 
     [FINDINGS]
 
+    Do not invent a code finding; report unresolved uncertainty as `⚠️ Cannot verify`.
+
     ## The Fix
 
     Read the implementer's report (fix reports are appended at the end):
     [REPORT_FILE]
+
+    **Original slice review (when preserved):** [ORIGINAL_REVIEW_FILE]
+
+    If no original review artifact exists (including legacy findings-only
+    checkpoints), use the supplied findings as the complete record available.
+    Do not imply unseen review content or reconstruct missing historical
+    evidence. For end-smoke fixes, use the supplied end-smoke findings and
+    brief acceptance boundary instead.
+
+    Check the reported Test Evidence against the current [HEAD_SHA].
 
     **Fix base:** [FIX_BASE_SHA] (the head the previous review saw)
     **Head:** [HEAD_SHA]
@@ -70,9 +82,12 @@ Subagent (general-purpose):
 
     ## Output Format
 
-    Your final message is the report itself: begin directly with the first
-    finding's verdict. Every line is a verdict, a finding with file:line,
-    or a check you ran — no preamble, no process narration.
+    Audit the reported Test Evidence and report uncertainty as `⚠️ Cannot verify`;
+    missing proof alone is not a code finding. Do not fabricate unrecorded RED
+    evidence. Begin with the first finding's verdict and retain the existing
+    scoped verdict format.
+    Every line is a verdict, finding with file:line, or check you ran — no
+    preamble or process narration.
 
     ### Finding Verdicts
 
@@ -110,9 +125,9 @@ Subagent (general-purpose):
 - `[ROUND]` — current fix round number (e.g. `1`, `2`)
 - `[BRIEF_FILE]` — the slice brief file (end-smoke fix loop: `end-smoke-findings.md` plus the `brief.md` acceptance boundary, see fix-loop.md; otherwise `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` prints the path; same file the implementer worked from; run `scripts/` helpers by their absolute path, from the working tree)
 - `[SEVERITY_DEFINITIONS]` — same text given to the original reviewer
-- `[FINDINGS]` — the open P0/P1 findings, spec gaps (no P label) from the
-  previous review (or an end-smoke failure report, or code changes
-  directed by user rulings), copied verbatim, one per bullet
+- `[FINDINGS]` — open P0/P1 findings and spec gaps from the prior review,
+  copied verbatim, one per bullet
+- `[ORIGINAL_REVIEW_FILE]` — optional for slice fixes when preserved; otherwise provide the saved findings file and state that no full review artifact is available; omit for end-smoke fixes
 - `[REPORT_FILE]` — the implementer's report file (fix reports appended)
 - `[FIX_BASE_SHA]` — the head the previous review saw
 - `[HEAD_SHA]` — current commit

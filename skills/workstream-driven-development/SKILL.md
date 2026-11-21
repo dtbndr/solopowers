@@ -165,11 +165,12 @@ For each slice, dispatch the worker subagent using file handoffs:
 
 ### 3. Reviewing the Slice
 
-- Once the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
-- The reviewer checks the diff and reported TDD evidence, returning spec compliance (✅/❌/⚠️), P0-P3 findings with evidence, and `Verdict: CLEAN` or `NEEDS FIXES`.
+- Verify Test Evidence before review; correct missing evidence first. Never fabricate RED. If a reviewer requests report correction, redispatch that review live against its same range, without commit or ledger advance.
+- Once the report is complete and the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
+- The reviewer checks the diff and reported Test Evidence, returning spec compliance (✅/❌/⚠️), P0-P3 findings with evidence, and the existing `Verdict: CLEAN` or `NEEDS FIXES` line. Missing or unclear evidence is reported as `⚠️ Cannot verify`; uncertainty alone is not a P0/P1 finding.
 - If the reviewer reports "⚠️ Cannot verify from diff", resolve it yourself from context before marking the slice review clean (see [references/cannot-verify.md](references/cannot-verify.md)).
-- If the verdict is NEEDS FIXES (open P0/P1): enter the bounded fix loop (see [references/fix-loop.md](references/fix-loop.md)). Re-read `references/fix-loop.md` before every fix round.
-- When the slice is **review clean**, append `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings])` to the ledger, mark it complete in the Todo list, and continue. No pause.
+- Persist the initial review and unresolved `⚠️ Cannot verify` items in `<workspace>/findings-<ID>.md` before fix round 0. For NEEDS FIXES, enter the bounded loop (see [references/fix-loop.md](fix-loop.md)). Resolve uncertainty from repository or credible implementer evidence; confirmed gaps become spec findings. Never fabricate RED. If evidence cannot be established, stop and escalate. Re-read fix-loop each round.
+- Before **review clean**, confirm reviewed `HEAD`, credible Test Evidence, and all `⚠️ Cannot verify` resolved. Re-establish on resume from report, worktree, and ledger; never infer from `0 open`. Then append the existing `complete` line.
 
 ### 4. Transitioning and Finalization
 

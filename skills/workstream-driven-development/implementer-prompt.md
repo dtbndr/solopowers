@@ -108,7 +108,7 @@ implementer subagent:
 
     **Testing & Verification:**
     - Do the tests actually verify behavior (not just mocks)?
-    - Did I run the specified verification commands and confirm they pass cleanly?
+    - Did I run the specified verification commands and confirm they pass (or report verified unchanged baseline failures separately at slice handoff)?
 
     If you find issues during self-review, fix and commit them now before reporting.
 
@@ -128,7 +128,8 @@ implementer subagent:
     - **Test Evidence** (mandatory for any DONE or DONE_WITH_CONCERNS status):
       - For intentional behavior changes, include RED: command, relevant failure evidence (new or existing test), and why it fails for the intended missing behavior; then report verification after implementation.
       - For pure refactors, include relevant before/after evidence and characterization tests if needed; do not fabricate RED.
-      - For mixed work, show both kinds of evidence for their respective changes. Report pre-existing failures explicitly; never describe a failing suite as green.
+      - For mixed work, show both kinds of evidence for their respective changes.
+      - For any failure claimed as an unchanged baseline failure, run the same check on BASE and the slice tip, or demonstrably equivalent checks that exercise the same behavior. Report both revisions, exact commands, and comparable failure evidence establishing it is unchanged. Without that evidence, report the failure as unverified; never describe a failing suite as green.
     - Files changed
     - Self-review findings (if any)
     - Any lingering concerns or carry-forward notes for the next slice

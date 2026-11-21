@@ -17,7 +17,7 @@ Per-slice reviews are slice-scoped gates; the broad review happens once at the f
 - Fill `[SEVERITY_DEFINITIONS]` (also in the re-review template): if `.memory/*grounding*.md` exists and defines P0/P1 for the project, paste its P0/P1 definitions verbatim plus the default P2/P3 lines below; otherwise paste the default below. Do not add a project's "happy path" filter to the default.
 
   ```
-  P0: breaks the slice's stated behavior or acceptance, data loss, security hole, or build/tests fail.
+  P0: breaks the slice's stated behavior or acceptance, data loss, security hole, or a new build/test failure. At slice handoff, report a failure separately when the same or demonstrably equivalent check on BASE and slice tip verifies it is unchanged; an unverified failure is graded by its evidence and impact, not automatically P0. This handoff allowance does not relax final all-pass verification.
   P1: a correctness bug or missing required behavior a user of the slice would hit on its intended path.
   P2: real but non-blocking (edge case, maintainability, missing non-critical test).
   P3: nit, style, preference.

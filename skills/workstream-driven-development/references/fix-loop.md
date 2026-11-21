@@ -5,14 +5,14 @@ Part of `solopowers:workstream-driven-development`.
 > [!IMPORTANT]
 > **Controller Instruction:** You MUST re-read this file (`references/fix-loop.md`) before every fix round. Conversation memory does not survive compaction.
 
-The fix loop is entered when an initial slice review reports spec compliance ❌, `Verdict: NEEDS FIXES` (an open P0/P1), or a confirmed ⚠️ gap; when an end-smoke check fails ([end-smoke.md](end-smoke.md)); or when user rulings (`Ruling (user)`) after cap escalation direct code changes.
+The fix loop is entered when an initial slice review reports spec compliance ❌, `Verdict: NEEDS FIXES` (an open P0/P1), or a confirmed ⚠️ gap; when an end-smoke check fails ([end-smoke.md](end-smoke.md)); or when user rulings (`Ruling (user)`) after cap escalation direct code changes. Missing evidence alone is handled through the existing `⚠️ Cannot verify` route: obtain credible evidence from the implementer or verify it directly before completion. If a reported requirement is confirmed missing, treat it as a spec gap and use the normal findings route. Never fabricate unrecorded RED.
 
 Before the loop starts, two routes leave it immediately:
 
 - **P2/P3 findings:** Never enter the loop and are not fixed unless the operator asks. The controller appends them to the gitignored `<workspace>/p2p3.md` (next to `progress.md`), one line each: `Slice <ID>: P2: <one-liner>` or `Slice <ID>: P3: <one-liner>`. Final review copies them into `<folder>/log.md` under a `P2/P3:` entry and tells the operator the count. Out-of-scope observations from a re-review are logged the same way. Entries are appended once per review round; the controller de-duplicates by finding text before appending.
 - **Workstream-mandated findings:** A finding labeled workstream-mandated — or any finding that conflicts with what `brief.md` or `slices.md` requires — is the user's decision, like any workstream contradiction: present the finding and the workstream text to the user and ask which governs. Do not dismiss the finding because the workstream mandates it, and do not dispatch a fix that contradicts the workstream without explicit human guidance.
 
-Everything else enters the loop. When the initial review returns NEEDS FIXES, BEFORE dispatching round 1, write the findings to `<workspace>/findings-<ID>.md` and append `Slice <ID>: fix round 0/4 (<Y> open — initial review; commits <base7>..<head7>)` to the ledger (a crash then resumes at round 1; see [resuming.md](resuming.md)). A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per fix series:
+Everything else enters the loop. When the initial review requires a fix round, save its findings to `<workspace>/findings-<ID>.md` and append `Slice <ID>: fix round 0/4 (<Y> open — initial review; commits <base7>..<head7>)` before dispatching round 1. A fix round is one fix dispatch plus one scoped re-review. Four rounds maximum per fix series:
 
 ## Rounds and Dispatch
 
@@ -23,9 +23,9 @@ Everything else enters the loop. When the initial review returns NEEDS FIXES, BE
 ## Every Round: Fix & Test Contract
 
 Every round, either way:
-- The implementer fixes the code, commits, re-runs the tests covering the amended code, appends its fix report to the same report file, and returns the short contract.
+- The implementer fixes code findings, commits, re-runs the tests covering amended code, appends its fix report to the same report file, and returns the short contract. Never invent a missing historical RED result.
 - **Test execution rule:** Run covering tests per fix round; run the full repository test suite before reporting slice DONE and before final workstream review.
-- Before re-dispatching the reviewer, confirm the fix report contains the covering tests, the command run, and the output; dispatch the re-review once all three are present. Name the covering test files in the fix message — a one-line fix does not need the whole suite.
+- For slice fixes, before the first scoped-review dispatch verify the amended report against applicable evidence requirements: behavior changes need meaningful pre-edit RED and GREEN; pure refactors need credible preservation evidence; mixed work needs both. If correction is needed, request it without commit or ledger advance, then dispatch once with this round's current nonempty `FIX_BASE..HEAD`. If a reviewer requests correction after reviewing, redispatch that review using its exact range, preserving findings and uncertainties; do not replace the range. Original RED carries forward with fresh GREEN only when it demonstrated the same behavior now fixed and the test covers it; a materially distinct behavior or failure mode needs its own meaningful pre-edit RED. If evidence cannot be established, stop and escalate. For end-smoke fixes, retain the failed-check covering-test/report requirements and final verification route; do not apply slice-only evidence persistence.
 
 ## Scoped Re-Review
 
@@ -34,14 +34,14 @@ The re-review is scoped to the fix diff:
    ```bash
    bash scripts/review-package "$FIX_BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"
    ```
-   where `FIX_BASE` is the head the previous review saw.
-2. Dispatch `re-review-prompt.md` with the findings list, the slice brief, the report file, and the printed diff path.
-3. The re-reviewer verdicts each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix diff only.
-4. New P0/P1 breakage in the fix diff joins the open findings list. New P2/P3 and out-of-scope observations go to `p2p3.md` as above — they never extend the loop.
+   Keep the helper's nonempty-range guard. If a reviewer requests report correction, update the report and redispatch that review in the live session using the exact range it reviewed; do not create an empty diff, commit, fix round, or ledger entry. If interrupted, do not infer an unrecorded dispatch range; resume from the last recorded checkpoint only when its tip matches HEAD, otherwise stop and ask the operator.
+2. Dispatch `re-review-prompt.md` with findings, brief, report, and diff. For slice fixes, include the full original review if preserved and the saved findings plus unresolved `⚠️ Cannot verify` items from `<workspace>/findings-<ID>.md`. Legacy findings-only files are sufficient to continue; do not imply an unavailable original review was preserved. For end-smoke fixes, use `end-smoke-findings.md` plus relevant `brief.md` acceptance boundary as the brief; omit original-review input.
+3. The re-reviewer verdicts each finding ADDRESSED or NOT ADDRESSED and flags new breakage in the fix diff only. Evidence remains subject to the `⚠️ Cannot verify` resolution route.
+4. For slice rounds, before appending the round state, update `<workspace>/findings-<ID>.md` with the complete unresolved `⚠️ Cannot verify` list from re-review, including newly raised items; remove only verified and recorded resolutions. New P0/P1 breakage joins the open list. For end-smoke rounds, use the existing end-smoke findings/report and ledger route; do not apply slice-specific persistence. New P2/P3 and out-of-scope observations go to `p2p3.md` as above.
 
 ## Ledger Tracking
 
-After each round, append to `$(bash scripts/wsd-workspace <workspace-slug> WORKSTREAM_FILE)/progress.md`:
+After persisting the current unresolved `⚠️ Cannot verify` list and re-review outcome, append the round state only when the review outcome is established. Write `0 open` only on the normal path after a CLEAN review for the reviewed tip, credible Test Evidence for that tip, and resolution of every `⚠️ Cannot verify` item. If any gate is unmet, do not record `0 open`; preserve findings and stop/escalate or continue the applicable fix route.
 ```markdown
 Slice <ID>: fix round <R>/4 (<X> addressed, <Y> open — <finding one-liners>; commits <a7>..<b7>)
 ```
@@ -51,7 +51,7 @@ Never fix findings yourself in the controller session — your context stays cle
 
 ## End-Smoke Variant
 
-For an end-smoke failure ([end-smoke.md](end-smoke.md)) there is no slice. Findings = `<workspace>/end-smoke-findings.md`; spec context = `brief.md`; the implementer and the re-review's `[BRIEF_FILE]` are that findings file plus the relevant `brief.md` acceptance boundary (not `slice-brief`). Ledger lines are `End smoke: fix round <R>/4 (...)`, `End smoke: escalated at cap — <Y> open`, `End smoke: Ruling (user): ...`. The implementer is a fresh dispatch in round 1 and writes `<workspace>/end-smoke-report.md`; later rounds and resumes read it. Everything else is unchanged, including the cap. Overrides: there is no `Slice <ID>: complete` write; when the loop ends review clean via user rulings that let it stand, write `End smoke: passed (rulings accepted)` and do not re-run the check; otherwise re-run the failed check ([end-smoke.md](end-smoke.md)).
+For an end-smoke failure ([end-smoke.md](end-smoke.md)) there is no slice. Findings = `<workspace>/end-smoke-findings.md`; spec context = `brief.md`; the implementer and re-review's `[BRIEF_FILE]` are that findings file plus the relevant `brief.md` acceptance boundary (not `slice-brief`). Ledger lines are `End smoke: fix round <R>/4 (...)`, `End smoke: escalated at cap — <Y> open`, `End smoke: Ruling (user): ...`. The implementer is a fresh dispatch in round 1 and writes `<workspace>/end-smoke-report.md`; later rounds and resumes read it. Everything else is unchanged, including the cap. Overrides: there is no `Slice <ID>: complete` write. After user rulings, never write `End smoke: passed` immediately: rerun the failed check and full Final verification as required by [end-smoke.md](end-smoke.md), and record passed only after both pass.
 
 ## The Breaker (Cap Escalation)
 
@@ -61,6 +61,7 @@ Immediately append to the ledger:
 ```markdown
 Slice <ID>: escalated at cap — <Y> open
 ```
+`<Y>` counts open P0/P1 findings only.
 
 **Escalate to the user:**
 Present the user with:
@@ -76,21 +77,21 @@ When the user decides on each finding, write one ledger line per open finding:
 Slice <ID>: Ruling (user): <finding> — <decision>
 ```
 
-- If the user's rulings let the slice stand as-is without code changes, the slice achieves **review clean** (see Success Gate below) with `<head7>` tied to the round-4 `<b7>` commit (from the preceding `fix round 4/4` line).
-- If the user's rulings direct a code change, start a fresh 4-round fix series (round 1/4) with `FIX_BASE` anchored to the round-4 `<b7>` commit (from the `fix round 4/4 (...; commits <a7>..<b7>)` line) with the user-directed changes as findings.
+- If the user's rulings let the slice stand as-is without code changes, the slice achieves **review clean** (see Success Gate below) with `<head7>` tied to the round-4 `<b7>` commit (from the preceding `fix round 4/4` line). For end-smoke rulings, do not write `End smoke: passed` here; run the failed check and full Final verification first, per [end-smoke.md](end-smoke.md).
+- If the user's rulings direct a code change, start a fresh 4-round fix series (round 1/4) with `FIX_BASE` at the round-4 `<b7>` commit and the user-directed changes as findings. If resuming after interruption, start only when `HEAD == <b7>`; if HEAD has advanced, stop and ask the operator rather than replaying or reviewing an unknown range.
 
 ## Success Gate: Review Clean
 
 ### Definition of "Review Clean"
 
-A slice achieves **review clean** when:
-1. The initial review is `✅ Slice compliant` + `Verdict: CLEAN` (no open P0/P1) with every `⚠️ Cannot verify` item resolved (see [cannot-verify.md](cannot-verify.md)), **OR**
-2. The latest fix round's scoped re-review ends `Verdict: CLEAN`: every `[FINDINGS]` item `ADDRESSED` (spec gaps, end-smoke failures and user-ruled changes count as P0/P1 for the verdict), no new P0/P1 (`0 open`), **OR**
-3. Every open P0/P1 at the round-4 cap has a user ruling (`Ruling (user)`) that lets the slice stand.
+Every completion route requires credible Test Evidence for the reviewed revision and resolution of all `⚠️ Cannot verify` items. On the normal path, additionally require no unresolved P0/P1 findings and a CLEAN review for the reviewed tip:
+1. The initial review is `✅ Slice compliant` + `Verdict: CLEAN` (no open P0/P1), and every `⚠️ Cannot verify` item is resolved (see [cannot-verify.md](cannot-verify.md)), **OR**
+2. The latest fix round's scoped re-review ends `Verdict: CLEAN`: every `[FINDINGS]` item `ADDRESSED` (spec gaps, end-smoke failures and user-ruled changes count as P0/P1 for the verdict), every `⚠️ Cannot verify` item explicitly resolved, and no new P0/P1 (`0 open`), **OR**
+3. At the round-4 cap, every open P0/P1 has a user ruling that lets the slice stand, all `⚠️ Cannot verify` items are resolved, and credible Test Evidence for the reviewed revision is present. CLEAN and zero open are not required on this cap route; rulings accept the named findings but do not substitute for evidence or uncertainty resolution.
 
 ### Completion
 
-Immediately when the slice achieves **review clean** (initial review with 0 fix rounds, after a fix round, or via user rulings), verify `HEAD == <head7>` (if not, stop and ask the operator) and write to `progress.md`; no pause:
+Immediately when the slice achieves **review clean** (initial review with 0 fix rounds, after a fix round, or via user rulings), verify `HEAD == <head7>` and credible Test Evidence is present for that revision (otherwise stop and request or establish it); then write to `progress.md`: no pause:
 ```markdown
 Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings])
 ```
