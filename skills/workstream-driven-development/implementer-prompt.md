@@ -127,7 +127,7 @@ implementer subagent:
 
     ## Report Format
 
-    Write your full report to [REPORT_FILE]:
+    Create [REPORT_FILE] only if absent. If it exists, preserve all prior sections and controller records; append only your designated fix-round section. Do not overwrite controller-owned blocker status, required-check sets, saved results, rulings, dispatch/revision/range, or outcome records. Write your report to [REPORT_FILE]:
     - What you implemented (or what you attempted, if blocked)
     - What you tested and exact test results
     - Full suite result: command run, total passed/failed, and any pre-existing failures explicitly named
