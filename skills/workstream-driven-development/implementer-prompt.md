@@ -114,10 +114,16 @@ implementer subagent:
 
     ## After Review Findings
 
-    If a reviewer finds issues and you fix them, re-run the tests that cover the amended
-    code and append the results to your report file. The test rule applies: covering
-    tests per fix round; full suite before a slice reports DONE and before final review.
-    Reviewers should be able to rely on your report as the test evidence.
+    If a reviewer finds issues and you fix them, re-run the tests that cover amended
+    code and append results to your report file. For end-smoke fixes, append only your
+    designated round report to `<workspace>/end-smoke-report.md`; the controller owns
+    blocker status, required-check sets, saved per-check results, rulings, dispatch,
+    revision/range, and outcome records. Do not edit or replace those records or prior
+    reports. Existing revision/range, outcome, and failure-group records are
+    authoritative; if their association is unclear, stop and report the ambiguity.
+    The test rule applies: covering tests per fix round; full suite before a slice
+    reports DONE and before final review. Reviewers should be able to rely on your
+    report as the test evidence.
 
     ## Report Format
 

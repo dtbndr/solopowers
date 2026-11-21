@@ -25,7 +25,7 @@ Everything else enters the loop. When the initial review requires a fix round, s
 ## Every Round: Fix & Test Contract
 
 Every round, either way:
-- The implementer fixes code findings, commits, re-runs the tests covering amended code, appends its fix report to the same report file, and returns the short contract. Never invent a missing historical RED result.
+- The implementer fixes code findings, commits, re-runs the tests covering amended code, and appends only its designated round report to `<workspace>/end-smoke-report.md` for end-smoke work (creating it only when absent). The controller owns blocker status, required-check sets, saved per-check results, rulings, dispatch/revision/range and outcome records; the implementer must not edit those records or prior reports. Never overwrite them. Existing revision/range, outcome, and failure-group records are authoritative; if their association is unclear, stop rather than reconstructing or replacing them. Never invent a missing historical RED result.
 - **Test execution rule:** Run covering tests per fix round; run the full repository test suite before reporting slice DONE and before final workstream review.
 - For slice fixes, before dispatching scoped re-review for the round verify the amended report against applicable evidence requirements: behavior changes need meaningful pre-edit RED and GREEN; pure refactors need credible preservation evidence; mixed work needs both. If correction is needed, request it without commit or ledger advance, then dispatch once with this round's current nonempty `FIX_BASE..HEAD`. After review, any evidence-related `⚠️ Cannot verify` triggers the same-range evidence correction and redispatch route, whether or not the reviewer explicitly requests correction. Preserve findings and uncertainties; do not replace the range. Original RED carries forward with fresh GREEN only when it demonstrated the same behavior now fixed and the test covers it; a materially distinct behavior or failure mode needs its own meaningful pre-edit RED. If evidence cannot be established, stop and escalate. For end-smoke fixes, retain the failed-check covering-test/report requirements and final verification route; do not apply slice-only evidence persistence.
 
@@ -49,7 +49,7 @@ Slice <ID>: fix round <R>/4 (<X> addressed, <Y> open — <finding one-liners>; c
 ```
 `<Y>` counts open P0/P1 findings only.
 
-Never fix findings yourself in the controller session — your context stays clean for coordination, and controller fixes skip review.
+Never fix findings yourself in the controller session — your context stays clean for coordination, and controller fixes skip review. For smoke success or verification repair, hand off to the canonical [Final Verification Blocker](verification-blocker.md) procedure; do not summarize it as permission to record smoke success.
 
 ## End-Smoke Variant
 
