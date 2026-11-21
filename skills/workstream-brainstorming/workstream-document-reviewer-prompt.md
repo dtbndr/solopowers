@@ -52,7 +52,7 @@ Dispatch a reviewer subagent (strongest tier; specify it explicitly, an omitted 
     ### 4. Builder Perspective (Implementer Usability)
     - **What Would a Slice Implementer Have to Guess?** Read this as the subagent implementing each slice without talking to the author: what would you have to guess?
     - **Ambiguous Definitions:** Which file paths, interfaces, data models, error states, or test commands are ambiguous or missing?
-    - **Test-evidence executability:** Does each slice specify evidence appropriate to its change—meaningful failing-test evidence for intentional behavior changes (which may use a relevant existing failing test), or before/after evidence and characterization coverage as needed for pure refactors? For mixed work, does it require both? Are relevant verification commands and implementation boundaries clear, with pre-existing failures reported separately rather than misrepresented as passing?
+    - **Test-evidence executability:** Does each slice specify evidence appropriate to its change—meaningful failing-test evidence for intentional behavior changes (which may use a relevant existing failing test), or before/after evidence for pure refactors, plus targeted characterization coverage before editing whenever existing checks do not exercise a material affected contract? For mixed work, does it require both? Are relevant verification commands and implementation boundaries clear, with pre-existing failures reported separately rather than misrepresented as passing?
     - **Scope and Sizing:** Is any slice oversized or exceeding worker context given behavioral complexity, dependencies, and verification burden (disparate components can be a signal) for a standard-tier worker's limited context window?
 
     ## Process Rules

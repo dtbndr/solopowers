@@ -7,7 +7,7 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 ## Overview
 
-For intentional behavior changes, establish meaningful failing-test evidence before implementation, then make the relevant tests pass. For pure refactors, preserve behavior and use relevant before/after evidence, adding characterization coverage when needed.
+For intentional behavior changes, establish meaningful failing-test evidence before implementation, then make the relevant tests pass. For pure refactors, preserve behavior and use relevant before/after evidence, adding targeted characterization coverage before editing when existing checks do not exercise a material affected contract.
 
 **Core principle:** Choose evidence that matches the change: demonstrate the missing behavior for intentional changes, and demonstrate preserved behavior for refactors.
 
@@ -15,7 +15,7 @@ For intentional behavior changes, establish meaningful failing-test evidence bef
 
 ## When to Use
 
-Use this guidance for new features, bug fixes, behavior changes, and refactoring. Intentional behavior changes require relevant failing-test evidence; pure refactors require relevant before/after evidence and characterization coverage as needed. Throwaway prototypes, generated code, and configuration-only changes may lack meaningful tests; ask the operator before treating them as exceptions.
+Use this guidance for new features, bug fixes, behavior changes, and refactoring. Intentional behavior changes require relevant failing-test evidence; pure refactors require relevant before/after evidence and targeted characterization coverage before editing when existing checks do not exercise a material affected contract. Throwaway prototypes, generated code, and configuration-only changes may lack meaningful tests; ask the operator before treating them as exceptions.
 
 ## The Behavior-Change Rule
 
@@ -55,7 +55,7 @@ digraph tdd_cycle {
 
 ### RED - Write Failing Test
 
-For an intentional behavior change, establish meaningful RED: a relevant test demonstrating the missing behavior, then verify it fails for the expected reason. A relevant existing failing test is valid RED evidence; a new test is not required solely to create a test diff. Select coverage against the changed contract, risks, and dependencies. For a pure refactor, use relevant before/after evidence and add characterization coverage when needed rather than inventing a behavior change to force RED. When tests fail, triage whether the failure is introduced or pre-existing; do not reflexively fix unrelated old code or weaken valid assertions, and keep intentional behavior changes separate.
+For an intentional behavior change, establish meaningful RED: a relevant test demonstrating the missing behavior, then verify it fails for the expected reason. A relevant existing failing test is valid RED evidence; a new test is not required solely to create a test diff. Select coverage against the changed contract, risks, and dependencies. For a pure refactor, use relevant before/after evidence and add targeted characterization coverage before editing whenever existing checks do not exercise a material affected contract; do not invent a behavior change to force RED. When tests fail, triage whether the failure is introduced or pre-existing; do not reflexively fix unrelated old code or weaken valid assertions, and keep intentional behavior changes separate.
 
 Write one minimal test showing what should happen.
 
@@ -113,13 +113,13 @@ If a new test passes immediately, determine whether it already captures existing
 
 ## Baseline and Refactor Workflow
 
-For a pure refactor, record relevant baseline behavior and verification before editing, then compare after editing; add characterization coverage when needed. For mixed work, use meaningful RED evidence for intentional behavior changes and before/after evidence for refactors. To call a failure pre-existing and unchanged, run the same check on the relevant base revision and the changed revision, or use demonstrably equivalent checks for the same behavior; report both revisions, commands, and comparable failure evidence. Without this comparison, label the failure unverified, not pre-existing. In WSD, verified unchanged failures may be reported separately at slice handoff, not counted as passes. Standalone work has no slice-handoff exception: run required project verification and report actual results. These rules do not relax final all-pass verification gates.
+For a pure refactor, record relevant baseline behavior and verification before editing, then compare after editing; add targeted characterization coverage before editing whenever existing checks do not exercise a material affected contract. For mixed work, use meaningful RED evidence for intentional behavior changes and before/after evidence for refactors. To call a failure pre-existing and unchanged, run the same check on the relevant base revision and the changed revision, or use demonstrably equivalent checks for the same behavior; report both revisions, commands, and comparable failure evidence. Without this comparison, label the failure unverified, not pre-existing. In WSD, verified unchanged failures may be reported separately at slice handoff, not counted as passes. Standalone work has no slice-handoff exception: run required project verification and report actual results. These rules do not relax final all-pass verification gates.
 
 ## Implement, Verify, and Clean Up
 
 ### Implement and Verify the Change
 
-For an intentional behavior change, write the simplest code to satisfy the verified failing test. For a pure refactor, preserve existing behavior; use relevant before/after checks and characterization tests where needed.
+For an intentional behavior change, write the simplest code to satisfy the verified failing test. For a pure refactor, preserve existing behavior; use relevant before/after checks and add targeted characterization tests before editing whenever existing checks do not exercise a material affected contract.
 
 <Good>
 ```typescript
@@ -315,10 +315,10 @@ When RED setup or assertion is broken, repair the test and rerun it before imple
 
 Before marking work complete:
 
-- [ ] Full project-required suite was run and passed before completion.
+- [ ] Full project-required suite was run and passed before completion, except at WSD slice handoff when the documented unchanged-baseline-failure exception applies; final completion still requires the full suite to pass.
 
 - [ ] For each intentional behavior change, relevant tests demonstrate the missing behavior and were verified failing for the expected reason before implementation (a relevant existing failing test may provide this evidence).
-- [ ] For pure refactors, relevant before/after evidence is recorded and characterization coverage is added when needed; no artificial behavior change or RED is required.
+- [ ] For pure refactors, relevant before/after evidence is recorded; when existing checks do not exercise a material affected contract, targeted characterization coverage was added before editing. No artificial behavior change or RED is required.
 - [ ] For mixed work, provide both behavior-change and refactor evidence for the corresponding changes.
 - [ ] Tests are selected against the changed contract, risks, and dependencies; test meaningful behavior, not necessarily every helper or function.
 - [ ] Failures are triaged as introduced or pre-existing; valid assertions are preserved and unrelated old code is not reflexively changed.
@@ -356,4 +356,4 @@ Pure refactor → relevant behavior preserved with before/after evidence
 Otherwise → not TDD
 ```
 
-Exceptions require operator approval. The discard-not-reuse rule applies to intentional behavior code written before valid RED, not refactors or tests that pass before implementation. For standalone work, run required project verification and report exact results; the baseline allowance applies only to WSD slice handoff, never final completion.
+Exceptions require operator approval. The discard-not-reuse rule applies to intentional behavior code written before valid RED, not refactors or tests that pass before implementation. For standalone work and final completion, all applicable checks must pass. Only at WSD slice handoff may a verified unchanged baseline failure be reported; establish it on both the relevant base and changed revision with equivalent checks and report both results. Check for unexpected errors or warnings and correct unmet applicable checks.

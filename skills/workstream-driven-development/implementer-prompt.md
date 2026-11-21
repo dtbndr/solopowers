@@ -37,7 +37,7 @@ implementer subagent:
 
     Once you're clear on requirements:
     1. Implement exactly what the slice specifies
-    2. Follow `solopowers:test-driven-development`: use meaningful failing-test evidence for intentional behavior changes; for pure refactors, use relevant before/after evidence and characterization coverage as needed.
+    2. Follow `solopowers:test-driven-development`: use meaningful failing-test evidence for intentional behavior changes; for pure refactors, use relevant before/after evidence and characterization coverage when existing checks do not exercise a material affected contract.
     3. Run the slice verification steps
     4. Commit your work
     5. Self-review (see below)

@@ -106,8 +106,7 @@ reviewer subagent:
     running it. If you cannot run commands in this environment, name the
     test you would run.
 
-    Warnings or other noise in the implementer's reported test output are
-    findings — test output should be pristine.
+    Flag test output when it shows a failure or undermines the claimed verification evidence or its reliability. An unexpected but harmless warning/noise is not a finding merely because it is unexpected; do not flag documented baseline output as newly introduced.
 
     ## Part 1: Spec Compliance
 
@@ -216,7 +215,7 @@ reviewer subagent:
 
     ### Findings
 
-    One bullet each for P0-P3 findings; use `None` when there are none. Report `⚠️ Cannot verify` items only in Spec Compliance, with the evidence needed to resolve them.
+    One bullet each for P0-P3 findings; use `None` when there are none. Report `⚠️ Cannot verify` items only in Spec Compliance, with the evidence needed to resolve them. Include unresolved Test Evidence uncertainty there.
 
     One bullet each: `P<0-3> — <file:line> — <what is wrong, why it matters>
     — Evidence: <required for P0/P1>`. "None" if none.
