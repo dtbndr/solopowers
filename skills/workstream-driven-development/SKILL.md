@@ -115,7 +115,7 @@ Detailed procedures that the controller reads fresh at specific workflow steps l
 
 Workers MUST use:
 
-- `solopowers:test-driven-development` - Mandatory for every slice. The worker must follow a real red → green cycle and provide evidence for it in the slice report.
+- `solopowers:test-driven-development` - Apply evidence appropriate to each slice: meaningful RED and subsequent relevant verification for intentional behavior changes; before/after evidence and characterization coverage as needed for pure refactors. Mixed slices report both. Report known pre-existing failures separately; never claim a failing suite is green.
 
 ## Roles and Model Selection
 
@@ -156,7 +156,7 @@ For each slice, dispatch the worker subagent using file handoffs:
 
 - Generate a slice brief with `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` and pass the printed file path to the worker. `SLICE_ID` must match `[A-Z][0-9]*` (e.g., `A`, `A1`, `A2`).
 - Explicitly inject `solopowers:test-driven-development` into the worker dispatch.
-- **Test execution rule:** Run covering tests per fix round; run the full repository test suite before reporting slice DONE and before final workstream review.
+- **Test execution rule:** Run covering tests per fix round; run the full repository test suite before reporting slice DONE and before final workstream review. At slice handoff, report verified unchanged baseline failures by name and do not call the failing suite green. This reporting allowance does not waive or relax the existing all-pass final verification, final review, or finishing gates at workstream completion.
 - Provide the Objective (from the `slices.md` preamble), in-scope details, and carry-forward context from the preceding completed slice.
 - Name a report file path for the worker so detailed notes and test evidence live on disk, not in controller context.
 - Provide only the relevant code files or interfaces for this slice.
@@ -202,6 +202,6 @@ For complete details on ledger header tracking, collision disambiguation (`<slug
 - **Creating a new branch or worktree per slice**: Absolutely NOT. One isolation unit for the entire workstream.
 - **Re-asking the isolation choice or committing onto the default branch**: Ask once; on resume read `log.md`. Never commit workstream work to the default branch.
 - **Letting subagents read the workstream folder**: Subagents do NOT read `brief.md` or `slices.md`. Provide the curated text and tasks for their specific slice to protect their context window.
-- **Treating TDD as optional**: Do not dispatch workers without `solopowers:test-driven-development`, and do not accept "tests added later" as equivalent to a real red → green cycle.
+- **Treating test discipline as optional**: Do not dispatch workers without `solopowers:test-driven-development`. For intentional behavior changes, require meaningful RED evidence; for pure refactors, require relevant before/after evidence and characterization coverage as needed. Do not accept tests added after implementation as proof of RED for a behavior change. Require accurate reporting of pre-existing failures.
 - **Proceeding while a slice review fails**: Never start the next slice while a P0/P1 is open in the current slice.
 - **Failing to commit**: Ensure each slice is committed before starting reviews, and any fixes are also committed.

@@ -93,11 +93,11 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
     List remaining approval-blocking questions, or state `None`.
 
     ## Final verification
-    Run all of the following before handoff. Each must pass clean:
-    - [ ] Tests pass (exact command)
-    - [ ] Type check passes (exact command)
-    - [ ] Linter passes (exact command)
-    - [ ] Formatter passes (exact command)
+    Run all applicable commands before handoff and record exact commands/results. They should pass; if a known pre-existing failure remains, identify it by command and failure, distinguish it from new failures, and do not describe the check or suite as passing. Do not treat an unchanged, verified baseline failure as a new blocker by itself.
+    - [ ] Tests: command and result (including known pre-existing failures)
+    - [ ] Type check: command and result
+    - [ ] Linter: command and result
+    - [ ] Formatter: command and result
 
     ---
 
@@ -112,11 +112,12 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
     #### Tasks
 
     **`file/to/modify`**
-    - [ ] Write the failing test for the exact behavior this slice introduces or changes
-    - [ ] Run the focused test command and verify the failure for the expected reason
+    - [ ] For intentional behavior changes, establish meaningful RED for the changed behavior (a relevant existing failing test may qualify); for pure refactors use relevant before/after evidence and characterization coverage as needed
+    - [ ] Size each slice to worker context, behavioral complexity, dependencies, and verification burden; do not use file count as a proxy
+    - [ ] Specify contract/risk-relevant tests and verification. For intentional behavior changes, meaningful RED may be an existing failing test; for pure refactors specify relevant before/after evidence and characterization coverage as needed
     - [ ] Implement the minimum production change required for that behavior
     - [ ] Run the focused test again and verify it passes
-    - [ ] Commit the slice changes once the focused behavior and slice verification are green
+    - [ ] Commit the slice changes once focused verification is complete; report known pre-existing failures separately and claim green only when the relevant suite passes without failures
 
     #### Watch out
     - Caveats, risks, or API constraints

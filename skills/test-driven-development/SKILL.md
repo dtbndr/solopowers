@@ -7,52 +7,33 @@ description: Use when implementing any feature or bugfix, before writing impleme
 
 ## Overview
 
-Write the test first. Watch it fail. Write minimal code to pass.
+For intentional behavior changes, establish meaningful failing-test evidence before implementation, then make the relevant tests pass. For pure refactors, preserve behavior and use relevant before/after evidence, adding characterization coverage when needed.
 
-**Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
+**Core principle:** Choose evidence that matches the change: demonstrate the missing behavior for intentional changes, and demonstrate preserved behavior for refactors.
 
 **Violating the letter of the rules is violating the spirit of the rules.**
 
 ## When to Use
 
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
+Use this guidance for new features, bug fixes, behavior changes, and refactoring. Intentional behavior changes require relevant failing-test evidence; pure refactors require relevant before/after evidence and characterization coverage as needed. Throwaway prototypes, generated code, and configuration-only changes may not have meaningful tests; report the verification appropriate to their risk and scope.
 
-**Exceptions (ask the user):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
+## The Behavior-Change Rule
 
-Thinking "skip TDD just this once"? Stop. That's rationalization.
+For intentional behavior changes, establish meaningful RED before implementation: a relevant test demonstrating the missing behavior, then verify it fails for the expected reason. A relevant existing failing test may provide RED evidence; do not require a new test merely to create a test diff.
 
-## The Iron Law
+Pure refactors do not introduce intended behavior changes, so do not invent one to force RED. Use relevant before/after evidence and add characterization coverage when needed. In either case, select tests against the changed contract, risks, and dependencies. Triage failures: distinguish regressions from pre-existing failures, do not reflexively fix unrelated old code or weaken valid assertions, and keep intentional changes separate.
 
-```
-NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
-```
+## Red-Green-Refactor for Intentional Behavior Changes
 
-Write code before the test? Delete it. Start over.
-
-**No exceptions:**
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
-
-Implement fresh from tests. Period.
-
-## Red-Green-Refactor
+This cycle is the behavior-change path: begin by establishing meaningful RED with a relevant test (new or existing), then implement and verify. Pure refactors do not enter this cycle; use the [baseline/refactor workflow](#baseline-and-refactor-workflow) below.
 
 ```dot
 digraph tdd_cycle {
     rankdir=LR;
-    red [label="RED\nWrite failing test", shape=box, style=filled, fillcolor="#ffcccc"];
+    red [label="Establish meaningful RED\n(relevant existing or new test)", shape=box, style=filled, fillcolor="#ffcccc"];
     verify_red [label="Verify fails\ncorrectly", shape=diamond];
     green [label="GREEN\nMinimal code", shape=box, style=filled, fillcolor="#ccffcc"];
-    verify_green [label="Verify passes\nAll green", shape=diamond];
+    verify_green [label="Verify relevant\nchecks", shape=diamond];
     refactor [label="REFACTOR\nClean up", shape=box, style=filled, fillcolor="#ccccff"];
     next [label="Next", shape=ellipse];
 
@@ -69,6 +50,8 @@ digraph tdd_cycle {
 ```
 
 ### RED - Write Failing Test
+
+For an intentional behavior change, establish meaningful RED: a relevant test demonstrating the missing behavior, then verify it fails for the expected reason. A relevant existing failing test is valid RED evidence; a new test is not required solely to create a test diff. Select coverage against the changed contract, risks, and dependencies. For a pure refactor, use relevant before/after evidence and add characterization coverage when needed rather than inventing a behavior change to force RED. When tests fail, triage whether the failure is introduced or pre-existing; do not reflexively fix unrelated old code or weaken valid assertions, and keep intentional behavior changes separate.
 
 Write one minimal test showing what should happen.
 
@@ -110,9 +93,9 @@ Vague name, tests mock not code
 - Clear name
 - Real code (no mocks unless unavoidable)
 
-### Verify RED - Watch It Fail
+### Verify RED for Behavior Changes
 
-**MANDATORY. Never skip.**
+For intentional behavior changes, verify meaningful RED before implementing. A relevant existing failing test may supply this evidence; it need not be a newly written test. Do not demand artificial RED for pure refactors.
 
 ```bash
 npm test path/to/test.test.ts
@@ -123,13 +106,15 @@ Confirm:
 - Failure message is expected
 - Fails because feature missing (not typos)
 
-**Test passes?** You're testing existing behavior. Fix test.
+If a new test passes immediately, determine whether it already captures existing behavior; do not treat that as RED for the intended change. A test error is not evidence of the missing behavior. For pre-existing failures, record and distinguish them from failures introduced by the change.
 
-**Test errors?** Fix error, re-run until it fails correctly.
+### Baseline and Refactor Workflow
 
-### GREEN - Minimal Code
+For a pure refactor, record relevant baseline behavior and verification before editing, then compare after editing; add characterization coverage when needed. For mixed work, use meaningful RED evidence for intentional behavior changes and before/after evidence for refactors. Report verified unchanged baseline failures at slice handoff as baseline failures, not passes. This does not relax required workstream-end final review or finishing verification gates; those existing gates remain unchanged.
 
-Write simplest code to pass the test.
+### Implement and Verify the Change
+
+For an intentional behavior change, write the simplest code to satisfy the verified failing test. For a pure refactor, preserve existing behavior; use relevant before/after checks and characterization tests where needed.
 
 <Good>
 ```typescript
@@ -165,45 +150,30 @@ Over-engineered
 
 Don't add features, refactor other code, or "improve" beyond the test.
 
-### Verify GREEN - Watch It Pass
+### Verify Relevant Checks
 
-**MANDATORY.**
+Run the focused checks for the changed contract, risks, and dependencies. Report results accurately: identify pre-existing failures separately, and say the suite is green only if it passes.
 
 ```bash
 npm test path/to/test.test.ts
 ```
 
-Confirm:
-- Test passes
-- Other tests still pass
-- Output pristine (no errors, warnings)
+Confirm and report what actually ran and its result. Do not claim other tests passed unless they were executed; identify any known pre-existing failures by name and distinguish them from new failures. A failing check or suite is not green.
 
-**Test fails?** Fix code, not test.
-
-**Other tests fail?** Fix now.
-
-**"Other tests" means the project's suite, not just your file.** A
-green run of the test you wrote is not a green suite. Before you call
-the change done, run the project's test command (bare `pytest`,
-`npm test`, `cargo test` — whatever the repo uses) even when your task
-named only one test file. A scope statement in your task bounds the
-deliverable, not your verification. Any failure that run shows —
-including one you didn't cause — goes in your report by name; a red
-test you watched scroll past and didn't mention is a report falsified
-by omission.
+If a relevant check fails, triage whether the change caused it. Fix regressions in scope; report known pre-existing failures by name without reflexively changing unrelated code or weakening valid assertions. Run the project's required broader verification before completion and report any failures; a failure is never described as green.
 
 ### REFACTOR - Clean Up
 
-After green only:
+After the relevant checks support the change:
 - Remove duplication
 - Improve names
 - Extract helpers
 
-Keep tests green. Don't add behavior.
+Preserve behavior during refactoring. Don't add behavior unless it is separately specified and tested.
 
 ### Repeat
 
-Next failing test for next feature.
+For the next intentional behavior change, establish relevant failing-test evidence; for refactoring, use evidence appropriate to behavior preservation.
 
 ## Good Tests
 
@@ -338,16 +308,14 @@ Extract validation for multiple fields if needed.
 
 Before marking work complete:
 
-- [ ] Every new function/method has a test
-- [ ] Watched each test fail before implementing
-- [ ] Each test failed for expected reason (feature missing, not typo)
-- [ ] Wrote minimal code to pass each test
-- [ ] All tests pass
-- [ ] Output pristine (no errors, warnings)
-- [ ] Tests use real code (mocks only if unavoidable)
-- [ ] Edge cases and errors covered
-
-Can't check all boxes? You skipped TDD. Start over.
+- [ ] For each intentional behavior change, relevant tests demonstrate the missing behavior and were verified failing for the expected reason before implementation (a relevant existing failing test may provide this evidence).
+- [ ] For pure refactors, relevant before/after evidence is recorded and characterization coverage is added when needed; no artificial behavior change or RED is required.
+- [ ] For mixed work, provide both behavior-change and refactor evidence for the corresponding changes.
+- [ ] Tests are selected against the changed contract, risks, and dependencies; test meaningful behavior, not necessarily every helper or function.
+- [ ] Failures are triaged as introduced or pre-existing; valid assertions are preserved and unrelated old code is not reflexively changed.
+- [ ] Report verification accurately. Name known pre-existing failures; do not claim the suite is green unless it passes.
+- [ ] Tests use real code (mocks only if unavoidable).
+- [ ] Edge cases and errors relevant to the changed contract are covered.
 
 ## When Stuck
 

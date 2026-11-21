@@ -37,7 +37,7 @@ implementer subagent:
 
     Once you're clear on requirements:
     1. Implement exactly what the slice specifies
-    2. Follow `solopowers:test-driven-development` strictly: no production code without a failing test first
+    2. Follow `solopowers:test-driven-development`: use meaningful failing-test evidence for intentional behavior changes; for pure refactors, use relevant before/after evidence and characterization coverage as needed.
     3. Run the slice verification steps
     4. Commit your work
     5. Self-review (see below)
@@ -56,7 +56,7 @@ implementer subagent:
     slices, information that isn't in scope to infer, or a loop of failing tests you
     cannot break). For those, report BLOCKED or NEEDS_CONTEXT.
 
-    While iterating, run the focused test for what you're changing; first verify RED, then verify GREEN. Remember the test rule: covering tests per fix round; full suite before a slice reports DONE and before final review.
+    For intentional behavior changes, use a meaningful RED: a relevant test that fails for the missing behavior (an existing failing test is valid evidence), then verify GREEN. For pure refactors, use relevant before/after evidence and add characterization coverage when needed; do not invent a behavior change just to force a new failing test. Select tests based on the changed contract, risks, and dependencies—not the size of the diff. Triage failures: distinguish regressions from pre-existing failures, preserve valid assertions, and keep intentional behavior changes separate. Covering tests per fix round; full suite before a slice reports DONE and before final review.
 
     ## Code Organization
 
@@ -125,9 +125,10 @@ implementer subagent:
     - What you implemented (or what you attempted, if blocked)
     - What you tested and exact test results
     - Full suite result: command run, total passed/failed, and any pre-existing failures explicitly named
-    - **TDD Evidence** (mandatory for any DONE or DONE_WITH_CONCERNS status):
-      - RED: command run, relevant failing output before implementation, and why the failure was expected
-      - GREEN: command run and relevant passing output after implementation
+    - **Test Evidence** (mandatory for any DONE or DONE_WITH_CONCERNS status):
+      - For intentional behavior changes, include RED: command, relevant failure evidence (new or existing test), and why it fails for the intended missing behavior; then report verification after implementation.
+      - For pure refactors, include relevant before/after evidence and characterization tests if needed; do not fabricate RED.
+      - For mixed work, show both kinds of evidence for their respective changes. Report pre-existing failures explicitly; never describe a failing suite as green.
     - Files changed
     - Self-review findings (if any)
     - Any lingering concerns or carry-forward notes for the next slice

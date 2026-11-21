@@ -124,14 +124,17 @@ reviewer subagent:
     unchanged code or spans slices), report it as a ⚠️ item instead of
     broadening your search.
 
-    **TDD gate verification:**
-    - Does the implementer's report contain credible RED and GREEN evidence
-      for the behavior changed in this slice?
-    - Does the diff show corresponding test creation or modification
-      alongside the production change?
-    - If the tests appear to have passed immediately, were added only after
-      the implementation, or the report omits real RED/GREEN evidence, fail
-      the compliance review.
+    **Test and evidence verification:**
+    - For intentional behavior changes, is there meaningful RED evidence for
+      the missing behavior (a relevant existing failing test may qualify),
+      followed by GREEN?
+    - For pure refactors, is relevant before/after evidence supplied, with
+      characterization tests where needed? Do not demand artificial RED or a
+      test diff when existing coverage/evidence is appropriate.
+    - Are selected tests relevant to the changed contract, risks, and
+      dependencies? Triage failures rather than reflexively fixing old code
+      or weakening valid assertions; separate intentional changes.
+    - Missing or implausible evidence for the applicable case fails review.
 
     **Slice verification:**
     - Do the slice's automated verification commands cover its required
