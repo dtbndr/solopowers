@@ -102,7 +102,7 @@ Intentionally left to `workstream-driven-development`:
 
 ## Final verification
 Run all applicable commands before final handoff and record exact commands/results. Every required final verification command must pass. Any failing required check blocks completion; if the operator changes scope, document that change and ensure every check that remains required passes.
-- [ ] Tests: command and result, including known pre-existing failures
+- [ ] Tests: command and result
 - [ ] Type check: command and result
 - [ ] Linter: command and result
 - [ ] Formatter: command and result

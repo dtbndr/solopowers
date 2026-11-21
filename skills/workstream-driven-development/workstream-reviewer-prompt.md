@@ -216,11 +216,12 @@ reviewer subagent:
 
     ### Findings
 
+    One bullet each for P0-P3 findings; use `None` when there are none. Report `⚠️ Cannot verify` items only in Spec Compliance, with the evidence needed to resolve them.
+
     One bullet each: `P<0-3> — <file:line> — <what is wrong, why it matters>
     — Evidence: <required for P0/P1>`. "None" if none.
 
-    Report missing evidence as `⚠️ Cannot verify` and state what evidence is
-    missing. Keep the existing verdict line and exact values below unchanged.
+    Report missing evidence as `⚠️ Cannot verify` under Spec Compliance, not as a finding. Keep the existing verdict line and exact values below unchanged.
 
     Final line, exactly one of:
 

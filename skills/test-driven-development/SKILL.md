@@ -23,6 +23,10 @@ For intentional behavior changes, establish meaningful RED before implementation
 
 Pure refactors do not introduce intended behavior changes, so do not invent one to force RED. Identify the affected contract, capture a pre-edit baseline, and repeat the same or demonstrably equivalent checks afterward. Add targeted characterization tests before editing when existing checks do not exercise a material affected contract; if credible evidence cannot be established, report a blocker. In either case, select tests against the changed contract, risks, and dependencies. Triage failures: distinguish regressions from pre-existing failures, do not reflexively fix unrelated old code or weaken valid assertions, and keep intentional changes separate.
 
+## The Iron Law (Intentional Behavior Changes)
+
+NO INTENTIONAL BEHAVIOR CODE WITHOUT A FAILING TEST FIRST. Do not keep pre-RED implementation as reference, adapt it, or reuse it; delete it and start from the verified failing test. This law applies to intentional behavior changes; pure refactors follow the baseline/refactor rule above and preserve behavior.
+
 ## Red-Green-Refactor for Intentional Behavior Changes
 
 This cycle is the behavior-change path: begin by establishing meaningful RED with a relevant test (new or existing), then implement and verify. Pure refactors do not enter this cycle; use the [baseline/refactor workflow](#baseline-and-refactor-workflow) below.
@@ -102,15 +106,16 @@ npm test path/to/test.test.ts
 ```
 
 Confirm:
-- Test fails (not errors)
-- Failure message is expected
-- Fails because feature missing (not typos)
+- A test failure—not an execution error—with the expected message because the feature is missing
+- If the test errors, fix the error and rerun before accepting RED
 
 If a new test passes immediately, determine whether it already captures existing behavior; do not treat that as RED for the intended change. A test error is not evidence of the missing behavior. For pre-existing failures, record and distinguish them from failures introduced by the change.
 
 ## Baseline and Refactor Workflow
 
 For a pure refactor, record relevant baseline behavior and verification before editing, then compare after editing; add characterization coverage when needed. For mixed work, use meaningful RED evidence for intentional behavior changes and before/after evidence for refactors. To call a failure pre-existing and unchanged, run the same check on the relevant base revision and the changed revision, or use demonstrably equivalent checks for the same behavior; report both revisions, commands, and comparable failure evidence. Without this comparison, label the failure unverified, not pre-existing. In WSD, verified unchanged failures may be reported separately at slice handoff, not counted as passes. Standalone work has no slice-handoff exception: run required project verification and report actual results. These rules do not relax final all-pass verification gates.
+
+## Implement, Verify, and Clean Up
 
 ### Implement and Verify the Change
 
@@ -164,7 +169,7 @@ If a relevant check fails, triage whether the change caused it. Fix regressions 
 
 ### REFACTOR - Clean Up
 
-After the relevant checks support the change:
+After relevant checks pass, preserve every verified passing check during cleanup.
 - Remove duplication
 - Improve names
 - Extract helpers
@@ -279,7 +284,7 @@ test('rejects empty email', async () => {
 });
 ```
 
-**Verify RED**
+**Verify RED for Behavior Changes**
 ```bash
 $ npm test
 FAIL: expected 'Email required', got undefined
@@ -295,7 +300,7 @@ function submitForm(data: FormData) {
 }
 ```
 
-**Verify GREEN**
+**Verify Relevant Checks**
 ```bash
 $ npm test
 PASS
@@ -309,6 +314,8 @@ When RED setup or assertion is broken, repair the test and rerun it before imple
 
 
 Before marking work complete:
+
+- [ ] Full project-required suite was run and passed before completion.
 
 - [ ] For each intentional behavior change, relevant tests demonstrate the missing behavior and were verified failing for the expected reason before implementation (a relevant existing failing test may provide this evidence).
 - [ ] For pure refactors, relevant before/after evidence is recorded and characterization coverage is added when needed; no artificial behavior change or RED is required.
@@ -344,7 +351,8 @@ When adding mocks or test utilities, read [testing-anti-patterns.md](testing-ant
 ## Final Rule
 
 ```
-Production code → test exists and failed first
+Intentional behavior change → relevant test failed first for the expected reason
+Pure refactor → relevant behavior preserved with before/after evidence
 Otherwise → not TDD
 ```
 

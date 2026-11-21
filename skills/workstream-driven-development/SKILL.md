@@ -165,12 +165,12 @@ For each slice, dispatch the worker subagent using file handoffs:
 
 ### 3. Reviewing the Slice
 
-- Verify Test Evidence before review; correct missing evidence first. Never fabricate RED. If a reviewer requests report correction, redispatch that review live against its same range, without commit or ledger advance.
+- Verify Test Evidence before review; correct omissions first. Never fabricate RED. If review reports `⚠️ Cannot verify` for evidence, resolve/correct it and redispatch against the same range without commit or round advance.
 - Once the report is complete and the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
 - The reviewer checks the diff and reported Test Evidence, returning spec compliance (✅/❌/⚠️), P0-P3 findings with evidence, and the existing `Verdict: CLEAN` or `NEEDS FIXES` line. Missing or unclear evidence is reported as `⚠️ Cannot verify`; uncertainty alone is not a P0/P1 finding.
 - If the reviewer reports "⚠️ Cannot verify from diff", resolve it yourself from context before marking the slice review clean (see [references/cannot-verify.md](references/cannot-verify.md)).
-- Persist the initial review and unresolved `⚠️ Cannot verify` items in `<workspace>/findings-<ID>.md` before fix round 0. For NEEDS FIXES, enter the bounded loop (see [references/fix-loop.md](fix-loop.md)). Resolve uncertainty from repository or credible implementer evidence; confirmed gaps become spec findings. Never fabricate RED. If evidence cannot be established, stop and escalate. Re-read fix-loop each round.
-- Before **review clean**, confirm reviewed `HEAD`, credible Test Evidence, and all `⚠️ Cannot verify` resolved. Re-establish on resume from report, worktree, and ledger; never infer from `0 open`. Then append the existing `complete` line.
+- Before correcting initial-review evidence, save its outcome, exact range/tip, and unresolved `⚠️` items in `<workspace>/findings-<ID>.md`, even for CLEAN/evidence-only reviews. See [references/fix-loop.md](references/fix-loop.md).
+- Before **review clean**, verify reviewed `HEAD`, Test Evidence, and all `⚠️ Cannot verify`; record the actual open P0/P1 count even if evidence remains uncertain. See [references/fix-loop.md](references/fix-loop.md).
 
 ### 4. Transitioning and Finalization
 

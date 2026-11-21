@@ -56,7 +56,7 @@ implementer subagent:
     slices, information that isn't in scope to infer, or a loop of failing tests you
     cannot break). For those, report BLOCKED or NEEDS_CONTEXT.
 
-    For intentional behavior changes, use a meaningful RED: a relevant test that fails for the missing behavior (an existing failing test is valid evidence), then verify GREEN. For pure refactors, use relevant before/after evidence and add characterization coverage when needed; do not invent a behavior change just to force a new failing test. Select tests based on the changed contract, risks, and dependencies—not the size of the diff. Triage failures: distinguish regressions from pre-existing failures, preserve valid assertions, and keep intentional behavior changes separate. Covering tests per fix round; full suite before a slice reports DONE and before final review.
+    For intentional behavior changes, run a relevant test and observe it fail for the missing behavior before making the implementation edit; this is the meaningful RED (an existing failing test is valid evidence). Fix test execution errors and rerun until the test produces a valid behavioral failure; an error, timeout, or broken test setup is not RED. Then implement the change and verify GREEN. For pure refactors, use matching or demonstrably equivalent before/after checks and add targeted pre-edit characterization tests whenever existing checks do not exercise a material affected contract; do not invent a behavior change just to force a new failing test. Select tests based on the changed contract, risks, and dependencies—not the size of the diff. Triage failures: distinguish regressions from pre-existing failures, preserve valid assertions, and keep intentional behavior changes separate. Covering tests per fix round; full suite before a slice reports DONE and before final review.
 
     ## Code Organization
 
@@ -126,8 +126,8 @@ implementer subagent:
     - What you tested and exact test results
     - Full suite result: command run, total passed/failed, and any pre-existing failures explicitly named
     - **Test Evidence** (mandatory for any DONE or DONE_WITH_CONCERNS status):
-      - For intentional behavior changes, include RED: command, relevant failure evidence (new or existing test), and why it fails for the intended missing behavior; then report verification after implementation.
-      - For pure refactors, include relevant before/after evidence and characterization tests if needed; do not fabricate RED.
+      - For intentional behavior changes, include RED observed before the implementation edit: command, relevant failure evidence (new or existing test), and why it demonstrates the intended missing behavior; then report verification after implementation. Fix and rerun test execution errors before treating any output as RED.
+      - For pure refactors, report matching or demonstrably equivalent before/after checks. Add targeted pre-edit characterization tests whenever existing checks do not exercise a material affected contract; do not fabricate RED.
       - For mixed work, show both kinds of evidence for their respective changes.
       - For any failure claimed as an unchanged baseline failure, run the same check on BASE and the slice tip, or demonstrably equivalent checks that exercise the same behavior. Report both revisions, exact commands, and comparable failure evidence establishing it is unchanged. Without that evidence, report the failure as unverified; never describe a failing suite as green.
     - Files changed

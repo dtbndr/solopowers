@@ -151,7 +151,7 @@ When: Reference material too large for inline
 
 Invoke bundled scripts through their interpreter in the prose (`bash scripts/tool.sh`, `node scripts/tool.js`), never by bare path: some harness plugin packagers strip executable bits, and a bare `scripts/tool.sh` fails there with `Permission denied`.
 
-## The Iron Law (Same as TDD)
+## The Iron Law (Skill Authoring)
 
 ```
 NO SKILL WITHOUT A FAILING TEST FIRST
