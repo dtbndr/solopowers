@@ -49,7 +49,7 @@ Slice <ID>: fix round <R>/4 (<X> addressed, <Y> open — <finding one-liners>; c
 ```
 `<Y>` counts open P0/P1 findings only.
 
-Never fix findings yourself in the controller session — your context stays clean for coordination, and controller fixes skip review. For a failed Final verification or a recorded active/pending verification obligation, use [Final Verification Blocker](verification-blocker.md). Ordinary smoke closeout follows [end-smoke.md](end-smoke.md): independent review-clean authorizes required smoke revalidation, but is not itself a smoke pass or permission to record success.
+Never fix findings yourself in the controller session — your context stays clean for coordination, and controller fixes skip review. For a failed Final verification or a recorded active/pending verification obligation, use [Final Verification Blocker](verification-blocker.md). An established full Final verification pass may be reused while applicable to the current revision and verification conditions; rerun if stale or unestablished. Matching `HEAD` alone is not proof, and a passing run does not clear pending smoke obligations. Ordinary smoke closeout follows [end-smoke.md](end-smoke.md): independent review-clean authorizes required smoke revalidation, but is not itself a smoke pass or permission to record success.
 
 ## End-Smoke Variant
 
@@ -57,7 +57,7 @@ For an end-smoke failure ([end-smoke.md](end-smoke.md)) there is no slice. Findi
 
 ## The Breaker (Cap Escalation)
 
-When round 4's re-review still leaves a P0/P1 open, the cap is reached. (P2/P3 never trigger escalation.) Stop dispatching.
+When round 4's re-review still leaves a P0/P1 open, the cap is reached. (P2/P3 never trigger escalation.) Stop dispatching. For a failed Final verification at this exit, immediately follow [Final Verification Blocker](verification-blocker.md), including pending smoke obligations.
 
 Immediately append to the ledger:
 ```markdown

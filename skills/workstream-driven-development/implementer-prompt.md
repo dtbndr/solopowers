@@ -120,14 +120,15 @@ implementer subagent:
     blocker status, required-check sets, saved per-check results, rulings, dispatch,
     revision/range, and outcome records. Do not edit or replace those records or prior
     reports. Existing revision/range, outcome, and failure-group records are
-    authoritative; if their association is unclear, stop and report the ambiguity.
+    authoritative; leave failure-group association and reconciliation to the
+    controller. If their association is unclear, stop and report the ambiguity.
     The test rule applies: covering tests per fix round; full suite before a slice
     reports DONE and before final review. Reviewers should be able to rely on your
     report as the test evidence.
 
     ## Report Format
 
-    Create [REPORT_FILE] only if absent. If it exists, preserve all prior sections and controller records; append only your designated fix-round section. Do not overwrite controller-owned blocker status, required-check sets, saved results, rulings, dispatch/revision/range, or outcome records. Write your report to [REPORT_FILE]:
+    Choose the report section by the work assigned, not by whether the file exists: write the initial report or evidence update when assigned, or only your designated fix-round section when assigned a fix round. Create [REPORT_FILE] only if absent. If it exists, append the assigned section and preserve all prior sections and controller records. Do not overwrite controller-owned blocker status, required-check sets, saved results, rulings, dispatch/revision/range, or outcome records. Write your report to [REPORT_FILE]:
     - What you implemented (or what you attempted, if blocked)
     - What you tested and exact test results
     - Full suite result: command run, total passed/failed, and any pre-existing failures explicitly named
