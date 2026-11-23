@@ -72,7 +72,7 @@ Subagent (general-purpose):
 
     ## Test Evidence by Review Type
 
-    For slice fixes, verify RED/GREEN or refactor preservation evidence against the reviewed tip and report missing proof as `⚠️ Cannot verify`. A controller-recorded `reconstructed RED (<sha>)` line with commands, failure excerpt and GREEN satisfies RED when original output is unrecoverable; do not re-flag its ordering. End-smoke fixes are different: verify only the failed-check covering tests and report required for the end-smoke fix; do not require slice RED evidence or broader slice Test Evidence.
+    For slice fixes, verify RED/GREEN or refactor preservation evidence against the reviewed tip and report missing proof as `⚠️ Cannot verify`. A controller-recorded `reconstructed RED (<sha>)` line in the report with commands, failure excerpt and GREEN satisfies RED when original output is unrecoverable; do not re-flag its ordering. End-smoke fixes are different: verify only the failed-check covering tests and report required for the end-smoke fix; do not require slice RED evidence or broader slice Test Evidence.
 
     The implementer re-ran the tests covering amended code and appended
     results to the report file. Treat the report as unverified claims:
