@@ -17,7 +17,7 @@ Only `brief.md` needs operator approval. `slices.md` and `log.md` need none.
 ### 1. Completeness and Sizing
 - **No Pseudo-code or Raw Implementation Code:** The folder deliberately contains no raw implementation code. Key file paths, API contracts, schema definitions, test targets, and verification commands are encouraged to eliminate ambiguity, but raw code generation belongs entirely to the slice implementer.
 - **Decision Completeness:** All design choices that could require rework if decided wrong MUST be settled. Incidental choices (variable names, internal helper decomposition, log message wording) are explicitly left to implementation discretion.
-- **Slice Sizing:** Slices are executed by standard-tier workers with limited context. Each slice should touch 1–5 files, have clear TDD tasks (red → green → verification), explicit watch-outs, and verification commands (no per-slice manual smoke tests). If a slice requires extensive prose to be unambiguous, split it.
+- **Slice Sizing:** Size each slice to fit the implementer's available context and the behavior's complexity, dependencies, and verification burden—not a file-count proxy. Keep a slice cohesive and independently verifiable; split when its objective, dependencies, or verification cannot be handled clearly in one worker context. State the behavior or refactor objective, relevant tests/evidence, explicit watch-outs, and verification commands (no per-slice manual smoke tests).
 - **Slice Heading Grammar:** Slice headings in `slices.md` use `### Slice <SLICE_ID>: <Slice Title>`, where `<SLICE_ID>` matches `[A-Z][0-9]*` (e.g., `A`, `A1`, `A2`). The ID is matched exactly by helper scripts (`slice-brief`).
 
 ### 2. Section Ownership
@@ -101,11 +101,11 @@ Intentionally left to `workstream-driven-development`:
 {Remaining open design questions that block approval, or `None`.}
 
 ## Final verification
-Run all of the following before handoff. Each must pass clean:
-- [ ] Tests pass (exact command)
-- [ ] Type check passes (exact command)
-- [ ] Linter passes (exact command)
-- [ ] Formatter passes (exact command)
+Run all applicable commands before final handoff and record exact commands/results. Every required final verification command must pass. Any failing required check blocks completion; if the operator changes scope, document that change and ensure every check that remains required passes.
+- [ ] Tests: command and result
+- [ ] Type check: command and result
+- [ ] Linter: command and result
+- [ ] Formatter: command and result
 
 ---
 
@@ -118,11 +118,11 @@ Run all of the following before handoff. Each must pass clean:
 #### Tasks
 
 **`file/to/modify`**
-- [ ] Write the failing test for the exact behavior this slice introduces or changes
-- [ ] Run the focused test command and verify the failure for the expected reason
-- [ ] Implement the minimum production change required for that behavior
-- [ ] Run the focused test again and verify it passes
-- [ ] Commit the slice changes once the focused behavior and slice verification are green
+- [ ] For intentional behavior changes, establish meaningful RED before editing for the missing behavior; a relevant existing test may qualify only if verified to fail for that reason. For pure refactors, identify the affected contract and capture matching or demonstrably equivalent before/after evidence; add targeted characterization coverage before editing when existing checks do not exercise a material affected contract. For mixed work, do both for their respective changes.
+- [ ] Run focused checks and record exact commands/results; distinguish verified unchanged baseline failures from new failures.
+- [ ] Implement the specified change with minimum scope, then rerun relevant focused checks and record outcomes.
+- [ ] Before reporting slice DONE, run the full project-required verification suite and report actual results. Fix regressions and identify verified unchanged baseline failures separately; do not describe a failing suite as green. An unchanged baseline failure does not by itself block slice handoff, but never waives final workstream verification, where every required check must pass.
+- [ ] Commit the slice changes only after implementation and required slice verification are complete.
 
 #### Watch out
 - Caveats, risks, or API constraints

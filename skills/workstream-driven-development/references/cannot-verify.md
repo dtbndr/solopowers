@@ -2,7 +2,9 @@
 
 Part of `solopowers:workstream-driven-development`.
 
-The slice reviewer may report items under `⚠️ Cannot verify from diff`: requirements that live in unchanged code, depend on environment setup, or span multiple slices.
+The reviewer may report `⚠️ Cannot verify` for requirements hidden by the diff or missing Test Evidence. This is uncertainty, not a verdict or finding severity. Inspect whether existing evidence or direct repository inspection establishes the affected contract. If evidence is missing or inadequate, correct it and redispatch review of the same recorded range; if direct inspection resolves the uncertainty, record the evidence and outcome. A confirmed contract gap enters the fix loop. The status alone is neither a correction request nor proof of a defect. For evidence omissions, inspect the report and worktree; ask the implementer to amend `report.md` without a commit when checks ran but were not recorded. If required checks can be run at the reviewed tip without code changes, run them and record the evidence; do not enter a fix round for evidence-only work. If missing coverage requires code changes, enter the normal fix loop; never fabricate historical RED. If the evidence cannot be established, stop and escalate.
+
+For `⚠️ Cannot verify from diff` items: requirements may live in unchanged code, depend on environment setup, or span multiple slices.
 
 These items do not automatically fail the review, but you must resolve each one yourself before the slice can achieve **review clean**:
 - Inspect the repository or worktree to check the requirement directly.
@@ -11,4 +13,4 @@ These items do not automatically fail the review, but you must resolve each one 
   Slice <ID>: ⚠️ resolved — <item> — <evidence>
   ```
   Recording this ensures your verification survives context compaction and session resume.
-- If you confirm the item is an actual gap or missing requirement, treat it as a failed spec review — it is a P1 finding and enters the fix loop (see [references/fix-loop.md](fix-loop.md)).
+- If you confirm an actual gap, record it as an actionable spec gap and enter the fix loop (see [references/fix-loop.md](fix-loop.md)). Count it as open P0/P1 only when the reviewer assigns that severity; do not inflate the ledger count merely because the gap triggers the loop.

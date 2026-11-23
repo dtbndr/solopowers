@@ -18,7 +18,7 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
 
     1. **Single-Artifact Invariant:** The workstream folder serves as both the design AND the implementation plan. This is NOT a separate plan or design specification. Do NOT create a separate `plan.md` or `spec.md`.
     2. **No Implementation Code Constraint:** The folder must contain NO production implementation code or pseudo-code. Key file paths, test commands, API contracts, column names, and verification instructions are highly encouraged, but actual logic/code generation must be offloaded entirely to the subsequent implementer.
-    3. **Actionable Slices:** Ensure each slice is sized appropriately for a standard-tier worker with limited context, with clear TDD tasks (red -> green loop) and automated verification per slice (no per-slice manual smoke tests).
+    3. **Actionable Slices:** Ensure each slice is sized appropriately for a standard-tier worker with limited context, based on worker context, behavioral complexity, dependencies, and verification burden (not file count), with contract/risk-relevant tests and automated verification per slice (no per-slice manual smoke tests).
     4. **Commit the Files:** Once the files are written or revised, commit the folder to the repository.
     5. **Decision Record:** Every consequential choice (one affecting rework, safety/correctness, data/package boundaries, public or inter-slice contracts, or later-slice dependencies) must appear as a one-line bullet in `brief.md` AND have fuller detail in the `slices.md` preamble. Keep incidental local choices under Implementation discretion. State `None` when no Unresolved design blockers remain; any unresolved design blocker other than `None` MUST also appear in `brief.md` Open questions so the operator sees it.
     6. **Brief Discipline (hard limits):** `brief.md` is the only file the operator reads and approves. It MUST be about 40 lines or fewer, contain NO tables anywhere, and write every key decision as ONE bullet of the form `decision — why`. Do not restate slices or the agent preamble in it. If it grows past one screen, move detail to `slices.md`.
@@ -93,11 +93,11 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
     List remaining approval-blocking questions, or state `None`.
 
     ## Final verification
-    Run all of the following before handoff. Each must pass clean:
-    - [ ] Tests pass (exact command)
-    - [ ] Type check passes (exact command)
-    - [ ] Linter passes (exact command)
-    - [ ] Formatter passes (exact command)
+    Run all applicable commands before final handoff and record exact commands/results. Every required final verification command must pass. Any failing required check blocks completion; if the operator changes scope, document that change and ensure every check that remains required passes.
+    - [ ] Tests: command and result
+    - [ ] Type check: command and result
+    - [ ] Linter: command and result
+    - [ ] Formatter: command and result
 
     ---
 
@@ -112,11 +112,11 @@ Dispatch a document-writer subagent (standard tier; specify it explicitly, an om
     #### Tasks
 
     **`file/to/modify`**
-    - [ ] Write the failing test for the exact behavior this slice introduces or changes
-    - [ ] Run the focused test command and verify the failure for the expected reason
-    - [ ] Implement the minimum production change required for that behavior
-    - [ ] Run the focused test again and verify it passes
-    - [ ] Commit the slice changes once the focused behavior and slice verification are green
+    - [ ] For intentional behavior changes, establish meaningful RED before editing for the missing behavior; a relevant existing test may qualify only if verified to fail for that reason. For pure refactors, identify the affected contract and capture matching or demonstrably equivalent before/after evidence; add targeted characterization coverage before editing when existing checks do not exercise a material affected contract. For mixed work, do both for their respective changes.
+    - [ ] Run the focused checks and record exact commands/results; distinguish verified unchanged baseline failures from new failures.
+    - [ ] Implement the specified change with minimum scope, then rerun the relevant focused checks and record outcomes.
+    - [ ] Before reporting slice DONE, run the full project-required verification suite and report actual results. Fix regressions and identify verified unchanged baseline failures separately; do not describe a failing suite as green. An unchanged baseline failure does not by itself block slice handoff, but never waives final workstream verification, where every required check must pass.
+    - [ ] Commit the slice changes only after implementation and required slice verification are complete.
 
     #### Watch out
     - Caveats, risks, or API constraints

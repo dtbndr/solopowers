@@ -4,6 +4,18 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-11-23
+
+### Breaking
+
+- An interrupted final-review fix wave created by an earlier release may lack the dispatch-continuation evidence now required for automatic resume. Finish such workstreams on `v2.0.2` before upgrading, or expect an operator handoff instead of automatic re-review.
+
+### Changed
+
+- Size independently verifiable slices using behavioral complexity, context, dependencies, uncertainty and verification burden rather than a fixed file-count target.
+- Apply proportional, risk-aware TDD: preserve meaningful pre-edit RED for behavior changes and use baseline and characterization evidence for refactors.
+- Clarify review evidence, exact-range tracking, final verification and smoke recovery, including retry caps, named waivers and conservative handling of ambiguous history.
+
 ## [2.0.2] - 2026-11-12
 
 ### Fixed

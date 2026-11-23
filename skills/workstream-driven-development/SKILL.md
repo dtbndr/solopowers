@@ -107,7 +107,8 @@ Detailed procedures that the controller reads fresh at specific workflow steps l
 - [references/isolation.md](references/isolation.md) - Branch-or-worktree choice, branch-mode rules, `log.md` setup.
 - [references/harness-dispatch.md](references/harness-dispatch.md) - Per-harness subagent dispatch and escalation tables.
 - [references/reviewer-prompts.md](references/reviewer-prompts.md) - Rules for filling the reviewer prompt template, incl. `[SEVERITY_DEFINITIONS]`.
-- [references/resuming.md](references/resuming.md) - Durable progress ledger, workspace identity, header parsing, isolation mode from `log.md`, and session resume.
+- [references/resuming.md](references/resuming.md) - Resume procedure.
+- [references/verification-blocker.md](references/verification-blocker.md) - Non-waivable Final verification recovery and smoke revalidation.
 - [references/handling-reports.md](references/handling-reports.md) - Handling non-DONE worker statuses (`BLOCKED`, `NEEDS_CONTEXT`, `DONE_WITH_CONCERNS`).
 - [references/cannot-verify.md](references/cannot-verify.md) - Resolving "⚠️ Cannot verify from diff" reviewer items.
 
@@ -115,7 +116,7 @@ Detailed procedures that the controller reads fresh at specific workflow steps l
 
 Workers MUST use:
 
-- `solopowers:test-driven-development` - Mandatory for every slice. The worker must follow a real red → green cycle and provide evidence for it in the slice report.
+- `solopowers:test-driven-development` - Apply evidence appropriate to each slice: meaningful RED and subsequent relevant verification for intentional behavior changes; before/after evidence for pure refactors, plus targeted characterization coverage before editing when existing checks do not exercise a material affected contract. Mixed slices report both. Report known pre-existing failures separately; never claim a failing suite is green.
 
 ## Roles and Model Selection
 
@@ -141,7 +142,7 @@ When `DONE`: Generate the review package (`bash scripts/review-package BASE HEAD
 
 ### 1. Resume Check, then Initial Set Up
 
-- **Resume check (FIRST, before pre-flight, the isolation choice, `log.md` append, or any `wsd-workspace` call).** Follow step 0 of [references/resuming.md](references/resuming.md) (`git worktree list`, `ws/<slug>` branch, `Isolation:` line in `log.md`) to see whether a unit exists (a `Final review: clean (at <h7>)` line in its `log.md` means finished: no workspace call, no dispatch). If so, this is a RESUME: follow `references/resuming.md` and SKIP only this section's isolation choice, `log.md` append and `wsd-workspace` bullets (redo pre-flight only if `log.md` has no `Pre-flight:` line). If no unit exists, it is a first run: continue below.
+- **Resume check (FIRST, before pre-flight, isolation choice, `log.md` append, or any `wsd-workspace` call).** Follow step 0 of [references/resuming.md](references/resuming.md) to find an existing unit. A `Final review: clean (at <h7>)` line in its `log.md` means finished: no workspace call or dispatch. If a unit exists, follow `references/resuming.md` and skip only this section's isolation choice, `log.md` append, and `wsd-workspace` bullets (redo pre-flight only if `log.md` lacks `Pre-flight:`). Otherwise, this is a first run; continue below.
 
 - Read `<folder>/brief.md` (acceptance boundary, final smoke checks) and `<folder>/slices.md` (preamble: key files, invariant, assumptions, final-verification commands; then the slices). Extract all slices, then create a `todo` task list: one task per slice, plus "Final verification and close branch".
 - Run the pre-flight scan over `brief.md` and `slices.md` (see [references/preflight.md](references/preflight.md)) and surface findings before the isolation choice; agreed edits happen inside the unit, and the result goes to `log.md` after isolation setup.
@@ -156,7 +157,7 @@ For each slice, dispatch the worker subagent using file handoffs:
 
 - Generate a slice brief with `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` and pass the printed file path to the worker. `SLICE_ID` must match `[A-Z][0-9]*` (e.g., `A`, `A1`, `A2`).
 - Explicitly inject `solopowers:test-driven-development` into the worker dispatch.
-- **Test execution rule:** Run covering tests per fix round; run the full repository test suite before reporting slice DONE and before final workstream review.
+- **Test execution rule:** Run covering tests per fix round; run the full repository test suite before reporting slice DONE and before final workstream review. At slice handoff, report verified unchanged baseline failures by name and do not call the failing suite green. This reporting allowance does not waive or relax the existing all-pass final verification, final review, or finishing gates at workstream completion.
 - Provide the Objective (from the `slices.md` preamble), in-scope details, and carry-forward context from the preceding completed slice.
 - Name a report file path for the worker so detailed notes and test evidence live on disk, not in controller context.
 - Provide only the relevant code files or interfaces for this slice.
@@ -165,11 +166,12 @@ For each slice, dispatch the worker subagent using file handoffs:
 
 ### 3. Reviewing the Slice
 
-- Once the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
-- The reviewer checks the diff and reported TDD evidence, returning spec compliance (✅/❌/⚠️), P0-P3 findings with evidence, and `Verdict: CLEAN` or `NEEDS FIXES`.
+- Verify Test Evidence before review; correct omissions first. Never fabricate RED. If review reports `⚠️ Cannot verify` for evidence, resolve/correct it and redispatch against the same range without commit or round advance.
+- Once the report is complete and the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
+- The reviewer checks the diff and reported Test Evidence, returning spec compliance (✅/❌/⚠️), P0-P3 findings with evidence, and the existing `Verdict: CLEAN` or `NEEDS FIXES` line. Missing or unclear evidence is reported as `⚠️ Cannot verify`; uncertainty alone is not a P0/P1 finding.
 - If the reviewer reports "⚠️ Cannot verify from diff", resolve it yourself from context before marking the slice review clean (see [references/cannot-verify.md](references/cannot-verify.md)).
-- If the verdict is NEEDS FIXES (open P0/P1): enter the bounded fix loop (see [references/fix-loop.md](references/fix-loop.md)). Re-read `references/fix-loop.md` before every fix round.
-- When the slice is **review clean**, append `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings])` to the ledger, mark it complete in the Todo list, and continue. No pause.
+- Before correcting initial-review evidence, save its outcome, exact range/tip, and unresolved `⚠️` items in `<workspace>/findings-<ID>.md`, even for CLEAN/evidence-only reviews. See [references/fix-loop.md](references/fix-loop.md).
+- Before **review clean**, verify reviewed `HEAD`, Test Evidence, and all `⚠️ Cannot verify`; record the actual open P0/P1 count even if evidence remains uncertain. See [references/fix-loop.md](references/fix-loop.md).
 
 ### 4. Transitioning and Finalization
 
@@ -202,6 +204,6 @@ For complete details on ledger header tracking, collision disambiguation (`<slug
 - **Creating a new branch or worktree per slice**: Absolutely NOT. One isolation unit for the entire workstream.
 - **Re-asking the isolation choice or committing onto the default branch**: Ask once; on resume read `log.md`. Never commit workstream work to the default branch.
 - **Letting subagents read the workstream folder**: Subagents do NOT read `brief.md` or `slices.md`. Provide the curated text and tasks for their specific slice to protect their context window.
-- **Treating TDD as optional**: Do not dispatch workers without `solopowers:test-driven-development`, and do not accept "tests added later" as equivalent to a real red → green cycle.
+- **Treating test discipline as optional**: Do not dispatch workers without `solopowers:test-driven-development`. For intentional behavior changes, require meaningful RED evidence; for pure refactors, require relevant before/after evidence and targeted characterization coverage before editing when existing checks do not exercise a material affected contract. Do not accept tests added after implementation as proof of RED for a behavior change. Require accurate reporting of pre-existing failures.
 - **Proceeding while a slice review fails**: Never start the next slice while a P0/P1 is open in the current slice.
 - **Failing to commit**: Ensure each slice is committed before starting reviews, and any fixes are also committed.
