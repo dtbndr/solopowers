@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-11-24
+
+### Fixed
+
+- `workstream-driven-development`: a slice whose historical RED output was no longer recoverable no longer stalls the workstream. The `cannot-verify` reference now gives a recovery ladder (attested record, then independently reconstructed RED, then escalation with a recommendation; reviewers accept a recorded `reconstructed RED` line), and implementers must save the RED command and failure excerpt to the report as they observe it.
+
 ## [3.0.1] - 2026-11-23
 
 ### Fixed
