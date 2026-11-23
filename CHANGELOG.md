@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.0.3] - 2026-11-24
+
+### Fixed
+
+- `workstream-driven-development`: the unrecoverable-RED ladder no longer accepts a load or import error as attested RED; recovery records now go to `report.md` so reviewers see them, `fix-loop.md` no longer redispatches already-resolved evidence items, and resume ignores leftover detached scratch worktrees.
+
 ## [3.0.2] - 2026-11-24
 
 ### Fixed

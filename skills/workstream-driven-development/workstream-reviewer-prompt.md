@@ -133,7 +133,7 @@ reviewer subagent:
       characterization coverage before editing when existing checks do not
       exercise a material affected contract.
     - For mixed work, verify both evidence paths for their respective changes.
-    - A controller-recorded `reconstructed RED (<sha>)` ledger line with
+    - A controller-recorded `reconstructed RED (<sha>)` line in the report with
       commands, failure excerpt and GREEN satisfies the RED requirement when
       original pre-edit output is unrecoverable; do not re-flag its ordering.
     - Verify the implementer triaged failures without weakening valid

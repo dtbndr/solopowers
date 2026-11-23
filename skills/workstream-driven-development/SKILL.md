@@ -166,7 +166,7 @@ For each slice, dispatch the worker subagent using file handoffs:
 
 ### 3. Reviewing the Slice
 
-- Verify Test Evidence before review; correct omissions first. Never fabricate RED. If review reports `⚠️ Cannot verify` for evidence, resolve/correct it and redispatch against the same range without commit or round advance.
+- Verify Test Evidence before review; correct omissions first. Never fabricate RED. If review reports `⚠️ Cannot verify` for evidence, resolve/correct it and redispatch against the same range without commit or round advance, unless already resolved per [cannot-verify](references/cannot-verify.md).
 - Once the report is complete and the worker reports `DONE` or `DONE_WITH_CONCERNS`, generate a diff package with `bash scripts/review-package BASE HEAD <workspace-slug> WORKSTREAM_FILE` and dispatch the reviewer subagent.
 - The reviewer checks the diff and reported Test Evidence, returning spec compliance (✅/❌/⚠️), P0-P3 findings with evidence, and the existing `Verdict: CLEAN` or `NEEDS FIXES` line. Missing or unclear evidence is reported as `⚠️ Cannot verify`; uncertainty alone is not a P0/P1 finding.
 - If the reviewer reports "⚠️ Cannot verify from diff", resolve it yourself from context before marking the slice review clean (see [references/cannot-verify.md](references/cannot-verify.md)).
