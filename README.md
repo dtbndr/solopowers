@@ -4,7 +4,7 @@ A curated skill pack for solo development workflows, derived from [obra/superpow
 
 ## Origin
 
-solopowers began as local adaptations of superpowers for a workflow where **a single workstream folder** (`brief.md`, `slices.md`, `log.md`) replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one isolation unit per workstream (a git branch or worktree, the operator's choice), with a single end-of-workstream smoke check for the P0/P1 checks agents cannot do, after automated review gates pass. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
+solopowers began as local adaptations of superpowers for a workflow where **a single workstream folder** (`brief.md`, `slices.md`, `log.md`) replaces the spec + plan artifact model (`docs/superpowers/specs`, `docs/superpowers/plans`). Work is split into sequential slices, executed in one isolation unit per workstream (a git branch or worktree, the operator's choice), with a single end-of-workstream human smoke phase for the P0/P1 checks agents cannot do, after Final verification passes and before final review. What started as project-local skill overrides later became this standalone project for identity and lifecycle management.
 
 Workstream folders are stored at `docs/workstreams/YYYY-MM-DD-<topic>/`. `workstream-brainstorming` creates the folder; `workstream-driven-development` executes it sequentially in one branch or worktree.
 
@@ -12,9 +12,9 @@ Workstream folders are stored at `docs/workstreams/YYYY-MM-DD-<topic>/`. `workst
 
 - `brief.md` (about one page) is the only file the operator approves; `slices.md` and `log.md` are agent-facing.
 - The operator picks a git branch or a worktree once per workstream.
-- Slice reviewers grade findings P0-P3 with evidence; the loop exits when no P0/P1 is open, P2/P3 are logged (not fixed), and a 4-round cap escalates only for persistent P0/P1.
-- No per-slice smoke pause: one end-of-workstream smoke step, only for P0/P1 checks agents cannot do (skipped if none).
-- Reviewers run on the strongest model tier, workers on the standard tier. Brainstorming playback and external review are opt-in (the agent recommends, the operator chooses); external review targets the folder.
+- Slice reviewers grade findings P0-P3 with evidence. Confirmed spec gaps require action, and unresolved evidence blocks completion. P2/P3 findings are logged and not fixed unless the operator asks. The loop has a 4-round cap; missing evidence alone does not trigger a code-fix round.
+- No per-slice smoke pause: one end-of-workstream human smoke phase follows passing Final verification and precedes final review. It covers only P0/P1 checks agents cannot do, and is skipped if none remain.
+- Strongest-tier review and standard-tier implementation are the intended model policy, subject to model selection in each harness. Dispatch sections document or link to the mechanism. Brainstorming playback and external review are opt-in (the agent recommends, the operator chooses); external review targets a package anchored to committed `brief.md` and `slices.md`, excluding `log.md`.
 
 ## Skills
 
@@ -62,11 +62,11 @@ npx skills add ~/Development/skills-ws/solopowers
 # From GitHub (tracks main)
 npx skills add https://github.com/dtbndr/solopowers
 
-# Pinned to a release (requires skills CLI >= 1.8); replace vX.Y.Z with a tag
+# Pinned to a release; replace vX.Y.Z with a tag
 npx skills add dtbndr/solopowers@vX.Y.Z
 ```
 
-Unpinned installs track `main`; pin a tag for a stable version. See [Releases](https://github.com/dtbndr/solopowers/releases) for available tags.
+Unpinned installs track `main`; pin a tag for a stable version. See [Releases](https://github.com/dtbndr/solopowers/releases) for available tags. For workstreams with an interrupted final-review fix wave from any pre-v3 release, finish the wave on `v2.0.2` before upgrading; otherwise expect an operator handoff rather than automatic re-review. See the [3.0.0 changelog entry](CHANGELOG.md#300---2026-11-23).
 
 ## Contributing
 
@@ -78,13 +78,14 @@ MIT, see [LICENSE](LICENSE). Includes work from [obra/superpowers](https://githu
 
 ## Agent Dispatch
 
-solopowers dispatch skills include a platform routing table for Pi, claude-code, and Antigravity. Each dispatch-bearing skill (e.g., `workstream-driven-development`, `dispatching-parallel-agents`, `dispatching-code-review`, `workstream-brainstorming`) contains a dispatch section (named `## Harness Dispatch` or `## Platform-Specific Subagent Dispatch` depending on the skill) with the concrete dispatch mechanism for your platform. No custom agent definitions or bridge skills are needed.
+solopowers dispatch skills include a platform routing table for Pi, claude-code, and Antigravity. Each dispatch-bearing skill (e.g., `workstream-driven-development`, `dispatching-parallel-agents`, `dispatching-code-review`, `workstream-brainstorming`) contains a dispatch section (named `## Harness Dispatch` or `## Platform-Specific Subagent Dispatch` depending on the skill) documenting or linking to the concrete dispatch mechanism for your platform. No custom agent definitions or bridge skills are needed.
 
 ## Pulling upstream changes
 
 ```bash
 git remote add upstream https://github.com/obra/superpowers.git
-git fetch upstream
+git config remote.upstream.tagOpt --no-tags
+git fetch --no-tags upstream
 # Port per AGENTS.md "Skill Lifecycle" (fork/adapt/eliminate); cherry-pick only fork-as-is changes
 git cherry-pick <commit>
 ```
