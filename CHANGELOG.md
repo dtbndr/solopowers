@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-11-23
+
+### Fixed
+
+- Update the README to reflect current workstream review and smoke guidance, upstream fetch configuration, and the v3 upgrade caveat.
+
 ## [3.0.0] - 2026-11-23
 
 ### Breaking
