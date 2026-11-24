@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-11-24
+
+### Changed
+
+- Slice sizing: `workstream-brainstorming` (sizing principles, folder template, document-reviewer prompt) and the `workstream-driven-development` pre-flight scan now treat a slice that bundles several independent contracts, each needing its own failing test and review, as oversized, so it is split before dispatch and not after workers stall.
+- A controller session keeps following the skill text it loaded at its start. `harness-dispatch.md` and the README now say to re-read `SKILL.md` and `harness-dispatch.md`, or restart the controller session, after the pack is updated mid-session.
+
 ## [3.1.0] - 2026-11-24
 
 ### Changed
