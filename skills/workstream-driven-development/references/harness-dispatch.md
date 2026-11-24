@@ -24,6 +24,8 @@ Where a harness has no tier choice, state the intended tier in the dispatch text
 
 ### Dispatch core
 
+A running controller session keeps following the skill text it loaded at its start. If the operator says the pack was updated mid-session, re-read `SKILL.md`, this file, and any other reference before its next use, or restart the controller session.
+
 A subagent may not see this pack's skills, and its role or system prompt may set its own report shape or tell it to escalate unapproved decisions. A path to the template is not enough: workers that were not handed the contract did not follow it. So write the filled implementer prompt to `<workspace>/implementer-<ID>-prompt.md` (also when it is absent on resume of an older workstream) and put this block, filled in, in every implementer dispatch, resume (a follow-up message to a live worker), and fix-round message. A resumed worker receives only your message, so a resume is never bare.
 
 ```

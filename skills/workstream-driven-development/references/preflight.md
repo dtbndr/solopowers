@@ -7,7 +7,7 @@ Before dispatching Slice 1 (e.g., Slice A), scan the workstream folder (`brief.m
 - **Cross-Slice Contradictions:** Check whether any slices contradict each other or the workstream's global requirements (`brief.md` acceptance boundary and key decisions) and the architecture invariant in the `slices.md` preamble.
 - **File and Contract Conflicts:** Look at pairs of slices that share a file, interface, or schema. Verify that what an earlier slice produces matches what a later slice expects, and that modifications in later slices do not break assumptions established in earlier slices.
 - **Review Rubric Conflicts:** Check if `brief.md` or `slices.md` explicitly mandates something the review rubric would treat as a defect (e.g., empty test assertions, duplicate code, or missing error handling).
-- **Oversized Slices:** Check if any slice is too large to fit comfortably in a worker subagent's curated context window.
+- **Oversized Slices:** Check if any slice is too large to fit comfortably in a worker subagent's curated context window, or bundles several independent contracts (for example data integrity, retry limits and restart acceptance) that each need their own failing test and review. Propose splitting it into sequential slices now (see Handling Findings); splitting after workers have stalled costs more. A single contract with many steps or tests stays one slice.
 
 ## Handling Findings
 
