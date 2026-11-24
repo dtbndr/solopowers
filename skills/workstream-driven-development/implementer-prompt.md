@@ -47,7 +47,7 @@ implementer subagent:
 
     **While you work:** A running slice does not pause for minor ambiguities. When the
     slice brief, workstream objective, and codebase together don't answer a question,
-    decide. Record every such decision in your report as:
+    decide; the controller has approved such decisions in advance. Record every one in your report as:
     `Ruling: <what you decided> — <why> — <what it costs if wrong>`
     then keep going. A wrong ruling costs rework the controller can see and undo;
     a stalled slice costs the whole workstream.
@@ -154,6 +154,8 @@ implementer subagent:
     - One-line test summary (including full-suite result)
     - Your concerns, if any
     - The report file path
+
+    If another instruction sets your report format, follow it and still end with the Status line as the last line.
 
     If BLOCKED or NEEDS_CONTEXT, put the specifics in the final message itself.
 
