@@ -68,7 +68,7 @@ npx skills add dtbndr/solopowers@vX.Y.Z
 
 Unpinned installs track `main`; pin a tag for a stable version. See [Releases](https://github.com/dtbndr/solopowers/releases) for available tags. For workstreams with an interrupted final-review fix wave from any pre-v3 release, finish the wave on `v2.0.2` before upgrading; otherwise expect an operator handoff rather than automatic re-review. See the [3.0.0 changelog entry](CHANGELOG.md#300---2026-11-23).
 
-After updating the pack, start a new controller session (or have it re-read `workstream-driven-development/SKILL.md` and `references/harness-dispatch.md`). A session that began earlier keeps following the older text.
+After updating the pack, start a new controller session (or have it re-read `workstream-driven-development/SKILL.md` and every reference file before it next uses it). A session that began earlier keeps following the older text.
 
 ## Contributing
 
