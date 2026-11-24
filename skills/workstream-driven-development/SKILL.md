@@ -105,7 +105,7 @@ Detailed procedures that the controller reads fresh at specific workflow steps l
 - [references/end-smoke.md](references/end-smoke.md) - Single end-of-workstream smoke step for P0/P1 checks agents cannot do.
 - [references/final-review.md](references/final-review.md) - Final whole-workstream review, no second fix wave, and cleanup.
 - [references/isolation.md](references/isolation.md) - Branch-or-worktree choice, branch-mode rules, `log.md` setup.
-- [references/harness-dispatch.md](references/harness-dispatch.md) - Per-harness dispatch, escalation, empty worker results.
+- [references/harness-dispatch.md](references/harness-dispatch.md) - Dispatch core, per-harness dispatch, empty results.
 - [references/reviewer-prompts.md](references/reviewer-prompts.md) - Rules for filling the reviewer prompt template, incl. `[SEVERITY_DEFINITIONS]`.
 - [references/resuming.md](references/resuming.md) - Resume procedure.
 - [references/verification-blocker.md](references/verification-blocker.md) - Non-waivable Final verification recovery and smoke revalidation.
@@ -156,7 +156,7 @@ When `DONE`: Generate the review package (`bash scripts/review-package BASE HEAD
 For each slice, dispatch the worker subagent using file handoffs:
 
 - Generate a slice brief with `bash scripts/slice-brief WORKSTREAM_FILE SLICE_ID` and pass the printed file path to the worker. `SLICE_ID` must match `[A-Z][0-9]*` (e.g., `A`, `A1`, `A2`).
-- Explicitly inject `solopowers:test-driven-development` into the worker dispatch.
+- Every implementer dispatch, resume and fix round carries the dispatch core (`harness-dispatch.md`).
 - **Test execution rule:** Run covering tests per fix round; run the full repository test suite before reporting slice DONE and before final workstream review. At slice handoff, report verified unchanged baseline failures by name and do not call the failing suite green. This reporting allowance does not waive or relax the existing all-pass final verification, final review, or finishing gates at workstream completion.
 - Provide the Objective (from the `slices.md` preamble), in-scope details, and carry-forward context from the preceding completed slice.
 - Name a report file path for the worker so detailed notes and test evidence live on disk, not in controller context.
