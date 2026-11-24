@@ -149,13 +149,13 @@ implementer subagent:
     - Any lingering concerns or carry-forward notes for the next slice
 
     Then report back with ONLY:
-    - **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
     - Commits created (short SHA + subject)
     - One-line test summary (including full-suite result)
     - Your concerns, if any
     - The report file path
+    - As the very last line, **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
-    If another instruction sets your report format, follow it and still end with the Status line as the last line.
+    If another instruction sets your report format, follow it and still end with this block, Status line last.
 
     If BLOCKED or NEEDS_CONTEXT, put the specifics in the final message itself.
 

@@ -23,3 +23,4 @@ Per-slice reviews are slice-scoped gates; the broad review happens once at the f
   P3: nit, style, preference.
   ```
 - Findings labeled workstream-mandated are the user's decision: present the finding and the workstream text to the user.
+- Write the filled template to `<workspace>/reviewer-<ID>[-r<N>]-prompt.md`; the dispatch message names it, the review package, and the required last line `Verdict: …` (see [harness-dispatch.md](harness-dispatch.md)). Re-review dispatches follow the same rule.

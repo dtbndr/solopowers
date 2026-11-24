@@ -7,7 +7,7 @@ Part of `solopowers:workstream-driven-development`.
 > [!IMPORTANT]
 > **Controller Instruction:** You MUST re-read this file (`references/fix-loop.md`) before every fix round. Conversation memory does not survive compaction.
 
-The fix loop is entered when an initial slice review reports spec compliance ❌, `Verdict: NEEDS FIXES` (an open P0/P1), or a confirmed ⚠️ gap; when an end-smoke check fails ([end-smoke.md](end-smoke.md)); or when user rulings (`Ruling (user)`) after cap escalation direct code changes. Missing evidence alone is handled through the existing `⚠️ Cannot verify` route: obtain credible evidence from the implementer or verify it directly before completion. If a reported requirement is confirmed missing, treat it as a spec gap and use the normal findings route. Never fabricate unrecorded RED.
+The fix loop is entered when an initial slice review reports spec compliance ❌, `Verdict: NEEDS FIXES` (an open P0/P1), or a confirmed ⚠️ gap; when an end-smoke check fails ([end-smoke.md](end-smoke.md)); or when user rulings (`Ruling (user)`) after cap escalation direct code changes. Missing evidence alone is handled through the existing `⚠️ Cannot verify` route: obtain credible evidence from the implementer (never retroactive RED; see [cannot-verify.md](cannot-verify.md)) or verify it directly before completion. If a reported requirement is confirmed missing, treat it as a spec gap and use the normal findings route. Never fabricate unrecorded RED.
 
 Before the loop starts, two routes leave it immediately:
 
@@ -18,9 +18,9 @@ Everything else enters the loop. When the initial review requires a fix round, s
 
 ## Rounds and Dispatch
 
-**Rounds 1-3 — resume the original implementer.** Send it the open findings verbatim, with the dispatch core ([harness-dispatch.md](harness-dispatch.md)); for a behavior-change fix its testing line asks for RED before the edit. Its context is intact: it knows the slice, the code, and its own choices. If your harness cannot send another message to a live subagent, dispatch a fresh implementer carrying the slice brief path, the report-file path, and the findings — the report file is the persistent memory either way.
+**Rounds 1-3 — resume the original implementer.** Send it the open findings verbatim, with the dispatch core ([harness-dispatch.md](harness-dispatch.md)); for a behavior-change fix its testing line asks for RED before the edit. Its context is intact: it knows the slice, the code, and its own choices. If your harness cannot send another message to a live subagent, dispatch a fresh implementer carrying the slice brief path, the report-file path, the findings, and the dispatch core — the report file is the persistent memory either way.
 
-**Round 4 — dispatch a fresh implementer on the strongest tier** (the one exception to fixers running on the standard tier; per SKILL.md's Model Selection), with the slice brief path, the report-file path, the open findings, and this framing: "A prior implementer attempted this slice 3 times; you own it now. Read the report file for what was tried." Also dispatch fresh if the implementer is stuck or context-polluted. A loop that survives three resumes usually means the implementer cannot see its own problem — fresh eyes and a capability bump in one move.
+**Round 4 — dispatch a fresh implementer on the strongest tier** (the one exception to fixers running on the standard tier; per SKILL.md's Model Selection), with the slice brief path, the report-file path, the open findings, the dispatch core, and this framing: "A prior implementer attempted this slice 3 times; you own it now. Read the report file for what was tried." Also dispatch fresh if the implementer is stuck or context-polluted. A loop that survives three resumes usually means the implementer cannot see its own problem — fresh eyes and a capability bump in one move.
 
 ## Every Round: Fix & Test Contract
 
