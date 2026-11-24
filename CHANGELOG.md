@@ -9,8 +9,9 @@ All notable changes to this project are documented here. Format follows [Keep a 
 ### Changed
 
 - `workstream-driven-development`: every implementer dispatch, resume and fix-round message now carries a short **dispatch core** (prompt and brief paths, this round's testing rule, report path, pre-approved slice-level `Ruling:`s, and a closing `Status:` line). In a session audit only 11 of 138 workers read the implementer template, and every `Status:` line came from those workers; a harness role may also replace the system prompt, set its own report shape, or tell workers to escalate. The core adds to those instructions instead of overriding them. Reviewer dispatches follow the same rule. The implementer prompt now pre-approves slice-level decisions and ends its report with the `Status:` line even when another instruction sets the report format.
-- The empty-worker-result rule from 3.0.4 is superseded: a result is empty only when it states no outcome, updates no report and leaves no change, and dispatches that expect no change are exempt.
-- A fix that landed without RED is no longer sent back for after-the-fact RED; fix-round dispatches ask for RED before the edit, and nondeterministic race or crash tests that cannot be reconstructed go to the `cannot-verify` escalation rung.
+- The empty-worker-result rule from 3.0.4 is superseded: a result is empty only when it states no outcome, updates no report and leaves no change, and dispatches that expect no change are exempt. A non-empty result without a `Status:` line is classified by the controller and not redispatched.
+- A fix that landed without RED is no longer sent back for after-the-fact RED; fix-round dispatches ask for RED before the edit. For a fix that landed without RED, the `cannot-verify` ladder applies: a reconstructed RED (from the round's `FIX_BASE`) is the standard and the operator decides at the escalation rung, as does a nondeterministic race or crash test that cannot be reconstructed. `test-driven-development` notes this mapping.
+- Reviewer dispatches write the filled prompt to a workspace file and name it with the `Verdict:` requirement (`reviewer-prompts.md`).
 
 ## [3.0.4] - 2026-11-24
 

@@ -153,7 +153,7 @@ implementer subagent:
     - One-line test summary (including full-suite result)
     - Your concerns, if any
     - The report file path
-    - As the very last line, **Status:** DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
+    - As the very last line, `Status:` DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
     If another instruction sets your report format, follow it and still end with this block, Status line last.
 
