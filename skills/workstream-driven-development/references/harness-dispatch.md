@@ -22,6 +22,12 @@ Skills say "strongest" (reviewers) and "standard" (workers). Map them per harnes
 
 Where a harness has no tier choice, state the intended tier in the dispatch text and accept the harness default.
 
+### Empty worker result
+
+A worker result with no `Status:` line and no new commit or working-tree change is not a slice outcome; do not advance the fix round on it. Keep any findings it reports (for example evidence that a test passes against old code), then redispatch once asking for the Status-line report, and put the full return contract (Status line, commits, test summary, report file path) in the new message together with the last obstacle the worker hit, if the transcript shows one. If the second result is also empty, stop and hand the slice to the operator with both transcripts' last messages.
+
+Resuming an existing worker (Pi `subagent` with `action: "resume"`) sends only your follow-up text; the original prompt survives only as background context, and a bare follow-up has produced a worker that ended without a `Status:` line. Restate the return contract in the resume message.
+
 ### Escalation (subagent needs controller input mid-task)
 
 | Harness | How to escalate |

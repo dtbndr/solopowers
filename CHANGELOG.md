@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.0.4] - 2026-11-24
+
+### Fixed
+
+- `workstream-driven-development`: an implementer that hit a retryable tool error (for example a refused ambiguous edit) could end its turn with an "incomplete" summary and no `Status:` line, which the controller saw as a worker that stopped without changes. The implementer prompt now treats such errors as obstacles to retry (BLOCKED only after real attempts, always ending with the Status line), and `harness-dispatch.md` tells the controller to redispatch once on a statusless, change-free result and to restate the return contract when resuming a Pi worker.
+
 ## [3.0.3] - 2026-11-24
 
 ### Fixed

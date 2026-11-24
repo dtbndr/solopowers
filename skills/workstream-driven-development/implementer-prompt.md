@@ -86,6 +86,13 @@ implementer subagent:
     - You feel uncertain about whether your implementation meets the core objective
     - You are stuck in a loop of failing tests or compilation errors
 
+    **A refused or errored tool call is not a stopping point.** A result marked
+    retryable, or an edit the tool refused (for example an ambiguous match), is an
+    obstacle: re-read the file, correct your input, and retry. For these errors, report
+    BLOCKED only after at least two real attempts. (Failing tests are different: they
+    follow the RED/GREEN rules above.) However you stop, end with the Status line
+    below, never with a bare summary of unfinished work.
+
     **How to escalate:** Report back with status BLOCKED or NEEDS_CONTEXT. Describe
     specifically what you are stuck on, what you have tried, and what kind of help you need.
 

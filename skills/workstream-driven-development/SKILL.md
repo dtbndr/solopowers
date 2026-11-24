@@ -105,7 +105,7 @@ Detailed procedures that the controller reads fresh at specific workflow steps l
 - [references/end-smoke.md](references/end-smoke.md) - Single end-of-workstream smoke step for P0/P1 checks agents cannot do.
 - [references/final-review.md](references/final-review.md) - Final whole-workstream review, no second fix wave, and cleanup.
 - [references/isolation.md](references/isolation.md) - Branch-or-worktree choice, branch-mode rules, `log.md` setup.
-- [references/harness-dispatch.md](references/harness-dispatch.md) - Per-harness subagent dispatch and escalation tables.
+- [references/harness-dispatch.md](references/harness-dispatch.md) - Per-harness dispatch, escalation, empty worker results.
 - [references/reviewer-prompts.md](references/reviewer-prompts.md) - Rules for filling the reviewer prompt template, incl. `[SEVERITY_DEFINITIONS]`.
 - [references/resuming.md](references/resuming.md) - Resume procedure.
 - [references/verification-blocker.md](references/verification-blocker.md) - Non-waivable Final verification recovery and smoke revalidation.
