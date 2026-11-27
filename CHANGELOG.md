@@ -6,7 +6,12 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ### Fixed
 
-- Pi dispatch no longer breaks when `pi-subagents` agent names change or when a role name such as `document-writer` is passed as `agent:`. `harness-dispatch.md` gains a "Pi agent names" section: Pi names are defaults validated once per session with `subagent({ action: "list", options: { capabilities: true } })`, role names are never agent names, and a missing default stops for an operator choice. Document review on Pi now uses `reviewer` (was `oracle`), matching the other dispatch tables. On Pi the code reviewer never runs git (the controller attaches the diff as a file), and model tiers use a per-call `model` the operator confirms.
+- Pi dispatch no longer breaks when `pi-subagents` agent names change or when a role name such as `document-writer` is passed as `agent:`. `harness-dispatch.md` gains a "Pi agent names" section: Pi names are defaults validated once per session with `subagent({ action: "list", options: { capabilities: true } })`, role names are never agent names, and a missing default stops for an operator choice.
+- Pi document review uses `reviewer` (was `oracle`), matching the other dispatch tables. On Pi the code reviewer never runs git: the controller attaches the diff as a file.
+
+### Changed
+
+- Pi model tiers use the per-call `model` parameter. The operator confirms the strongest (and standard) model once per session, at a defined start point (with the isolation choice, right after the resume check, or before the first document review), never between slices.
 
 ## [3.2.0] - 2026-11-27
 

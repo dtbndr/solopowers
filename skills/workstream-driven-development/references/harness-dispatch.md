@@ -37,7 +37,7 @@ Skills say "strongest" (reviewers) and "standard" (workers). Map them per harnes
 | Harness | Strongest | Standard |
 |---|---|---|
 | claude-code | `opus` | `sonnet` |
-| Pi | per-call `model` parameter (`provider/id`; `subagent({ action: "models" })` lists them): once per session, recommend the strongest listed model with a one-line reason, let the operator confirm it, and pass it on every review; do not dispatch a review without a confirmed model | per-call `model` parameter: pass the operator-confirmed standard model; if none is confirmed, state the tier in the dispatch text and accept the agent default |
+| Pi | per-call `model` parameter (`provider/id`; `subagent({ action: "models" })` lists them): confirm it at a defined start point, never between slices: in WSD, in the same turn as the isolation choice on a first run or right after the resume check on resume; in brainstorming, before the first document review. Recommend the strongest listed model with a one-line reason; the operator confirms it, and you pass it on every review. Do not dispatch a review without a confirmed model | per-call `model` parameter: ask in the same question as the strongest model and pass the operator-confirmed standard model; if none is confirmed, state the tier in the dispatch text and accept the agent default |
 | Antigravity | no tier choice; harness picks the model | harness picks the model |
 
 Where a harness has no tier choice, state the intended tier in the dispatch text and accept the harness default.
