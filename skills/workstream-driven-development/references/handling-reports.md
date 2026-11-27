@@ -7,6 +7,7 @@ Worker subagents report one of four statuses upon completing their turn:
 ## DONE
 
 The worker completed the slice, committed changes, and ran tests.
+0. **Check the RED before review.** Open the report's RED excerpt. If it shows `ERR_MODULE_NOT_FOUND`, a "module/export must exist" assertion, `error TS`, a setup or fixture error, or one assertion standing for several contracts, it is not RED: redispatch the worker for correct RED with the rules in `solopowers:test-driven-development` `red-evidence.md` (before the review, while the code is fresh) instead of waiting for the reviewer to flag it. If the raw RED is gone, use the unrecoverable-RED ladder in [cannot-verify.md](cannot-verify.md).
 1. Generate the review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
    bash scripts/review-package "$BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"  # always <folder>/slices.md
@@ -36,6 +37,8 @@ Assess the blocker systematically:
 2. **Insufficient reasoning capacity:** Re-dispatch on the strongest tier.
 3. **Oversized slice:** If the slice is too large or complex for a single turn, split it in `slices.md` with user consent.
 4. **Workstream defect:** If `brief.md` or `slices.md` itself contains an incorrect requirement or contradiction, escalate to the user.
+
+**Partial work left in the tree.** A stalled or blocked worker may leave uncommitted implementation. Do not tell a takeover worker to "preserve and extend" it: that skips RED. Tell it to stash the implementation, write or restore the tests, save RED against the base, then restore the implementation and verify GREEN (`red-evidence.md`, "Taking over uncommitted implementation"). If the behavior cannot be isolated, the worker reports it and the unrecoverable-RED ladder in [cannot-verify.md](cannot-verify.md) applies.
 
 > [!CAUTION]
 > Never ignore an escalation or force the same model to retry without changes. If the worker reports that it is stuck, something needs to change.
