@@ -4,6 +4,8 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-11-27
+
 ### Fixed
 
 - Pi dispatch no longer breaks when `pi-subagents` agent names change or when a role name such as `document-writer` is passed as `agent:`. `harness-dispatch.md` gains a "Pi agent names" section: Pi names are defaults validated once per session with `subagent({ action: "list", options: { capabilities: true } })`, role names are never agent names, and a missing default stops for an operator choice.
