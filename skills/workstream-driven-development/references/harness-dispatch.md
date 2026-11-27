@@ -6,9 +6,29 @@ Use the table below to dispatch implementer and reviewer subagents on your harne
 
 | Harness | Dispatch implementer | Dispatch reviewer |
 |---|---|---|
-| Pi | built-in `worker` role | built-in `reviewer` role |
+| Pi | default agent `worker` (see Pi agent names) | default agent `reviewer` (see Pi agent names) |
 | claude-code | `Task` tool with implementer prompt | `Task` tool with reviewer prompt |
 | Antigravity | describe the implementation task in natural language; harness spawns dynamically | describe the review task in natural language; harness spawns dynamically |
+
+### Pi agent names
+
+Agent names belong to the `pi-subagents` extension and can change between its releases. Treat every Pi name in this pack as a **default to validate**, never as a contract.
+
+- `agent:` takes only a name from the Default agent column below, or one the operator confirmed. Never use a prompt-role label such as `document-writer`, `document-reviewer` or `builder-check` as an agent. Put the role's prompt in the task text. (The agent `reviewer` and the reviewer prompt role share a name by coincidence.)
+- Once per session, before the first Pi dispatch, run `subagent({ action: "list", options: { capabilities: true } })` and confirm from `details.agentCapabilities` (or `options: { search: "<name>" }`) that each default you need is present with the tools the role requires. `acceptanceRole` is not required.
+
+| Role | Default agent | Required tools | Context |
+|---|---|---|---|
+| implementer, ad-hoc worker | `worker` | read, edit, write, bash | `fresh` |
+| reviewer, document-reviewer, builder-check | `reviewer` | read, grep; no edit (diff provided as a file) | `fresh` |
+| document-writer | `delegate` | read, edit, write, bash | `fork` |
+| scout (recon) | `scout` | read, grep; no edit | `fresh` |
+
+- `reviewer` has no bash and cannot run git. For code review, the controller writes the diff to a file and names it in the dispatch (the WSD review package already does); the reviewer prompt's `git diff` lines do not apply on Pi. If a review needs commands, ask the operator to choose a read-only agent with bash such as `oracle`, and pass `context: "fresh"` (its default is `fork`, which would weaken an independent review). On Pi, replace the "Git Range to Review" block in `code-reviewer.md` with the diff file path.
+- `context: "fork"` is strict: if Pi refuses it because the parent session has no persisted leaf, ask the operator to either run `fresh` with the approved design pasted into the task, or persist the session.
+- If a default is missing or lacks the tools, stop and ask the operator. Recommend the best listed candidate with a one-line reason; do not pick one silently. Never route to an external-CLI agent (`agy`, `codex-exec*`, `cursor-agent*`, `claude-code*`) unless the operator chose it.
+- On `Unknown agent`, do not scan the error's "Available agents" list (it is truncated). Re-run the capabilities `list`, then follow the previous bullet. Retry once, with a name the operator confirmed.
+- Pi agents here run with `inheritSkills: false` and cannot load this pack's skills: a skill name in a dispatch (for example `follow solopowers:test-driven-development`) is not enough. Name a prompt file path (absolute, for example the `red-evidence.md` the Dispatch core block mentions), or inline the needed rules.
 
 ### Model tiers
 
@@ -17,7 +37,7 @@ Skills say "strongest" (reviewers) and "standard" (workers). Map them per harnes
 | Harness | Strongest | Standard |
 |---|---|---|
 | claude-code | `opus` | `sonnet` |
-| Pi | no override documented; state the intended tier in the dispatch text (`reviewer` role default) | no override documented; state the intended tier in the dispatch text (`worker` role default) |
+| Pi | per-call `model` parameter (`provider/id`; `subagent({ action: "models" })` lists them): confirm it before the session's first Pi dispatch, never between slices: in WSD, in the same turn as the isolation choice on a first run, or before the first dispatch on a resume (`resuming.md` step 0); in brainstorming, before the document-writer. Recommend the strongest listed model with a one-line reason; the operator confirms it, and you pass it on every review. Do not dispatch a review without a confirmed model | per-call `model` parameter: before the session's first dispatch, in the same question as the strongest model, recommend a standard model with a one-line reason and pass the operator-confirmed one; fall back to stating the tier in the dispatch text and accepting the agent default only if the operator declines |
 | Antigravity | no tier choice; harness picks the model | harness picks the model |
 
 Where a harness has no tier choice, state the intended tier in the dispatch text and accept the harness default.

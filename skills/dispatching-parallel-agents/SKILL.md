@@ -201,6 +201,6 @@ From debugging session (2025-10-03):
 
 | Harness | Dispatch implementer | Dispatch investigator | Parallel dispatch |
 |---|---|---|---|
-| Pi | built-in `worker` role | built-in `scout` role | multiple dispatch calls in one response |
+| Pi | default agent `worker` | default agent `scout` (validate both: `solopowers:workstream-driven-development` `references/harness-dispatch.md`, "Pi agent names" and Model tiers) | multiple dispatch calls in one response |
 | claude-code | `Task` tool with implementer prompt | `Task` tool with investigation prompt | multiple `Task` calls in one response |
 | Antigravity | describe the task in natural language | describe the investigation in natural language | list all tasks in one prompt; state "run these as parallel subagents" |

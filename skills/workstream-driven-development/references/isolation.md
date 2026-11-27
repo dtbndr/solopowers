@@ -13,3 +13,7 @@ The agent recommends with a one-line reason; the operator decides:
 ## log.md
 
 Brainstorming already created `<folder>/log.md` with its `# <Topic> Workstream Log` header; do NOT re-create it. Right after isolation setup, APPEND a line after the existing lines of it INSIDE the isolation unit, `Isolation: <branch|worktree> — branch <name>`, and commit that as the first commit on the feature branch or worktree (never on the default branch). In branch mode, if the workstream folder is not yet committed on the base, include it in this first commit (worktree mode requires it committed already). Apply any pre-flight edits agreed with the operator inside the isolation unit and commit them there (after the `Isolation:` commit). Then append the pre-flight result line (see [preflight.md](preflight.md)).
+
+## Pi review model
+
+On Pi, ask the review-model question in the same turn as the isolation choice on a first run, or before the first dispatch on a resume ([resuming.md](resuming.md) step 0), never between slices (see [harness-dispatch.md](harness-dispatch.md) Model tiers).
