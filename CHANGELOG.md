@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.1.2] - 2026-11-27
+
+### Fixed
+
+- Implementation workers frequently missed a valid RED. A session audit of one project found workers turning a missing-module load error into an assertion (`try { await import() } catch {}` plus `assert.ok(mod)`), hiding several contracts behind one failing assertion, rewriting tests after the failure so the saved output no longer matched them, and taking over uncommitted implementation. New `test-driven-development/red-evidence.md` (linked from the skill and the implementer prompt) sets RED against a compiling stub, an outcome assertion (plus a positive control where an allowed path exists) for every "never does X" test, one test per contract, raw RED output saved to a file before the implementation edit, and reset-and-rerun when tests change after RED. `workstream-driven-development/references/handling-reports.md` now has the controller route an invalid first RED to the reconstructed-RED rung before review and brief takeover workers to set partial implementation aside, record RED, then restore it.
+
 ## [3.1.1] - 2026-11-24
 
 ### Fixed

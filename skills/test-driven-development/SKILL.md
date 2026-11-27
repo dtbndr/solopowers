@@ -111,6 +111,8 @@ Confirm:
 
 If a new test passes immediately, determine whether it already captures existing behavior; do not treat that as RED for the intended change. A test error is not evidence of the missing behavior. For pre-existing failures, record and distinguish them from failures introduced by the change.
 
+A missing module or export is an execution error: never wrap the import in `try/catch` and assert the module exists. Read [red-evidence.md](red-evidence.md) before testing new code, slices with several contracts, or work you are taking over: it covers RED against a compiling stub, positive controls for "never does X" tests, one test per contract, and saving raw RED output before the implementation edit.
+
 ## Baseline and Refactor Workflow
 
 For a pure refactor, record relevant baseline behavior and verification before editing, then compare after editing; add targeted characterization coverage before editing whenever existing checks do not exercise a material affected contract. For mixed work, use meaningful RED evidence for intentional behavior changes and before/after evidence for refactors. To call a failure pre-existing and unchanged, run the same check on the relevant base revision and the changed revision, or use demonstrably equivalent checks for the same behavior; report both revisions, commands, and comparable failure evidence. Without this comparison, label the failure unverified, not pre-existing. In WSD, verified unchanged failures may be reported separately at slice handoff, not counted as passes. Standalone work has no slice-handoff exception: run required project verification and report actual results. These rules do not relax final all-pass verification gates.
