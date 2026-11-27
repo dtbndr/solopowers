@@ -6,9 +6,27 @@ Use the table below to dispatch implementer and reviewer subagents on your harne
 
 | Harness | Dispatch implementer | Dispatch reviewer |
 |---|---|---|
-| Pi | built-in `worker` role | built-in `reviewer` role |
+| Pi | default agent `worker` (see Pi agent names) | default agent `reviewer` (see Pi agent names) |
 | claude-code | `Task` tool with implementer prompt | `Task` tool with reviewer prompt |
 | Antigravity | describe the implementation task in natural language; harness spawns dynamically | describe the review task in natural language; harness spawns dynamically |
+
+### Pi agent names
+
+Agent names belong to the `pi-subagents` extension and can change between its releases. Treat every Pi name in this pack as a **default to validate**, never as a contract.
+
+- Solopowers role names (`implementer`, `reviewer` prompt roles, `document-writer`, `document-reviewer`, `builder-check`) are never `agent:` values. Pass an agent that exists in `pi-subagents`, and put the role's prompt in the task text.
+- Once per session, before the first Pi dispatch, run `subagent({ action: "list", options: { capabilities: true } })` and confirm each default you need is listed with the capability the role requires:
+
+| Role | Default agent | Required capability | Context |
+|---|---|---|---|
+| implementer, ad-hoc worker | `worker` | writer (edit/write/bash) | `fresh` |
+| reviewer, document-reviewer, builder-check | `reviewer` | read-only | `fresh` |
+| document-writer | `delegate` | writer (edit/write/bash) | `fork` |
+| scout (recon) | `scout` | read-only recon | `fresh` |
+
+- If a default is missing or lacks the capability, stop and ask the operator. Recommend the best listed candidate with a one-line reason; do not pick one silently. Never route to an external-CLI agent (`agy`, `codex-exec*`, `cursor-agent*`, `claude-code*`) unless the operator chose it.
+- On `Unknown agent`, do not parse the error's candidate list (it can be filtered). Re-run `action: "list"`, then follow the previous bullet. Retry once, with a name the operator confirmed.
+- Pi agents here run with `inheritSkills: false`: put the full prompt in the dispatch text, not a pointer to a skill.
 
 ### Model tiers
 

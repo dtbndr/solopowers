@@ -1,6 +1,6 @@
 # Workstream Folder Writer Prompt Template
 
-Use this template when dispatching a document-writer subagent (usually mapped to Pi's built-in `delegate` role) to write the finalized workstream folder.
+Use this template when dispatching a document-writer subagent (on Pi, default agent `delegate`; `document-writer` is not an agent name) to write the finalized workstream folder.
 
 **Purpose:** Take the approved brainstorming, design decisions, and slice breakdowns, and structure them into the canonical workstream folder: `brief.md`, `slices.md`, and `log.md`.
 

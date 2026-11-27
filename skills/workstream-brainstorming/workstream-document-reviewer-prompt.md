@@ -2,7 +2,7 @@
 
 Use this template when dispatching a reviewer subagent for adversarial review of a written workstream folder (`brief.md` and `slices.md`).
 
-**Role Mapping:** Usually mapped to Pi's built-in `oracle` role (using `context: "fresh"`), keeping the template body itself harness-agnostic.
+**Role Mapping:** On Pi, default agent `reviewer` (using `context: "fresh"`; `document-reviewer` is not an agent name), keeping the template body itself harness-agnostic.
 **Purpose:** Perform an adversarial, high-stakes review to verify completeness, structural soundness, and logical correctness of the plan.
 
 ---
