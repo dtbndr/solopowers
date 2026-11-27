@@ -8,7 +8,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ### Changed
 
-- `workstream-driven-development`: an unrecoverable historical RED no longer stops the workstream for an operator decision. When neither rung 1 nor the rung-2 reconstruction works, rung 3 now logs a `RED gap` (with why rung 2 failed, the worker-attested account and GREEN at the tip) in a separate gitignored `red-gaps.md`, proceeds, and finish records it under a `RED gaps:` entry in `log.md` with its own count, apart from P2/P3. Reviewers treat the line as a disposed evidence gap and still review the code and tests on their merits; the final reviewer does not raise a P0/P1 for the missing RED alone.
+- `workstream-driven-development`: an unrecoverable historical RED no longer stops the workstream for an operator decision. When neither rung 1 nor the rung-2 reconstruction works, rung 3 now logs a `RED gap` (with the rung-2 attempt (command and observed output), why it failed, the worker-attested account and GREEN at the tip) in a separate gitignored `red-gaps.md`, proceeds, and finish records it under a `RED gaps:` entry in `log.md` with its own count, apart from P2/P3. Reviewers treat the line as a disposed evidence gap and still review the code and tests on their merits; the final reviewer does not raise a P0/P1 for the missing RED alone.
 
 ### Fixed
 

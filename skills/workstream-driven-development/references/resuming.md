@@ -31,7 +31,7 @@ Per-slice entries in `progress.md` distinguish **state lines** (which define whe
 | `Slice <ID>: fix round 0/4 (<Y> open — initial review; commits <base7>..<head7>)` | Written when initial review requires a fix loop (NEEDS FIXES, ❌ spec compliance, or confirmed ⚠️ gap), before round 1 dispatch. Save actionable findings/gaps and uncertainties in `<workspace>/findings-<ID>.md`; `<Y>` counts open P0/P1 only and may be zero. |
 | `Slice <ID>: escalated at cap — <Y> open` | Written when round 4 still has open findings. |
 | `Slice <ID>: Ruling (user): <finding> — <decision>` | Annotation: written one per open finding once the user decides. |
-| `Slice <ID>: ⚠️ resolved — <item> — <evidence>` | Annotation: written when the controller resolves a `⚠️ Cannot verify` item. |
+| `Slice <ID>: ⚠️ resolved — <item> — <evidence>` (`Final:` in place of `Slice <ID>:` during final review) | Annotation: written when the controller resolves a `⚠️ Cannot verify` item. |
 | `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings])` | Normal path: write only after a CLEAN review for the reviewed tip, credible Test Evidence for it, and all ⚠️ resolved. Cap path: named P0/P1 findings have user rulings that let the slice stand, with credible evidence and all ⚠️ resolved; CLEAN is not required. |
 
 ## Resume Dispatch Table
