@@ -118,6 +118,6 @@ See template at: [code-reviewer.md](code-reviewer.md)
 
 | Harness | Dispatch reviewer |
 |---|---|
-| Pi | default agent `reviewer` (validate: `solopowers:workstream-driven-development` `references/harness-dispatch.md`, "Pi agent names") |
+| Pi | default agent `reviewer`, which cannot run git: write the diff to a file and name it in the dispatch (validate: `solopowers:workstream-driven-development` `references/harness-dispatch.md`, "Pi agent names") |
 | claude-code | `Task` tool with reviewer prompt |
 | Antigravity | describe the review task in natural language; harness spawns dynamically |

@@ -144,10 +144,10 @@ Use the table below to dispatch document-writer and document-reviewer subagents 
 | Platform | Dispatch document-writer | Dispatch document-reviewer |
 |---|---|---|
 | Pi | default agent `delegate` (`context: "fork"`) | default agent `reviewer` (`context: "fresh"`) |
-
-On Pi, `document-writer` and `document-reviewer` are prompt roles, not agent names. Validate the defaults first: `solopowers:workstream-driven-development` `references/harness-dispatch.md`, "Pi agent names".
 | claude-code | `Task` tool with document-writer prompt | `Task` tool with document-reviewer prompt |
 | Antigravity | describe the document-writing task in natural language | describe the adversarial review task in natural language |
+
+On Pi, `document-writer` and `document-reviewer` are prompt roles, not agent names. Validate the defaults first: `solopowers:workstream-driven-development` `references/harness-dispatch.md`, "Pi agent names".
 
 ## Mandatory Internal Review & The Builder Perspective
 

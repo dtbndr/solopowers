@@ -14,19 +14,21 @@ Use the table below to dispatch implementer and reviewer subagents on your harne
 
 Agent names belong to the `pi-subagents` extension and can change between its releases. Treat every Pi name in this pack as a **default to validate**, never as a contract.
 
-- Solopowers role names (`implementer`, `reviewer` prompt roles, `document-writer`, `document-reviewer`, `builder-check`) are never `agent:` values. Pass an agent that exists in `pi-subagents`, and put the role's prompt in the task text.
-- Once per session, before the first Pi dispatch, run `subagent({ action: "list", options: { capabilities: true } })` and confirm each default you need is listed with the capability the role requires:
+- `agent:` takes only a name from the Default agent column below, or one the operator confirmed. Never use a prompt-role label such as `document-writer`, `document-reviewer` or `builder-check` as an agent. Put the role's prompt in the task text. (The agent `reviewer` and the reviewer prompt role share a name by coincidence.)
+- Once per session, before the first Pi dispatch, run `subagent({ action: "list", options: { capabilities: true } })` and confirm from `details.agentCapabilities` (or `options: { search: "<name>" }`) that each default you need is present with the tools the role requires. `acceptanceRole` is not required.
 
-| Role | Default agent | Required capability | Context |
+| Role | Default agent | Required tools | Context |
 |---|---|---|---|
-| implementer, ad-hoc worker | `worker` | writer (edit/write/bash) | `fresh` |
-| reviewer, document-reviewer, builder-check | `reviewer` | read-only | `fresh` |
-| document-writer | `delegate` | writer (edit/write/bash) | `fork` |
-| scout (recon) | `scout` | read-only recon | `fresh` |
+| implementer, ad-hoc worker | `worker` | read, edit, write, bash | `fresh` |
+| reviewer, document-reviewer, builder-check | `reviewer` | read, grep; no edit | `fresh` |
+| document-writer | `delegate` | read, edit, write, bash | `fork` |
+| scout (recon) | `scout` | read, grep; no edit | `fresh` |
 
-- If a default is missing or lacks the capability, stop and ask the operator. Recommend the best listed candidate with a one-line reason; do not pick one silently. Never route to an external-CLI agent (`agy`, `codex-exec*`, `cursor-agent*`, `claude-code*`) unless the operator chose it.
-- On `Unknown agent`, do not parse the error's candidate list (it can be filtered). Re-run `action: "list"`, then follow the previous bullet. Retry once, with a name the operator confirmed.
-- Pi agents here run with `inheritSkills: false`: put the full prompt in the dispatch text, not a pointer to a skill.
+- `reviewer` has no bash and cannot run git. For code review, the controller writes the diff to a file and names it in the dispatch (the WSD review package already does); the reviewer prompt's `git diff` lines do not apply on Pi. If a review needs commands, ask the operator to choose a read-only agent with bash such as `oracle`.
+- `context: "fork"` is strict: if Pi refuses it because the parent session has no persisted leaf, ask the operator to either run `fresh` with the approved design pasted into the task, or persist the session.
+- If a default is missing or lacks the tools, stop and ask the operator. Recommend the best listed candidate with a one-line reason; do not pick one silently. Never route to an external-CLI agent (`agy`, `codex-exec*`, `cursor-agent*`, `claude-code*`) unless the operator chose it.
+- On `Unknown agent`, do not scan the error's "Available agents" list (it is truncated). Re-run the capabilities `list`, then follow the previous bullet. Retry once, with a name the operator confirmed.
+- Pi agents here run with `inheritSkills: false` and cannot load this pack's skills: a skill name in a dispatch (for example `follow solopowers:test-driven-development`) is not enough. Name a prompt file path, or inline the needed rules.
 
 ### Model tiers
 
@@ -35,7 +37,7 @@ Skills say "strongest" (reviewers) and "standard" (workers). Map them per harnes
 | Harness | Strongest | Standard |
 |---|---|---|
 | claude-code | `opus` | `sonnet` |
-| Pi | no override documented; state the intended tier in the dispatch text (`reviewer` role default) | no override documented; state the intended tier in the dispatch text (`worker` role default) |
+| Pi | per-call `model` parameter (`provider/id`; `subagent({ action: "models" })` lists them): ask the operator once per session for the strongest model and pass it on every review | per-call `model` parameter: pass the operator-confirmed standard model; if none is confirmed, state the tier in the dispatch text and accept the agent default |
 | Antigravity | no tier choice; harness picks the model | harness picks the model |
 
 Where a harness has no tier choice, state the intended tier in the dispatch text and accept the harness default.

@@ -10,7 +10,7 @@ Use this template when dispatching a reviewer subagent for adversarial review of
 ```
 Dispatch a reviewer subagent (strongest tier; specify it explicitly, an omitted model inherits the controller's) with this prompt:
 
-    You are an Oracle reviewer acting as an adversarial prober. Your job is to rigorously review the workstream folder and find any gaps, unstated assumptions, or architectural flaws.
+    You are an adversarial reviewer. Your job is to rigorously review the workstream folder and find any gaps, unstated assumptions, or architectural flaws.
 
     **Workstream folder to review:** [WORKSTREAM_FOLDER_PATH] (read `brief.md` and `slices.md`; `log.md` is written later by the execution skill and starts as a header plus one `Opt-ins:` line)
 
