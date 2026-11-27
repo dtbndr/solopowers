@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-11-27
+
+### Changed
+
+- `workstream-driven-development`: an unrecoverable historical RED no longer stops the workstream for an operator decision. When neither rung 1 nor the rung-2 reconstruction works, rung 3 now logs a `RED gap` (with why rung 2 failed, the worker-attested account and GREEN at the tip) in a separate gitignored `red-gaps.md`, proceeds, and finish records it under a `RED gaps:` entry in `log.md` with its own count, apart from P2/P3. Reviewers treat the line as a disposed evidence gap and still review the code and tests on their merits; the final reviewer does not raise a P0/P1 for the missing RED alone.
+
+### Fixed
+
+- `handling-reports.md` step 0 no longer reads as banning a rung-2 reconstruction dispatch: it says not to ask a worker to recall a RED it did not save, and to run the reconstruction instead.
+- The dispatch core's testing line now points to `red-evidence.md`, so workers that only get the dispatch core still reach the stub, one-test-per-contract and saved-RED rules.
+
 ## [3.1.2] - 2026-11-27
 
 ### Fixed

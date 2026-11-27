@@ -30,7 +30,7 @@ A subagent may not see this pack's skills, and its role or system prompt may set
 
 ```
 Read first (if not already read this session): <prompt file> and <slice brief>; follow solopowers:test-driven-development.
-Testing this round: <behavior change: observe a behavioral RED before editing implementation (an error or load failure is not RED) and save the command and failure excerpt to the report | refactor: before/after evidence, characterization first if uncovered | mixed: both | evidence-only: no code changes or commits; record findings in the report>. Full suite before DONE.
+Testing this round: <behavior change: observe a behavioral RED before editing implementation (an error or load failure is not RED) and save the command and failure excerpt to the report; for a new module or export, several contracts, or work taken over, follow `red-evidence.md` in `solopowers:test-driven-development` | refactor: before/after evidence, characterization first if uncovered | mixed: both | evidence-only: no code changes or commits; record findings in the report>. Full suite before DONE.
 Report details to: <report file>.
 Decisions: the controller approves in advance any decision within this slice's scope that the brief, objective and code leave open. Record each as `Ruling: <decision> — <why> — <cost if wrong>` and continue; escalate only blockers (cross-slice architecture conflict, missing out-of-scope information, a test loop you cannot break).
 End your final message with this block: commits, a one-line test summary, the report path, and as the very last line `Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT`. This adds to any report format you otherwise use.

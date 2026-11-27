@@ -136,6 +136,9 @@ reviewer subagent:
     - A controller-recorded `reconstructed RED (<sha>)` line in the report with
       commands, failure excerpt and GREEN satisfies the RED requirement when
       original pre-edit output is unrecoverable; do not re-flag its ordering.
+    - A controller-recorded `RED gap` line in the report means the controller
+      logged an unrecoverable RED for that item: do not re-flag the missing RED,
+      but still judge the code and tests on their merits.
     - Verify the implementer triaged failures without weakening valid
       assertions. To substantiate an unchanged baseline failure, require the
       same check on BASE and slice tip, or demonstrably equivalent checks for

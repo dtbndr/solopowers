@@ -12,7 +12,7 @@ Workstream folders are stored at `docs/workstreams/YYYY-MM-DD-<topic>/`. `workst
 
 - `brief.md` (about one page) is the only file the operator approves; `slices.md` and `log.md` are agent-facing.
 - The operator picks a git branch or a worktree once per workstream.
-- Slice reviewers grade findings P0-P3 with evidence. Confirmed spec gaps require action, and unresolved evidence blocks completion. P2/P3 findings are logged and not fixed unless the operator asks. The loop has a 4-round cap; missing evidence alone does not trigger a code-fix round.
+- Slice reviewers grade findings P0-P3 with evidence. Confirmed spec gaps require action, and unresolved evidence blocks completion, except an unrecoverable historical RED, which is logged as a `RED gap` for later triage. P2/P3 findings are logged and not fixed unless the operator asks. The loop has a 4-round cap; missing evidence alone does not trigger a code-fix round.
 - No per-slice smoke pause: one end-of-workstream human smoke phase follows passing Final verification and precedes final review. It covers only P0/P1 checks agents cannot do, and is skipped if none remain.
 - Strongest-tier review and standard-tier implementation are the intended model policy, subject to model selection in each harness. Dispatch sections document or link to the mechanism. Brainstorming playback and external review are opt-in (the agent recommends, the operator chooses); external review targets a package anchored to committed `brief.md` and `slices.md`, excluding `log.md`.
 
