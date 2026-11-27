@@ -16,4 +16,4 @@ Brainstorming already created `<folder>/log.md` with its `# <Topic> Workstream L
 
 ## Pi review model
 
-On Pi, ask the review-model question in the same turn as the isolation choice on a first run, or right after the resume check on resume, never between slices (see [harness-dispatch.md](harness-dispatch.md) Model tiers).
+On Pi, ask the review-model question in the same turn as the isolation choice on a first run, or before the first dispatch on a resume ([resuming.md](resuming.md) step 0), never between slices (see [harness-dispatch.md](harness-dispatch.md) Model tiers).
