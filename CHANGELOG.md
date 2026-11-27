@@ -11,7 +11,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 
 ### Changed
 
-- Pi model tiers use the per-call `model` parameter. The operator confirms the strongest (and standard) model once per session, at a defined start point (with the isolation choice, right after the resume check, or before the first document review), never between slices.
+- Pi model tiers use the per-call `model` parameter. Before the session's first Pi dispatch, the operator confirms both models in one question: the agent recommends the strongest and the standard model with a one-line reason each. On a WSD first run this is the same turn as the isolation choice; on a resume it comes before the first dispatch on that resume (`resuming.md` step 0); in brainstorming it comes before the document-writer. A review never runs without a confirmed strongest model; the standard model falls back to the agent default only if the operator declines. The question is never asked between slices.
 
 ## [3.2.0] - 2026-11-27
 
