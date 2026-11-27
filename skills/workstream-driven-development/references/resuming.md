@@ -31,7 +31,7 @@ Per-slice entries in `progress.md` distinguish **state lines** (which define whe
 | `Slice <ID>: fix round 0/4 (<Y> open — initial review; commits <base7>..<head7>)` | Written when initial review requires a fix loop (NEEDS FIXES, ❌ spec compliance, or confirmed ⚠️ gap), before round 1 dispatch. Save actionable findings/gaps and uncertainties in `<workspace>/findings-<ID>.md`; `<Y>` counts open P0/P1 only and may be zero. |
 | `Slice <ID>: escalated at cap — <Y> open` | Written when round 4 still has open findings. |
 | `Slice <ID>: Ruling (user): <finding> — <decision>` | Annotation: written one per open finding once the user decides. |
-| `Slice <ID>: ⚠️ resolved — <item> — <evidence>` | Annotation: written when the controller resolves a `⚠️ Cannot verify` item. |
+| `Slice <ID>: ⚠️ resolved — <item> — <evidence>` (`Final:` in place of `Slice <ID>:` during final review) | Annotation: written when the controller resolves a `⚠️ Cannot verify` item. |
 | `Slice <ID>: complete (commits <base7>..<head7>, review clean[, <K> user rulings])` | Normal path: write only after a CLEAN review for the reviewed tip, credible Test Evidence for it, and all ⚠️ resolved. Cap path: named P0/P1 findings have user rulings that let the slice stand, with credible evidence and all ⚠️ resolved; CLEAN is not required. |
 
 ## Resume Dispatch Table
@@ -68,7 +68,7 @@ After the last slice, `progress.md` carries `End smoke: pending|passed|skipped|f
    - **Finished check (still before any `wsd-workspace` call or step 1):** look for a `Final review: clean (at <h7>)` line in BOTH `git show HEAD:<folder>/log.md` and the working-tree `<folder>/log.md`.
      - Marker in `HEAD`: finished. Ignore unrelated `log.md` dirtiness (do not commit it).
      - Marker only in the working tree (uncommitted): the outcome commit did not happen. Commit `<folder>/log.md` AND `<folder>/brief.md` together by explicit path (`Status: Done` is part of it), then treat as finished.
-     - No marker anywhere: not finished; continue the normal resume (Finish step 2 must check `log.md` first so it does not append duplicate `Smoke:`/`P2/P3:`/`Final review:` lines).
+     - No marker anywhere: not finished; continue the normal resume (Finish step 2 must check `log.md` first so it does not append duplicate `Smoke:`/`P2/P3:`/`RED gaps:`/`Final review:` lines).
      - When finished: do NOT run `wsd-workspace`, dispatch anything, or rerun reviews. Find the marker commit `MC=$(git log -n1 --format=%H -G'^Final review: clean' -- <folder>/log.md)` and compare `HEAD` with `MC` (not `<h7>`): if `HEAD` has commits past `MC`, tell the operator and ask. If `HEAD == MC`, offer `solopowers:finishing-a-development-branch`, or, if a PR/keep outcome was already chosen, just report the state. After a local merge the unit is gone: on the default branch with no `ws/<slug>` unit, if `git show HEAD:<folder>/log.md` shows `Final review: clean`, report "finished and merged" instead of restarting.
    - Only if NO `ws/<slug>` branch or worktree exists AND no `Isolation:` line exists anywhere is this a first run, not a resume: go through the normal isolation choice ([references/isolation.md](isolation.md)).
 1. From inside the unit, run `bash scripts/wsd-workspace <folder>/slices.md` to identify the resolved workspace directory.

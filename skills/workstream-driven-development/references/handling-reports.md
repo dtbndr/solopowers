@@ -7,7 +7,7 @@ Worker subagents report one of four statuses upon completing their turn:
 ## DONE
 
 The worker completed the slice, committed changes, and ran tests.
-0. **Check the RED before review.** Open the report's RED excerpt. If it shows `ERR_MODULE_NOT_FOUND`, a "module/export must exist" assertion, `error TS`, a setup or fixture error, or one assertion standing for several contracts, it fails rung 1 of the unrecoverable-RED ladder in [cannot-verify.md](cannot-verify.md): go straight to rung 2 (reconstructed RED, labeled as fresh evidence) before review instead of waiting for the reviewer to flag it. Do not send the worker back for after-the-fact RED.
+0. **Check the RED before review.** Open the report's RED excerpt. If it shows `ERR_MODULE_NOT_FOUND`, a "module/export must exist" assertion, `error TS`, a setup or fixture error, or one assertion standing for several contracts, it fails rung 1 of the unrecoverable-RED ladder in [cannot-verify.md](cannot-verify.md): go straight to rung 2 (reconstructed RED, labeled as fresh evidence) before review instead of waiting for the reviewer to flag it. Do not ask the worker to recall or recover a RED it did not save: its history is gone. The recovery is the rung-2 reconstruction, run by you or as one evidence-only dispatch (`harness-dispatch.md`); if it cannot be isolated, rung 3 logs a RED gap and the workstream continues.
 1. Generate the review package (run `scripts/review-package` by its absolute path, from the working tree you're executing in):
    ```bash
    bash scripts/review-package "$BASE" "$HEAD" "$WORKSPACE_SLUG" "$WORKSTREAM_FILE"  # always <folder>/slices.md
