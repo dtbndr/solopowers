@@ -138,7 +138,7 @@ Run all applicable commands before final handoff and record exact commands/resul
 
 ## Canonical Template: `log.md`
 
-Brainstorming creates `log.md` with the header `# <Topic> Workstream Log` and one `Opt-ins:` line recording the operator's choices (see [opt-ins.md](opt-ins.md)); nothing else (it is committed with the folder). The execution skill (`solopowers:workstream-driven-development`) owns its content and only appends after it: `Isolation: <branch|worktree> — branch <name>`, then `Pre-flight:`, `Smoke:` lines, the `Final review:` outcome and the `P2/P3:` entry (nothing else).
+Brainstorming creates `log.md` with the header `# <Topic> Workstream Log` and one `Opt-ins:` line recording the operator's choices (see [opt-ins.md](opt-ins.md)); nothing else (it is committed with the folder). The execution skill (`solopowers:workstream-driven-development`) owns its content and only appends after it: `Isolation: <branch|worktree> — branch <name>`, then `Pre-flight:`, `Smoke:` lines, the `Final review:` outcome, the `P2/P3:` entry and the `RED gaps:` entry (nothing else).
 
 ```markdown
 # <Topic> Workstream Log

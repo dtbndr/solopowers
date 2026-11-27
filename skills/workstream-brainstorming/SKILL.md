@@ -69,7 +69,7 @@ We explicitly do NOT split design and implementation planning into separate arti
 
 1. **`brief.md`** (the operator's file, the only one they approve; one screen, about 40 lines max, no tables): title/date/status; Why; Happy path and acceptance boundary (testable bullets); Key decisions as one-line bullets (`decision — why`); Open questions; Final smoke checks (only P0/P1 checks agents cannot perform or are not authorized to perform, else `None`); Pointers to `slices.md` and `log.md`.
 2. **`slices.md`** (agents only, as verbose as needed): agent preamble (Objective, scope in/out, key files, architecture invariant, fuller assumptions and design decisions, implementation discretion, unresolved blockers, final-verification commands) followed by the sequential slices (`### Slice <ID>: <title>`, ID `[A-Z][0-9]*`) with Goal, Tasks, Watch out, Verification, and Carry-forward.
-3. **`log.md`** (agents only): created with the header `# <Topic> Workstream Log` and one line `Opt-ins: playback=<on|off>, external review=<on|off>`; the execution skill appends only `Isolation:` (after the Opt-ins line), `Pre-flight:`, `Smoke:` lines, the `Final review:` outcome and the `P2/P3:` entry.
+3. **`log.md`** (agents only): created with the header `# <Topic> Workstream Log` and one line `Opt-ins: playback=<on|off>, external review=<on|off>`; the execution skill appends only `Isolation:` (after the Opt-ins line), `Pre-flight:`, `Smoke:` lines, the `Final review:` outcome, the `P2/P3:` entry and the `RED gaps:` entry.
 
 For the full markdown schema, section requirements, and examples, read [references/workstream-folder-template.md](references/workstream-folder-template.md).
 
